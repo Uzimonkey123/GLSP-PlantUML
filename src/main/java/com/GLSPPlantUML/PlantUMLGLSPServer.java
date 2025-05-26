@@ -1,0 +1,34 @@
+package com.GLSPPlantUML;
+
+import org.apache.logging.log4j.LogManager;
+import org.eclipse.glsp.server.protocol.DefaultGLSPServer;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.glsp.server.protocol.InitializeResult;
+import org.eclipse.glsp.server.utils.MapUtil;
+
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+import static org.eclipse.glsp.server.types.GLSPServerException.getOrThrow;
+
+public class PlantUMLGLSPServer extends DefaultGLSPServer {
+    protected static final Logger LOGGER = LogManager.getLogger(PlantUMLGLSPServer.class);
+    private static final String MESSAGE_KEY = "message";
+    private static final String TIMESTAMP_KEY = "timestamp";
+
+    @Override
+    public CompletableFuture<InitializeResult> handleIntializeArgs(final InitializeResult result, final Map<String, String> args) {
+        CompletableFuture<InitializeResult> completableResult = CompletableFuture.completedFuture(result);
+        if (args.isEmpty()) {
+            return completableResult;
+        }
+
+        String timestamp = getOrThrow(MapUtil.getValue(args, TIMESTAMP_KEY),
+                "No value present for the given key: " + TIMESTAMP_KEY);
+        String message = getOrThrow(MapUtil.getValue(args, MESSAGE_KEY),
+                "No value present for the given key: " + MESSAGE_KEY);
+        LOGGER.debug(timestamp + ": " + message);
+
+        return completableResult;
+    }
+}
