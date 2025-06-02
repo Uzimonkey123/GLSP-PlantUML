@@ -1,22 +1,35 @@
 {
-  "name": "plantuml-client",
+  "name": "plantuml-glsp",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "client",
+    "extension",
+    "webview"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@eclipse-glsp/client": "^2.4.0",
-    "@eclipse-glsp/vscode-integration": "^2.4.0"
+    "build:client": "npm run --workspace=client build",
+    "build:extension": "npm run --workspace=extension build",
+    "build:webview": "npm run --workspace=webview build",
+    "build:all": "npm run build:client && npm run build:webview && npm run build:extension"
   },
   "devDependencies": {
-    "@types/vscode": "^1.100.0",
-    "ts-loader": "^9.5.2",
     "typescript": "^5.8.3",
-    "webpack": "^5.99.9"
+    "ts-loader": "^9.5.2",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
+    "copy-webpack-plugin": "^13.0.0",
+    "circular-dependency-plugin": "^5.2.2",
+    "rimraf": "^5.0.0"
+  },
+  "dependencies": {
+    "@eclipse-glsp/client": "^2.4.0",
+    "@eclipse-glsp/ts-config": "^2.4.0",
+    "@eclipse-glsp/vscode-integration-webview": "^2.4.0",
+    "@vscode/codicons": "^0.0.36",
+    "inversify": "^6.1.3",
+    "@eclipse-glsp/vscode-integration": "^2.4.0"
   }
 }

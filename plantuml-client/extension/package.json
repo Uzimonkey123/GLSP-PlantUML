@@ -1,0 +1,72 @@
+{
+  "name": "plantuml-glsp-viewer",
+  "displayName": "PlantUML GLSP Viewer",
+  "publisher": "Norman Babiak",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VS Code extension for GLSP and PlantUML notation based diagrams.",
+  "engines": { "vscode": "^1.60.0" },
+  "main": "./dist/extension.js",
+  "files": ["dist"],
+  "scripts": {
+    "clean": "rimraf dist",
+    "compile": "tsc -b",
+    "bundle": "webpack",
+    "build": "npm run clean && npm run compile && npm run bundle"
+  },
+  "activationEvents": [ 
+    "onLanguage:plantuml",
+    "onCustomEditor:plantuml.glspDiagram",
+    "onCommand:plantuml.openPreview"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "plantuml",
+        "name": "PlantUML",
+        "aliases": [
+          "PlantUML",
+          "puml"
+        ],
+        "extensions": [
+          ".puml"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "plantuml.openPreview",
+        "title": "Open PlantUML Preview"
+      },
+      {
+      "command": "plantuml.exportSvg",
+      "title":   "PlantUML: Export diagram as SVG"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "plantuml.glspDiagram",
+        "displayName": "PlantUML Diagram",
+        "selector": [
+          {
+            "filenamePattern": "*.puml"
+          }
+        ]
+      },
+      {
+        "viewType": "glsp-puml-viewer.open",
+        "displayName": "PlantUML GLSP Preview",
+        "selector": [
+          {
+            "filenamePattern": "*.puml"
+          }
+        ]
+      }
+    ]
+  },
+  "dependencies": { },
+  "devDependencies": {
+    "@types/vscode": "^1.100.0",
+    "@types/ws": "^8.18.1"
+  }
+}
