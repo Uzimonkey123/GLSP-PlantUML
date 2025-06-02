@@ -1,0 +1,37 @@
+rect.sprotty-node {
+  fill: blue;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+path.sprotty-edge {
+  stroke: black !important;
+  stroke-width: 2px !important;
+  fill: black !important;
+  stroke-opacity: 1 !important;
+}
+
+marker#arrow path {
+  fill: black;
+}
+
+.sprotty-label {
+  fill: black !important;
+  dominant-baseline: middle;
+}
+
+.sprotty-graph {
+    font-size: 15pt;
+    border: none;
+    height: 100%;
+}
+
+.sprotty-text {
+    font-size: 12pt;
+    text-anchor: middle;
+}
+
+.sprotty-node {
+    stroke-width: 0;
+    font-weight: bold;
+}

@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react",        
+    "jsxFactory": "svg", 
+    "jsxFragmentFactory": "Fragment",
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "lib"
+  },
+  "include": ["src"]
+}

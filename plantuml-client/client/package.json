@@ -1,0 +1,17 @@
+{
+  "name": "@plantuml-client/glsp-client",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": ["lib"],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf lib tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "balloon-css": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.23"
+  }
+}
