@@ -13,10 +13,10 @@ module.exports = merge(common, {
     filename: "webview.js",
     path: outputPath
   },
-  mode: process.env.NODE_ENV === "production" ? "production" : "development",
-  devtool: process.env.NODE_ENV === "production" ? "source-map" : "eval-source-map",
+  mode: "development",
+  devtool: "source-map",
   resolve: {
-    // The common part already defined extensions & CSS; here we just add fallbacks/aliases
+    // CSS moved to client part
     extensions: [".ts", ".tsx", ".js", ".css"],
     alias: {
       process: "process/browser"
