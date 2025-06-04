@@ -1,5 +1,10 @@
 package com.GLSPPlantUML.model;
 
+import net.sourceforge.plantuml.skin.ArrowConfiguration;
+import net.sourceforge.plantuml.skin.ArrowDecoration;
+import net.sourceforge.plantuml.skin.ArrowHead;
+import net.sourceforge.plantuml.skin.ArrowPart;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,10 +13,29 @@ public class SequenceModel {
         private final String from;
         private final String to;
         private final String message;
-        public SequenceMessage(String from, String to, String message) {
+        private final ArrowConfiguration arrowConfiguration;
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration) {
             this.from = from;
             this.to = to;
             this.message = message;
+            this.arrowConfiguration = arrowConfiguration;
+        }
+
+        private String getHead(ArrowHead arrowHead) {
+            return switch (arrowHead) {
+                case NORMAL -> "block";
+                case ASYNC -> "open";
+                case CROSSX -> "cross";
+                default -> "none";
+            };
+        }
+
+        private String getPart(ArrowPart arrowPart) {
+            return switch (arrowPart) {
+                case BOTTOM_PART -> "bottom";
+                case TOP_PART -> "top";
+                default -> "full";
+            };
         }
 
         public String getFrom() {
@@ -24,6 +48,38 @@ public class SequenceModel {
 
         public String getMessage() {
             return message;
+        }
+
+        public boolean isDotted() {
+            return arrowConfiguration.isDotted();
+        }
+
+        public String getStartHead() {
+            return this.getHead(arrowConfiguration.getDressing1().getHead());
+        }
+
+        public String getEndHead() {
+            return this.getHead(arrowConfiguration.getDressing2().getHead());
+        }
+
+        public String getStartPart() {
+            return this.getPart(arrowConfiguration.getDressing1().getPart());
+        }
+
+        public String getEndPart() {
+            return this.getPart(arrowConfiguration.getDressing2().getPart());
+        }
+
+        public String getStartDecor() {
+            return arrowConfiguration.getDecoration1() == ArrowDecoration.CIRCLE ? "circle" : "none";
+        }
+
+        public String getEndDecor() {
+            return arrowConfiguration.getDecoration2() == ArrowDecoration.CIRCLE ? "circle" : "none";
+        }
+
+        public boolean isSelf() {
+            return arrowConfiguration.isSelfArrow();
         }
     }
 
