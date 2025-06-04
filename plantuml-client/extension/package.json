@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "VS Code extension for GLSP and PlantUML notation based diagrams.",
-  "engines": { "vscode": "^1.60.0" },
+  "engines": { "vscode": "^1.100.0" },
   "main": "./dist/extension.js",
   "files": ["dist"],
   "scripts": {
