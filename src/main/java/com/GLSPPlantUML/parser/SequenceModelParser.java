@@ -6,6 +6,7 @@ import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
 import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.sequencediagram.*;
+import net.sourceforge.plantuml.skin.ArrowConfiguration;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,9 +37,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 // Extract participants and messages with API
                 for (Event event : sd.events()) {
                     if (event instanceof AbstractMessage msg) {
-                        String from = msg.getParticipant1().getCode();
-                        String to = msg.getParticipant2().getCode();
-                        String text2 = String.join(" ", msg.getLabel());
+                        String from = msg.getParticipant1().getDisplay(false).get(0).toString();
+                        String to = msg.getParticipant2().getDisplay(false).get(0).toString();
+                        String label = String.join(" ", msg.getLabel());
+                        ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
 
                         // Record participants
                         if (!model.participants.contains(from)) {
@@ -49,7 +51,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         }
 
                         // Record message
-                        model.messages.add(new SequenceModel.SequenceMessage(from, to, text2));
+                        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig));
                     }
                 }
             }
