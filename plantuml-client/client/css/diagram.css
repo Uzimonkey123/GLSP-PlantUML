@@ -1,6 +1,6 @@
 rect.sprotty-node {
-  fill: blue;
-  stroke: black;
+  fill: #5d4949;
+  stroke: #d0d0d0;
   stroke-width: 1px;
 }
 
@@ -9,10 +9,6 @@ path.sprotty-edge {
   stroke-width: 2px !important;
   fill: black !important;
   stroke-opacity: 1 !important;
-}
-
-marker#arrow path {
-  fill: black;
 }
 
 .sprotty-label {
