@@ -28,10 +28,10 @@ public abstract class AbstractPlantUMLStorage<M, S extends PlantUMLModelState<M>
     public void loadSourceModel(RequestModelAction action) {
         System.err.println("loadSourceModel");
 
-        Optional<String> uriOpt = MapUtil.getValue(action.getOptions(), "sourceURI");
+        Optional<String> uriOpt = MapUtil.getValue(action.getOptions(), "sourceUri");
         if (uriOpt.isEmpty() || uriOpt.get().isBlank()) {
             throw new GLSPServerException(
-                    "'sourceURI' missing in options");
+                    "'sourceUri' missing in options");
         }
 
         String uriString = uriOpt.get();

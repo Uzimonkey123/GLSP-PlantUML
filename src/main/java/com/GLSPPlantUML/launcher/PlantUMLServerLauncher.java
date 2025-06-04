@@ -6,6 +6,7 @@ import org.apache.commons.cli.ParseException;
 //import org.eclipse.glsp.layout.ElkLayoutEngine;
 import org.eclipse.glsp.server.di.ServerModule;
 import org.eclipse.glsp.server.launch.GLSPServerLauncher;
+import org.eclipse.glsp.server.launch.SocketGLSPServerLauncher;
 import org.eclipse.glsp.server.utils.LaunchUtil;
 import org.eclipse.glsp.server.websocket.WebsocketServerLauncher;
 
@@ -21,9 +22,10 @@ public class PlantUMLServerLauncher {
             ServerModule serverModule = new GLSPServerModule()
                     .configureDiagramModule(new SequenceDiagramModule());
 
-            //TODO: Add possibility for Socket too
-            GLSPServerLauncher launcher = new WebsocketServerLauncher(serverModule, "/plantuml",
-                    parser.parseWebsocketLogLevel());
+            GLSPServerLauncher launcher = parser.isWebsocket() ?
+                    new WebsocketServerLauncher(serverModule, "/plantuml",
+                    parser.parseWebsocketLogLevel()) :
+                    new SocketGLSPServerLauncher(serverModule);
 
             launcher.start(host, port, parser);
         } catch (ParseException e) {
