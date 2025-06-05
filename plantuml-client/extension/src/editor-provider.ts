@@ -26,8 +26,6 @@ export default class PumlEditorProvider extends GlspEditorProvider {
     const extensionUri = this.extensionContext.extensionUri;
     const webviewScriptSourceUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'extension/dist', 'webview.js'));
 
-    //this.glspVscodeConnector.dispatchAction(SetEditModeAction.create(EditMode.READONLY), clientId);
-
     webviewPanel.webview.options = {
       enableScripts: true
     };

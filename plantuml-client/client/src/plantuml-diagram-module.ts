@@ -19,7 +19,10 @@ import {
     GGraph,
     GLSPProjectionView,
     GNode,
-    GEdge
+    GEdge,
+    EditorContextService,
+    EditMode,
+    SetEditModeAction
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
@@ -35,10 +38,23 @@ import 'sprotty/css/sprotty.css';
 import 'sprotty/css/edit-label.css';
 import 'balloon-css/balloon.min.css';
 
+// Set every document to read only, since no need for editor
+class ReadOnlyEditorContextService extends EditorContextService {
+    protected initialize(): void {
+        super.initialize();
+        this._editMode = EditMode.READONLY;
+    }
+
+    // To ignore SetEditModeAction in case it is called
+    protected handleSetEditModeAction(action: SetEditModeAction): void {
+    }
+}
+
 export const PlantUmlDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
         const context = { bind, unbind, isBound, rebind };
 
+        bindOrRebind(context, EditorContextService).to(ReadOnlyEditorContextService).inSingletonScope();
         bindOrRebind(context, GLSPDiagramWidget).to(PlantUmlGLSPDiagramWidget).inSingletonScope();
         bindOrRebind(context, GLSPDiagramWidgetFactory).toFactory(context => () => context.container.get<PlantUmlGLSPDiagramWidget>(GLSPDiagramWidget));
         bindAsService(context, TYPES.ICommandPaletteActionProvider, RevealNamedElementActionProvider);
