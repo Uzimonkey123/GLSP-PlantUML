@@ -79,7 +79,7 @@ public class SequenceModel {
         }
 
         public boolean isSelf() {
-            return arrowConfiguration.isSelfArrow();
+            return this.from.equals(this.to);
         }
     }
 
