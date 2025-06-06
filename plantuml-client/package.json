@@ -54,7 +54,8 @@
           {
             "filenamePattern": "*.puml"
           }
-        ]
+        ],
+        "priority": "option"
       },
       {
         "viewType": "glsp-puml-viewer.open",
@@ -63,7 +64,8 @@
           {
             "filenamePattern": "*.puml"
           }
-        ]
+        ],
+        "priority": "option"
       }
     ]
   },
