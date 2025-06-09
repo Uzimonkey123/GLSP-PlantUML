@@ -174,7 +174,7 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		 additionals.unshift(
 			 <path
 				 d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
-				 stroke='${arrColor}'
+				 stroke={this.arrColor}
 				 strokeWidth={strokeWidth}
 				 {...(dashed ? {'stroke-dasharray': dashed} : {})}
 				 marker-end="none"
@@ -213,9 +213,8 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 			 additionals.push(
 				 <path d={d}
 					   transform={`translate(${at.x} ${at.y}) rotate(${ang})`}
-					   fill={kind === 'block' ? 'black' : 'none'}
-					   stroke="black" strokeWidth={strokeWidth}
-					   class-sprotty-edge={true}
+					   style={{ fill: kind === 'block' ? this.arrColor : 'none' }}
+					   stroke={this.arrColor} strokeWidth={strokeWidth}
 				 />
 			 );
 		 }
@@ -227,8 +226,8 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 				 cx={at.x}
 				 cy={at.y}
 				 r={3}
-				 fill="black"
-				 stroke="black"
+				 fill={this.arrColor}
+				 stroke={this.arrColor}
 				 strokeWidth={1}
 			 />
 		 )

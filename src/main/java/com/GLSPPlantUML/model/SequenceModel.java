@@ -1,5 +1,7 @@
 package com.GLSPPlantUML.model;
 
+import net.sourceforge.plantuml.klimt.color.ColorMapper;
+import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
 import net.sourceforge.plantuml.skin.ArrowDecoration;
 import net.sourceforge.plantuml.skin.ArrowHead;
@@ -80,6 +82,15 @@ public class SequenceModel {
 
         public boolean isSelf() {
             return this.from.equals(this.to);
+        }
+
+        public String getColor() {
+            HColor color = arrowConfiguration.getColor();
+            if (color == null) {
+                return "black";
+            }
+
+            return color.asString();
         }
     }
 

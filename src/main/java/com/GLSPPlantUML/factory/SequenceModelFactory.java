@@ -90,6 +90,7 @@ public class SequenceModelFactory implements GModelFactory {
             eb.addArgument("circleEnd", msg.getEndDecor());
             eb.addArgument("style", msg.isDotted() ? "dotted" : "solid");
             eb.addArgument("self", msg.isSelf());
+            eb.addArgument("arrColor", msg.getColor());
 
             elements.add(eb.build());
         }
