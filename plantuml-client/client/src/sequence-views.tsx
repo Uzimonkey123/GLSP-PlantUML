@@ -1,18 +1,57 @@
 import { injectable } from 'inversify';
 import {
-    GNode,
-    GEdge,
-    Point,
-    RenderingContext,
-    IViewArgs,
-    PolylineEdgeViewWithGapsOnIntersections,
-    ShapeView,
-    svg
- } from '@eclipse-glsp/client';
+	GNode,
+	GEdge,
+	Point,
+	RenderingContext,
+	IViewArgs,
+	PolylineEdgeViewWithGapsOnIntersections,
+	ShapeView,
+	svg, GEdgeView, SEdgeImpl
+} from '@eclipse-glsp/client';
 import { VNode } from "snabbdom";
 import '../css/diagram.css';
 
  /** @jsx svg */
+
+@injectable()
+export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersections {
+	 protected override renderAdditionals(
+		 edge: SEdgeImpl,
+		 segments: Point[],
+		 context: RenderingContext,
+		 args?: IViewArgs
+	 ): VNode[] {
+		 const additionals = super.renderAdditionals(edge, segments, context);
+
+		 if (segments.length < 3) return additionals;
+
+		 const interior = segments.slice(1, segments.length - 1);
+		 if (interior.length < 2) return additionals;
+
+		 const start = interior[0];
+		 const end = interior[interior.length - 1];
+
+		 const midX = (start.x + end.x) / 2;
+		 const midY = (start.y + end.y) / 2;
+		 const labels = context.renderChildren(edge, args);
+		 if (labels.length) {
+			 additionals.push(
+				 <g transform={`translate(${midX},${midY})`}>
+					 {labels.map((l, i) =>
+						 <text key={i}
+							   {...(l.data?.props as any)}
+							   text-anchor="middle"
+							   fill="black">
+							 {l.children}
+						 </text>
+					 )}
+				 </g>
+			 );
+		 }
+		 return additionals;
+	 }
+}
 
 @injectable()
 export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
