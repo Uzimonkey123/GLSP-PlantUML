@@ -16,11 +16,18 @@ public class SequenceModel {
         private final String to;
         private final String message;
         private final ArrowConfiguration arrowConfiguration;
-        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration) {
+        private final String messageType;
+
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType) {
             this.from = from;
             this.to = to;
             this.message = message;
             this.arrowConfiguration = arrowConfiguration;
+            this.messageType = messageType;
+        }
+
+        public String getType() {
+            return messageType;
         }
 
         private String getHead(ArrowHead arrowHead) {

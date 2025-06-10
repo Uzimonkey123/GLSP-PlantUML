@@ -51,7 +51,13 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         }
 
                         // Record message
-                        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig));
+                        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge"));
+                    }
+
+                    if(event instanceof Delay delay) {
+                        String label = delay.getText().get(0).toString();
+
+                        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay"));
                     }
                 }
             }
