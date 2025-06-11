@@ -7,50 +7,76 @@ import {
 	IViewArgs,
 	PolylineEdgeViewWithGapsOnIntersections,
 	ShapeView,
-	svg, GEdgeView, SEdgeImpl
+	svg,
+	SEdgeImpl,
+	GLabelView,
+	GLabel
 } from '@eclipse-glsp/client';
 import { VNode } from "snabbdom";
 import '../css/diagram.css';
+import { TspanConverter } from "./utils";
 
- /** @jsx svg */
+/** @jsx svg */
+
+@injectable()
+export class HtmlLabelView extends GLabelView {
+	override render(label: Readonly<GLabel>,
+					context: RenderingContext,
+					args?: IViewArgs): VNode {
+		const num = (label as any).args?.numbering as string | undefined;
+		const text = label.text ?? '';
+
+		const numSpans = num ? TspanConverter(num) : [];
+
+		return (
+			<text class-sprotty-label={true} text-anchor="middle">
+				{numSpans}
+				{num ? <tspan> </tspan> : undefined }
+				<tspan>{text}</tspan>
+			</text>
+		);
+	}
+}
 
 @injectable()
 export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersections {
-	 protected override renderAdditionals(
-		 edge: SEdgeImpl,
-		 segments: Point[],
-		 context: RenderingContext,
-		 args?: IViewArgs
-	 ): VNode[] {
-		 const additionals = super.renderAdditionals(edge, segments, context);
+	protected override renderAdditionals(
+		edge: SEdgeImpl,
+		segments: Point[],
+		context: RenderingContext,
+		args?: IViewArgs
+		): VNode[]
+	{
 
-		 if (segments.length < 3) return additionals;
+		const additionals = super.renderAdditionals(edge, segments, context);
 
-		 const interior = segments.slice(1, segments.length - 1);
-		 if (interior.length < 2) return additionals;
+		if (segments.length < 3) return additionals;
 
-		 const start = interior[0];
-		 const end = interior[interior.length - 1];
+		const interior = segments.slice(1, segments.length - 1);
+		if (interior.length < 2) return additionals;
 
-		 const midX = (start.x + end.x) / 2;
-		 const midY = (start.y + end.y) / 2;
-		 const labels = context.renderChildren(edge, args);
-		 if (labels.length) {
-			 additionals.push(
-				 <g transform={`translate(${midX},${midY})`}>
-					 {labels.map((l, i) =>
-						 <text key={i}
-							   {...(l.data?.props as any)}
-							   text-anchor="middle"
-							   fill="black">
-							 {l.children}
-						 </text>
-					 )}
-				 </g>
-			 );
-		 }
-		 return additionals;
-	 }
+		const start = interior[0];
+		const end = interior[interior.length - 1];
+
+		const midX = (start.x + end.x) / 2;
+		const midY = (start.y + end.y) / 2;
+		const labels = context.renderChildren(edge, args);
+		if (labels.length) {
+			additionals.push(
+				<g transform={`translate(${midX},${midY})`}>
+					{labels.map((l, i) =>
+					 <text key={i}
+						   {...(l.data?.props as any)}
+						   text-anchor="middle"
+						   fill="black">
+						 {l.children}
+					 </text>
+					)}
+				</g>
+			);
+		}
+		return additionals;
+	}
 }
 
 @injectable()
@@ -279,14 +305,19 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		 if (labels.length) {
 			 additionals.push(
 				 <g transform={`translate(${midX},${midY})`}>
-					 {labels.map((l, i) =>
-						 <text key={i}
-							   {...(l.data?.props as any)}
-							   text-anchor="middle"
-							   fill="black">
-							 {l.children}
-						 </text>
-					 )}
+					 {labels.map((l, i) => {
+						 const raw = (l.text as string | undefined) ?? '';
+						 return (
+							 <text key={i}
+								   {...(l.data?.props as any)}
+								   text-anchor="middle"
+								   dominant-baseline="central"
+								   fill="black">
+
+								 {TspanConverter(raw)}
+							 </text>
+						 );
+					 })}
 				 </g>
 			 );
 		 }

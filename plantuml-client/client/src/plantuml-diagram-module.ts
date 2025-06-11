@@ -22,14 +22,14 @@ import {
     GEdge,
     EditorContextService,
     EditMode,
-    SetEditModeAction, configureModelElement
+    SetEditModeAction, configureModelElement, GLabel
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
     GLSPDiagramWidget,      
     GLSPDiagramWidgetFactory
 } from '@eclipse-glsp/vscode-integration-webview';
-import {SequenceMessageEdgeView, RectangularNodeView, SequenceMessageDelay} from './sequence-views';
+import {SequenceMessageEdgeView, RectangularNodeView, SequenceMessageDelay, HtmlLabelView} from './sequence-views';
 
 import { PlantUmlStartup } from './plantuml-startup';
 import { PlantUmlGLSPDiagramWidget } from './plantuml-diagram-widget'; 
@@ -63,9 +63,11 @@ export const PlantUmlDiagramModule = new FeatureModule(
 
         configureDefaultModelElements(context);
         overrideModelElement(context, DefaultTypes.GRAPH, GGraph, GLSPProjectionView);
-        overrideModelElement(context, DefaultTypes.NODE_RECTANGLE, GNode, RectangularNodeView);
         overrideModelElement(context, DefaultTypes.EDGE, GEdge, SequenceMessageEdgeView);
+        configureModelElement(context, "PARTICIPANT", GNode, RectangularNodeView);
+
         configureModelElement(context, "edge:delay", GEdge, SequenceMessageDelay);
+        configureModelElement(context, "label:html", GLabel, HtmlLabelView);
     }
 );
 
