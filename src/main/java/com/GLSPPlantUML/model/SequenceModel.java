@@ -110,10 +110,12 @@ public class SequenceModel {
     public static class SequenceNode {
         private final String name;
         private final String type;
+        private final int order;
 
-        public SequenceNode(String name, String type) {
+        public SequenceNode(String name, String type, int order) {
             this.name = name;
             this.type = type;
+            this.order = order;
         }
 
         public String getName() {
@@ -122,6 +124,10 @@ public class SequenceModel {
 
         public String getType() {
             return type;
+        }
+
+        public int getOrder() {
+            return order;
         }
     }
 
