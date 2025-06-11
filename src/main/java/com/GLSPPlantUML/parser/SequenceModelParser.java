@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.List;
 
 public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
@@ -34,9 +35,16 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             Diagram d = block.getDiagram();
             if (d instanceof SequenceDiagram sd) {
 
+                // Record all participants, even if unused
+                Collection<Participant> participants = sd.participants();
+                for (Participant participant : participants) {
+                    ParticipantHandler(participant, model);
+                }
+
                 // Extract participants and messages with API
                 for (Event event : sd.events()) {
                     if (event instanceof AbstractMessage msg) {
+                        System.err.println("Event: " + msg);
                         AbstractMessageHandler(msg, model);
                     }
 
@@ -49,12 +57,20 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         return model;
     }
 
+    private void ParticipantHandler(Participant participant, SequenceModel model) {
+        String name = participant.getDisplay(false).get(0).toString();
+        String type = participant.getType().toString();
+        int order = participant.getOrder();
+
+        if(!hasParticipant(name, model)) {
+            addParticipants(model.participants, new SequenceModel.SequenceNode(name, type, order));
+        }
+    }
+
     private void AbstractMessageHandler(AbstractMessage msg, SequenceModel model) {
         String from = msg.getParticipant1().getDisplay(false).get(0).toString();
-        String fromType = msg.getParticipant1().getType().toString();
 
         String to = msg.getParticipant2().getDisplay(false).get(0).toString();
-        String toType = msg.getParticipant2().getType().toString();
 
         String num = msg.getMessageNumber();
 
@@ -64,14 +80,6 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
 
         ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
-
-        // Record participants
-        if (!hasParticipant(from, model)) {
-            model.participants.add(new SequenceModel.SequenceNode(from, fromType));
-        }
-        if (!hasParticipant(to, model)) {
-            model.participants.add(new SequenceModel.SequenceNode(to, toType));
-        }
 
         // Record message
         model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge", num));
@@ -91,6 +99,19 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
 
         return false;
+    }
+
+    private void addParticipants(List<SequenceModel.SequenceNode> participants, SequenceModel.SequenceNode node) {
+        for (int i = 0; i < participants.size(); i++) {
+            int existingOrder = participants.get(i).getOrder();
+            if (node.getOrder() < existingOrder) {
+                participants.add(i, node);
+                return;
+            }
+        }
+
+        // Add to last position
+        participants.add(node);
     }
 }
 
