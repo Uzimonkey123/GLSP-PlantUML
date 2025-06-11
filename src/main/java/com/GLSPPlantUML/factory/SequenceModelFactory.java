@@ -36,20 +36,21 @@ public class SequenceModelFactory implements GModelFactory {
         double totalHeight = nodeHeight + lifelineLength + nodeHeight;
 
         double cursor = 40; // Start of the first node
-        double gap    = 120; // Gap to add between the different nodes
+        double gap = Math.max(40, getMaxMessageLength(model));
 
         Map<String, Double> centre = new HashMap<>(); // Map to store the middle of all nodes for lifeline
         List<GModelElement> elements = new ArrayList<>();
 
         // Add participants as nodes to the list
-        for (String p : model.participants) {
+        for (SequenceModel.SequenceNode node: model.participants) {
+            String p = node.getName();
             double textWidth = p.length() * 8;
             double nodeWidth = textWidth + 10 * 2;
 
             double centreX = cursor + nodeWidth / 2;
             centre.put(p, centreX);
 
-            elements.add(new GNodeBuilder("node:rectangle")
+            elements.add(new GNodeBuilder(node.getType())
                     .id(p)
                     .layout("vbox")
                     .position(cursor, nodeY)
@@ -64,15 +65,24 @@ public class SequenceModelFactory implements GModelFactory {
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceModel.SequenceMessage msg = model.messages.get(i);
             double y = firstMsgY + i * msgGap;
+            String routingOne, two;
+            if(msg.getType().equals("edge:delay")) {
+                routingOne = model.participants.getFirst().getName();
+                two = model.participants.getLast().getName();
+            } else {
+                routingOne = msg.getFrom();
+                two = msg.getTo();
+            }
 
-            GEdgeBuilder eb = new GEdgeBuilder("edge")
+            GEdgeBuilder eb = new GEdgeBuilder(msg.getType())
                     .id("msg-" + i)
-                    .sourceId(msg.getFrom())
-                    .targetId(msg.getTo())
-                    .addRoutingPoint(point(centre.get(msg.getFrom()), y))
-                    .addRoutingPoint(point(centre.get(msg.getTo()), y))
-                    .add(new GLabelBuilder()
+                    .sourceId(routingOne)
+                    .targetId(two)
+                    .addRoutingPoint(point(centre.get(routingOne), y))
+                    .addRoutingPoint(point(centre.get(two), y))
+                    .add(new GLabelBuilder("label:html")
                             .text(msg.getMessage())
+                            .addArgument("numbering", msg.getNumbering())
                             .edgePlacement(new GEdgePlacementBuilder()
                                     .side(GConstants.EdgeSide.TOP) // above the line
                                     .position(0.5d) // center
@@ -82,15 +92,17 @@ public class SequenceModelFactory implements GModelFactory {
                             .build());
 
             // Additional arguments to get every side and aspect of the arrow
-            eb.addArgument("headStart", msg.getStartHead());
-            eb.addArgument("headEnd", msg.getEndHead());
-            eb.addArgument("partStart", msg.getStartPart());
-            eb.addArgument("partEnd", msg.getEndPart());
-            eb.addArgument("circleStart", msg.getStartDecor());
-            eb.addArgument("circleEnd", msg.getEndDecor());
-            eb.addArgument("style", msg.isDotted() ? "dotted" : "solid");
-            eb.addArgument("self", msg.isSelf());
-            eb.addArgument("arrColor", msg.getColor());
+            if (msg.getType().equals("edge")) {
+                eb.addArgument("headStart", msg.getStartHead());
+                eb.addArgument("headEnd", msg.getEndHead());
+                eb.addArgument("partStart", msg.getStartPart());
+                eb.addArgument("partEnd", msg.getEndPart());
+                eb.addArgument("circleStart", msg.getStartDecor());
+                eb.addArgument("circleEnd", msg.getEndDecor());
+                eb.addArgument("style", msg.isDotted() ? "dotted" : "solid");
+                eb.addArgument("self", msg.isSelf());
+                eb.addArgument("arrColor", msg.getColor());
+            }
 
             elements.add(eb.build());
         }
@@ -104,5 +116,21 @@ public class SequenceModelFactory implements GModelFactory {
         // Update model state
         modelState.updateRoot(newGModel);
         modelState.getRoot().setRevision(-1);
+    }
+
+    private double getMaxMessageLength(SequenceModel model) {
+        double charWidth = 8;
+        double padding = 20;
+
+        double maxWidth = 0;
+        for (SequenceModel.SequenceMessage msg : model.messages) {
+            int len = msg.getMessage() != null ? msg.getMessage().length() : 0;
+            double width = charWidth * len + padding;
+            if (maxWidth < width) {
+                maxWidth = width;
+            }
+        }
+
+        return maxWidth;
     }
 }
