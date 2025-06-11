@@ -37,32 +37,60 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 // Extract participants and messages with API
                 for (Event event : sd.events()) {
                     if (event instanceof AbstractMessage msg) {
-                        String from = msg.getParticipant1().getDisplay(false).get(0).toString();
-                        String to = msg.getParticipant2().getDisplay(false).get(0).toString();
-                        String label = String.join(" ", msg.getLabel());
-                        ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
-
-                        // Record participants
-                        if (!model.participants.contains(from)) {
-                            model.participants.add(from);
-                        }
-                        if (!model.participants.contains(to)) {
-                            model.participants.add(to);
-                        }
-
-                        // Record message
-                        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge"));
+                        AbstractMessageHandler(msg, model);
                     }
 
                     if(event instanceof Delay delay) {
-                        String label = delay.getText().get(0).toString();
-
-                        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay"));
+                        DelayHandler(delay, model);
                     }
                 }
             }
         }
         return model;
+    }
+
+    private void AbstractMessageHandler(AbstractMessage msg, SequenceModel model) {
+        String from = msg.getParticipant1().getDisplay(false).get(0).toString();
+        String fromType = msg.getParticipant1().getType().toString();
+
+        String to = msg.getParticipant2().getDisplay(false).get(0).toString();
+        String toType = msg.getParticipant2().getType().toString();
+
+        String num = msg.getMessageNumber();
+
+        String label = String.join(" ", msg.getLabel());
+        if(num == null) {
+            num = "";
+        }
+
+        ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
+
+        // Record participants
+        if (!hasParticipant(from, model)) {
+            model.participants.add(new SequenceModel.SequenceNode(from, fromType));
+        }
+        if (!hasParticipant(to, model)) {
+            model.participants.add(new SequenceModel.SequenceNode(to, toType));
+        }
+
+        // Record message
+        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge", num));
+    }
+
+    private void DelayHandler(Delay delay, SequenceModel model) {
+        String label = delay.getText().get(0).toString();
+
+        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay", ""));
+    }
+
+    private boolean hasParticipant(String name, SequenceModel model) {
+        for (SequenceModel.SequenceNode node : model.participants) {
+            if (node.getName().equals(name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

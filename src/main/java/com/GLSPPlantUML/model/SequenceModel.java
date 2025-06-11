@@ -17,13 +17,19 @@ public class SequenceModel {
         private final String message;
         private final ArrowConfiguration arrowConfiguration;
         private final String messageType;
+        private final String numbering;
 
-        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType) {
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType, String numbering) {
             this.from = from;
             this.to = to;
             this.message = message;
             this.arrowConfiguration = arrowConfiguration;
             this.messageType = messageType;
+            this.numbering = numbering;
+        }
+
+        public String getNumbering() {
+            return numbering;
         }
 
         public String getType() {
@@ -101,7 +107,25 @@ public class SequenceModel {
         }
     }
 
-    public List<String> participants = new ArrayList<>();
+    public static class SequenceNode {
+        private final String name;
+        private final String type;
+
+        public SequenceNode(String name, String type) {
+            this.name = name;
+            this.type = type;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getType() {
+            return type;
+        }
+    }
+
+    public List<SequenceNode> participants = new ArrayList<>();
     public List<SequenceMessage> messages = new ArrayList<>();
 
     public SequenceModel() {}
