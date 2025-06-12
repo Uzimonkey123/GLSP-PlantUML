@@ -37,6 +37,7 @@ public class SequenceModelFactory implements GModelFactory {
 
         double cursor = 40; // Start of the first node
         double gap = Math.max(40, getMaxMessageLength(model));
+        System.err.println(gap);
 
         Map<String, Double> centre = new HashMap<>(); // Map to store the middle of all nodes for lifeline
         List<GModelElement> elements = new ArrayList<>();
@@ -119,12 +120,14 @@ public class SequenceModelFactory implements GModelFactory {
     }
 
     private double getMaxMessageLength(SequenceModel model) {
-        double charWidth = 8;
-        double padding = 20;
+        double charWidth = 4;
+        double padding = 5;
 
         double maxWidth = 0;
         for (SequenceModel.SequenceMessage msg : model.messages) {
-            int len = msg.getMessage() != null ? msg.getMessage().length() : 0;
+            if (msg.isSelf()) continue;
+            int len = msg.getMessage() != null ? msg.getMessage().length() + msg.getNumbering().length() : 0;
+            System.err.println(msg.getMessage() + " " + len);
             double width = charWidth * len + padding;
             if (maxWidth < width) {
                 maxWidth = width;
