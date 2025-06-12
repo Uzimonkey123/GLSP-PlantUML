@@ -51,6 +51,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     if(event instanceof Delay delay) {
                         DelayHandler(delay, model);
                     }
+
+                    if (event instanceof Divider div) {
+
+                    }
                 }
             }
         }
@@ -89,6 +93,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         String label = delay.getText().get(0).toString();
 
         model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay", ""));
+    }
+
+    private void DividerHandler(Divider div, SequenceModel model) {
+        String label = div.getText().get(0).toString();
+
+        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:divider", ""));
     }
 
     private boolean hasParticipant(String name, SequenceModel model) {

@@ -66,7 +66,7 @@ public class SequenceModelFactory implements GModelFactory {
             SequenceModel.SequenceMessage msg = model.messages.get(i);
             double y = firstMsgY + i * msgGap;
             String routingOne, two;
-            if(msg.getType().equals("edge:delay")) {
+            if(!msg.getType().equals("edge")) {
                 routingOne = model.participants.getFirst().getName();
                 two = model.participants.getLast().getName();
             } else {
