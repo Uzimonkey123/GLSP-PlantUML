@@ -53,7 +53,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     }
 
                     if (event instanceof Divider div) {
-
+                        DividerHandler(div, model);
                     }
                 }
             }

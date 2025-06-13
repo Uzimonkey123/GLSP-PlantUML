@@ -67,7 +67,7 @@ public class SequenceModelFactory implements GModelFactory {
             SequenceModel.SequenceMessage msg = model.messages.get(i);
             double y = firstMsgY + i * msgGap;
             String routingOne, two;
-            if(!msg.getType().equals("edge")) {
+            if(msg.getType().equals("edge:delay") || msg.getType().equals("edge:divider")) {
                 routingOne = model.participants.getFirst().getName();
                 two = model.participants.getLast().getName();
             } else {
@@ -125,7 +125,6 @@ public class SequenceModelFactory implements GModelFactory {
 
         double maxWidth = 0;
         for (SequenceModel.SequenceMessage msg : model.messages) {
-            if (msg.isSelf()) continue;
             int len = msg.getMessage() != null ? msg.getMessage().length() + msg.getNumbering().length() : 0;
             System.err.println(msg.getMessage() + " " + len);
             double width = charWidth * len + padding;
