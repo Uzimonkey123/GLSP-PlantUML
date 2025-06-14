@@ -1,0 +1,570 @@
+import {injectable} from "inversify";
+import {GNode, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
+import {VNode} from "snabbdom";
+
+/** @jsx svg */
+
+@injectable()
+export class RectangularNodeView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const totalH = node.size.height;
+
+        const headerH = 30;
+        const footerH = 30;
+
+        // Lifeline between header and footer
+        const lifeLineStart = headerH;
+        const lifeLineEnd = totalH - footerH;
+
+        return <g>
+            {/* Top rectangle */}
+            <g>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH}/>
+                <g transform={`translate(${w/2},${headerH/2})`}>
+                    {context.renderChildren(node)}
+                </g>
+            </g>
+
+            {/* Dashed lifeline, auto‐size */}
+            <line
+                x1={w/2}
+                y1={lifeLineStart}
+                x2={w/2}
+                y2={lifeLineEnd}
+                stroke="black"
+                stroke-dasharray="4 2"
+            />
+
+            {/* Bottom rectangle */}
+            <g transform={`translate(0, ${lifeLineEnd})`}>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH}/>
+                <g transform={`translate(${w/2},${footerH/2})`}>
+                    {context.renderChildren(node)}
+                </g>
+            </g>
+        </g>;
+    }
+}
+
+@injectable()
+export class ActorNodeView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+
+        const headerH = 15;
+        const footerH = 15;
+
+        const cx = w / 2; // Center of circle
+        const headRadius = 6;
+
+        const bodyStartY = headRadius * 2;
+        const bodyEndY = bodyStartY + 20;
+
+        const drawStickman = (offsetY: number) => (
+            <g transform={`translate(0, ${offsetY})`}>
+                {/* Head */}
+                <circle cx={cx} cy={headRadius} r={headRadius} stroke="black" fill="#5d4949" />
+                {/* Body */}
+                <line x1={cx} y1={bodyStartY} x2={cx} y2={bodyEndY} stroke="black" />
+                {/* Arms */}
+                <line x1={cx - 15} y1={bodyStartY + 5} x2={cx + 15} y2={bodyStartY + 5} stroke="black" />
+                {/* Legs */}
+                <line x1={cx} y1={bodyEndY} x2={cx - 15} y2={bodyEndY + 15} stroke="black" />
+                <line x1={cx} y1={bodyEndY} x2={cx + 15} y2={bodyEndY + 15} stroke="black" />
+            </g>
+        );
+
+        // Lifeline line coordinates to be between the two labels
+        const lifeLineStart = headerH + 5;
+        const lifeLineEnd = h - footerH - 5;
+
+        // Position for the label
+        const labelY = headerH;
+
+        return (
+            <g>
+                {/* Top stickman */}
+                {drawStickman(labelY - 65)}
+
+                {/* Top label */}
+                <g transform={`translate(${cx}, ${labelY})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Lifeline */}
+                <line
+                    x1={cx}
+                    y1={lifeLineStart}
+                    x2={cx}
+                    y2={lifeLineEnd}
+                    stroke="black"
+                    stroke-dasharray="4 2"
+                />
+
+                {/* Bottom label */}
+                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Bottom stickman */}
+                {drawStickman(lifeLineEnd + 10)}
+            </g>
+        );
+    }
+}
+
+@injectable()
+export class BoundaryNodeView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+
+        const headerH = 15;
+        const footerH = 15;
+
+        const cx = w / 2; // Center of circle
+
+        const drawBoundary = (offsetY: number) => {
+            const verticalLine = 12;
+            const horizontalLine = 20;
+            const circleRadius = 6;
+
+            return (
+                <g>
+                    {/* Vertical line */}
+                    <line
+                        x1={cx - horizontalLine}
+                        y1={offsetY - verticalLine / 2}
+                        x2={cx - horizontalLine}
+                        y2={offsetY + verticalLine / 2}
+                        stroke="black"
+                    />
+
+                    {/* Horizontal line  */}
+                    <line
+                        x1={cx - horizontalLine}
+                        y1={offsetY}
+                        x2={cx}
+                        y2={offsetY}
+                        stroke="black"
+                    />
+
+                    {/* Circle */}
+                    <circle
+                        cx={cx}
+                        cy={offsetY}
+                        r={circleRadius}
+                        stroke="black"
+                        fill="#5d4949"
+                    />
+                </g>
+            );
+        };
+
+        // Lifeline line coordinates to be between the two labels
+        const lifeLineStart = headerH + 5;
+        const lifeLineEnd = h - footerH - 5;
+
+        // Position for the label
+        const labelY = headerH;
+
+        return (
+            <g>
+                {/* Top boundary */}
+                {drawBoundary(labelY - 20)}
+
+                {/* Top label */}
+                <g transform={`translate(${cx}, ${labelY})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Lifeline */}
+                <line
+                    x1={cx}
+                    y1={lifeLineStart}
+                    x2={cx}
+                    y2={lifeLineEnd}
+                    stroke="black"
+                    stroke-dasharray="4 2"
+                />
+
+                {/* Bottom label */}
+                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Bottom boundary */}
+                {drawBoundary(lifeLineEnd + 20)}
+            </g>
+        );
+    }
+}
+
+@injectable()
+export class ControlNodeView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+
+        const headerH = 15;
+        const footerH = 15;
+
+        const cx = w / 2; // Center of circle
+
+        const drawControl = (offsetY: number) => {
+            const circleRadius = 6;
+
+            // Arrow dimensions
+            const arrowLength = 8;
+            const arrowWidth = 6;
+
+            // Arrow tip position towards left
+            const arrowTipX = cx- 6;
+            const arrowTipY = offsetY - circleRadius;
+
+            return (
+                <g>
+                    {/* Circle */}
+                    <circle
+                        cx={cx}
+                        cy={offsetY}
+                        r={circleRadius}
+                        stroke="black"
+                        fill="#5d4949"
+                    />
+
+                    {/* Arrowhead */}
+                    <polygon
+                        points={`
+                            ${arrowTipX},${arrowTipY}
+                            ${arrowTipX + arrowLength},${arrowTipY - arrowWidth / 2}
+                            ${arrowTipX + arrowLength},${arrowTipY + arrowWidth / 2}
+                        `}
+                        fill="black"
+                    />
+                </g>
+            );
+        };
+
+        // Lifeline line coordinates to be between the two labels
+        const lifeLineStart = headerH + 5;
+        const lifeLineEnd = h - footerH - 5;
+
+        // Position for the label
+        const labelY = headerH;
+
+        return (
+            <g>
+                {/* Top control */}
+                {drawControl(labelY - 20)}
+
+                {/* Top label */}
+                <g transform={`translate(${cx}, ${labelY})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Lifeline */}
+                <line
+                    x1={cx}
+                    y1={lifeLineStart}
+                    x2={cx}
+                    y2={lifeLineEnd}
+                    stroke="black"
+                    stroke-dasharray="4 2"
+                />
+
+                {/* Bottom label */}
+                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Bottom control */}
+                {drawControl(lifeLineEnd + 20)}
+            </g>
+        );
+    }
+}
+
+@injectable()
+export class EntityNodeView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+
+        const headerH = 15;
+        const footerH = 15;
+
+        const cx = w / 2;
+
+        const drawEntitySymbol = (offsetY: number) => {
+            const circleRadius = 6;
+            const lineLength = 16;
+
+            return (
+                <g>
+                    {/* Circle */}
+                    <circle
+                        cx={cx}
+                        cy={offsetY}
+                        r={circleRadius}
+                        stroke="black"
+                        fill="#5d4949"
+                    />
+
+                    {/* Line under the circle */}
+                    <line
+                        x1={cx - lineLength / 2}
+                        y1={offsetY + 7}
+                        x2={cx + lineLength / 2}
+                        y2={offsetY + 7}
+                        stroke="black"
+                    />
+                </g>
+            );
+        };
+
+        // Lifeline line coordinates to be between the two labels
+        const lifeLineStart = headerH + 5;
+        const lifeLineEnd = h - footerH - 5;
+
+        // Position for the label
+        const labelY = headerH;
+
+        return (
+            <g>
+                {/* Top entity */}
+                {drawEntitySymbol(labelY - 20)}
+
+                {/* Top label */}
+                <g transform={`translate(${cx}, ${labelY})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Lifeline */}
+                <line
+                    x1={cx}
+                    y1={lifeLineStart}
+                    x2={cx}
+                    y2={lifeLineEnd}
+                    stroke="black"
+                    stroke-dasharray="4 2"
+                />
+
+                {/* Bottom label */}
+                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Bottom entity */}
+                {drawEntitySymbol(lifeLineEnd + 20)}
+            </g>
+        );
+    }
+}
+
+@injectable()
+export class DatabaseNodeView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+
+        const headerH = 15;
+        const footerH = 15;
+
+        const cx = w / 2;
+
+        const drawDatabase = (offsetY: number) => {
+            const width = 30;
+            const height = 40;
+            const rx = width / 2;
+            const ry = 6;
+
+            const x = cx - rx;
+
+            return (
+                <g>
+                    {/* Rectangle without borders */}
+                    <rect
+                        x={x}
+                        y={offsetY}
+                        width={width}
+                        height={height - 6}
+                        fill="#5d4949"
+                        stroke="none"
+                        strokeWidth="1"
+                        rx={rx}
+                        ry="0"
+                    />
+
+                    {/* Left border of the rectangle */}
+                    <line
+                        x1={x}
+                        y1={offsetY}
+                        x2={x}
+                        y2={offsetY + height - 6}
+                        stroke="black"
+                        strokeWidth="1"
+                    />
+
+                    {/* Right border of the rectangle */}
+                    <line
+                        x1={x + width}
+                        y1={offsetY}
+                        x2={x + width}
+                        y2={offsetY + height - 6}
+                        stroke="black"
+                        strokeWidth="1"
+                    />
+
+                    {/* Top ellipse */}
+                    <ellipse
+                        cx={cx}
+                        cy={offsetY}
+                        rx={rx}
+                        ry={ry}
+                        stroke="black"
+                        fill="#5d4949"
+                    />
+
+                    {/* Half bottom ellipse */}
+                    <path
+                        d={`
+                            M ${cx - rx} ${offsetY + height - ry}
+                            A ${rx} ${ry} 0 0 0 ${cx + rx} ${offsetY + height - ry}
+                        `}
+                        stroke="black"
+                        fill="#5d4949"
+                    />
+                </g>
+            );
+        };
+
+        // Lifeline line coordinates to be between the two labels
+        const lifeLineStart = headerH + 5;
+        const lifeLineEnd = h - footerH - 5;
+
+        // Label position
+        const labelY = headerH;
+
+        return (
+            <g>
+                {/* Top database */}
+                {drawDatabase(labelY - 50)}
+
+                {/* Top label */}
+                <g transform={`translate(${cx}, ${labelY})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Lifeline */}
+                <line
+                    x1={cx}
+                    y1={lifeLineStart}
+                    x2={cx}
+                    y2={lifeLineEnd}
+                    stroke="black"
+                    stroke-dasharray="4 2"
+                />
+
+                {/* Bottom label */}
+                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                    {context.renderChildren(node)}
+                </g>
+
+                {/* Bottom database */}
+                {drawDatabase(lifeLineEnd + 25)}
+            </g>
+        );
+    }
+}
+
+@injectable()
+export class CollectionNodeView extends ShapeView {
+    override render(node: Readonly<GNode>, context: RenderingContext): VNode {
+        const w = node.size.width;
+        const totalH = node.size.height;
+
+        const headerH = 30;
+        const footerH = 30;
+
+        const lifeLineStart = headerH;
+        const lifeLineEnd = totalH - footerH;
+
+        return <g>
+            {/* Back rectangle */}
+            <rect
+                x={6}
+                y={-6}
+                width={w}
+                height={headerH}
+                class-sprotty-node={true}
+            />
+
+            {/* Front rectangle */}
+            <g>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH}/>
+                <g transform={`translate(${w / 2}, ${headerH / 2})`}>
+                    {context.renderChildren(node)}
+                </g>
+            </g>
+
+            {/* Lifeline */}
+            <line
+                x1={w / 2}
+                y1={lifeLineStart}
+                x2={w / 2}
+                y2={lifeLineEnd}
+                stroke="black"
+                stroke-dasharray="4 2"
+            />
+
+            {/* Back of bottom rectangle */}
+            <rect
+                x={6}
+                y={lifeLineEnd}
+                width={w}
+                height={headerH}
+                class-sprotty-node={true}
+            />
+
+            {/* Bottom rectangle */}
+            <g transform={`translate(0, ${lifeLineEnd + 6})`}>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH}/>
+                <g transform={`translate(${w / 2}, ${footerH / 2})`}>
+                    {context.renderChildren(node)}
+                </g>
+            </g>
+        </g>;
+    }
+}
+
+@injectable()
+export class QueueNodeView extends ShapeView {
+    override render(node: Readonly<GNode>, context: RenderingContext): VNode {
+        return (
+            <g>
+                {/* TODO */}
+            </g>
+        );
+    }
+}

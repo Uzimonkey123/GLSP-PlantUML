@@ -1,12 +1,10 @@
 import { injectable } from 'inversify';
 import {
-	GNode,
 	GEdge,
 	Point,
 	RenderingContext,
 	IViewArgs,
 	PolylineEdgeViewWithGapsOnIntersections,
-	ShapeView,
 	svg,
 	SEdgeImpl,
 	GLabelView,
@@ -35,6 +33,84 @@ export class HtmlLabelView extends GLabelView {
 				<tspan>{text}</tspan>
 			</text>
 		);
+	}
+}
+
+@injectable()
+export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersections {
+	protected override renderAdditionals(
+		edge: SEdgeImpl,
+		segments: Point[],
+		context: RenderingContext,
+		args? : IViewArgs
+	): VNode[] {
+
+		const additionals = super.renderAdditionals(edge, segments, context);
+
+		if (segments.length < 3) return additionals;
+
+		const interior = segments.slice(1, segments.length - 1);
+		if (interior.length < 2) return additionals;
+
+		const start = interior[0];
+		const end = interior[interior.length - 1];
+		// Center of the divider
+		const centerX = (start.x + end.x) / 2;
+		const centerY = (start.y + end.y) / 2;
+
+		// Label text
+		const label = context.renderChildren(edge, args);
+
+		const labelPadding = 4;
+		const fontSize = 11;
+		const textVNode = label[0]; // Get the first and only label
+		const textContent = String(textVNode.children ?? "");
+		const labelWidth = textContent.length * 4.5; // Calculate an approx. width of letters
+
+		additionals.push(
+			<g>
+				{/* Bottom line */}
+				<line
+					x1={start.x}
+					y1={centerY - 6}
+					x2={end.x}
+					y2={centerY - 6}
+					stroke="black"
+				/>
+
+				{/* Top line*/}
+				<line
+					x1={start.x}
+					y1={centerY - 9}
+					x2={end.x}
+					y2={centerY - 9}
+					stroke="black"
+				/>
+
+				{/* Label */}
+				<rect
+					x={centerX - labelWidth / 2 - labelPadding}
+					y={centerY - 15}
+					width={labelWidth + 2 * labelPadding}
+					height={fontSize + 4}
+					fill="#5d4949"
+					stroke="black"
+					stroke-width={2}
+				/>
+
+				<text
+					x={centerX}
+					y={centerY - 2}
+					text-anchor="middle"
+					alignment-baseline="middle"
+					font-size={fontSize}
+				>
+					{label}
+				</text>
+			</g>
+		);
+
+		return additionals;
 	}
 }
 
@@ -322,50 +398,4 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 			 );
 		 }
 	 }
-}
-
-@injectable()
-export class RectangularNodeView extends ShapeView {
-  	override render(
-		node: Readonly<GNode>, 
-		context: RenderingContext
-	): VNode {
-		const w = node.size.width;
-		const totalH = node.size.height;
-
-		const headerH = 30;
-		const footerH = 30;
-
-		// Lifeline between header and footer
-		const lifeLineStart = headerH;
-		const lifeLineEnd = totalH - footerH;
-
-		return <g>
-		{/* Top rectangle */}
-		<g>
-			<rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH}/>
-			<g transform={`translate(${w/2},${headerH/2})`}>
-			{context.renderChildren(node)}
-			</g>
-		</g>
-
-		{/* Dashed lifeline, auto‐size */}
-		<line
-			x1={w/2}
-			y1={lifeLineStart}
-			x2={w/2}
-			y2={lifeLineEnd}
-			stroke="black"
-			stroke-dasharray="4 2"
-		/>
-
-		{/* Bottom rectangle */}
-		<g transform={`translate(0, ${lifeLineEnd})`}>
-			<rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH}/>
-			<g transform={`translate(${w/2},${footerH/2})`}>
-				{context.renderChildren(node)}
-			</g>
-		</g>
-		</g>;
-	}
 }

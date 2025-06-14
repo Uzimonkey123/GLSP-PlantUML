@@ -31,13 +31,21 @@ import {
 } from '@eclipse-glsp/vscode-integration-webview';
 import {
     SequenceMessageEdgeView,
-    RectangularNodeView,
     SequenceMessageDelay,
     HtmlLabelView,
+    SequenceMessageDivider
+} from './sequence-views';
+
+import {
+    RectangularNodeView,
     ActorNodeView,
     BoundaryNodeView,
-    ControlNodeView, EntityNodeView, DatabaseNodeView, SequenceMessageDivider
-} from './sequence-views';
+    ControlNodeView,
+    EntityNodeView,
+    DatabaseNodeView,
+    CollectionNodeView,
+    QueueNodeView
+} from "./sequence-node-views";
 
 import { PlantUmlStartup } from './plantuml-startup';
 import { PlantUmlGLSPDiagramWidget } from './plantuml-diagram-widget'; 
@@ -78,6 +86,8 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "CONTROL", GNode, ControlNodeView);
         configureModelElement(context, "ENTITY", GNode, EntityNodeView);
         configureModelElement(context, "DATABASE", GNode, DatabaseNodeView);
+        configureModelElement(context, "COLLECTIONS", GNode, CollectionNodeView);
+        configureModelElement(context, "QUEUE", GNode, QueueNodeView);
 
         configureModelElement(context, "edge:delay", GEdge, SequenceMessageDelay);
         configureModelElement(context, "edge:divider", GEdge, SequenceMessageDivider);

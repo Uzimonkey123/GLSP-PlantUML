@@ -1,7 +1,7 @@
 rect.sprotty-node {
   fill: #5d4949;
-  stroke: #d0d0d0;
-  stroke-width: 1px;
+  stroke: black !important;
+  stroke-width: 1px !important;
 }
 
 path.sprotty-edge {
