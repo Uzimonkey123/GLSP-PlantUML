@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
 import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.sequencediagram.*;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
 
@@ -65,9 +67,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         String name = participant.getDisplay(false).get(0).toString();
         String type = participant.getType().toString();
         int order = participant.getOrder();
+        HColor background = participant.getColors().getColor(ColorType.BACK);
 
         if(!hasParticipant(name, model)) {
-            addParticipants(model.participants, new SequenceModel.SequenceNode(name, type, order));
+            addParticipants(model.participants, new SequenceModel.SequenceNode(name, type, order, background));
         }
     }
 

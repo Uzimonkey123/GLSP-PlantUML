@@ -55,6 +55,7 @@ public class SequenceModelFactory implements GModelFactory {
                     .id(p)
                     .layout("vbox")
                     .position(cursor, nodeY)
+                    .addArgument("background", node.getBackground())
                     .size(nodeWidth, totalHeight)
                     .add(new GLabelBuilder().text(p).build())
                     .build());

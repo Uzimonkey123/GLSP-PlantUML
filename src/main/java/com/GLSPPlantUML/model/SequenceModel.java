@@ -111,11 +111,13 @@ public class SequenceModel {
         private final String name;
         private final String type;
         private final int order;
+        private final HColor background;
 
-        public SequenceNode(String name, String type, int order) {
+        public SequenceNode(String name, String type, int order, HColor background) {
             this.name = name;
             this.type = type;
             this.order = order;
+            this.background = background;
         }
 
         public String getName() {
@@ -128,6 +130,10 @@ public class SequenceModel {
 
         public int getOrder() {
             return order;
+        }
+
+        public String getBackground() {
+            return this.background != null ? this.background.asString() : "#5d4949";
         }
     }
 
