@@ -50,9 +50,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
                 // Extract participants and messages with API
                 for (Event event : sd.events()) {
-                    if (event instanceof AbstractMessage msg) {
-                        System.err.println("Event: " + msg);
-                        AbstractMessageHandler(msg, model);
+                    if (event instanceof MessageExo msg) {
+                        MessageExoHandler(msg, model);
+                    }
+
+                    if (event instanceof Message msg) {
+                        MessageHandler(msg, model);
                     }
 
                     if(event instanceof Delay delay) {
@@ -79,7 +82,32 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
-    private void AbstractMessageHandler(AbstractMessage msg, SequenceModel model) {
+    private void MessageExoHandler(MessageExo msg, SequenceModel model) {
+        // TODO
+        MessageExoType type = msg.getType();
+        String from, to;
+        if (type.equals(MessageExoType.FROM_LEFT) || type.equals(MessageExoType.FROM_RIGHT)) {
+            from = "[";
+            to = msg.getParticipant().toString();
+        } else {
+            from = msg.getParticipant().toString();
+            to = "]";
+        }
+
+        String num = msg.getMessageNumber();
+        if(num == null) {
+            num = "";
+        }
+
+        String label = String.join(" ", msg.getLabel());
+
+        ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
+
+        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge", num, false));
+        System.err.println("Message: " + from + " -> " + to);
+    }
+
+    private void MessageHandler(Message msg, SequenceModel model) {
         String from = msg.getParticipant1().getDisplay(false).get(0).toString();
 
         String to = msg.getParticipant2().getDisplay(false).get(0).toString();
@@ -92,21 +120,22 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
 
         ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
+        boolean isSelf = msg.isSelfMessage();
 
         // Record message
-        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge", num));
+        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge", num, false, isSelf));
     }
 
     private void DelayHandler(Delay delay, SequenceModel model) {
         String label = delay.getText().get(0).toString();
 
-        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay", ""));
+        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay"));
     }
 
     private void DividerHandler(Divider div, SequenceModel model) {
         String label = div.getText().get(0).toString();
 
-        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:divider", ""));
+        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:divider"));
     }
 
     private boolean hasParticipant(String name, SequenceModel model) {

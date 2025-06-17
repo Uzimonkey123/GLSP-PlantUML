@@ -17,15 +17,37 @@ public class SequenceModel {
         private final String message;
         private final ArrowConfiguration arrowConfiguration;
         private final String messageType;
-        private final String numbering;
+        private String numbering = "";
+        private boolean isShort = false;
+        private boolean isSelf = false;
 
-        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType, String numbering) {
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType, String numbering, boolean isShort, boolean isSelf) {
             this.from = from;
             this.to = to;
             this.message = message;
             this.arrowConfiguration = arrowConfiguration;
             this.messageType = messageType;
             this.numbering = numbering;
+            this.isShort = isShort;
+            this.isSelf = isSelf;
+        }
+
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType) {
+            this.from = from;
+            this.to = to;
+            this.message = message;
+            this.arrowConfiguration = arrowConfiguration;
+            this.messageType = messageType;
+        }
+
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType, String numbering, boolean isShort) {
+            this.from = from;
+            this.to = to;
+            this.message = message;
+            this.arrowConfiguration = arrowConfiguration;
+            this.messageType = messageType;
+            this.numbering = numbering;
+            this.isShort = isShort;
         }
 
         public String getNumbering() {
@@ -94,7 +116,7 @@ public class SequenceModel {
         }
 
         public boolean isSelf() {
-            return this.from.equals(this.to);
+            return this.isSelf;
         }
 
         public String getColor() {
