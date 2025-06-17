@@ -1,5 +1,5 @@
 import {injectable} from "inversify";
-import {GNode, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
+import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
 
 /** @jsx svg */
@@ -8,10 +8,12 @@ import {VNode} from "snabbdom";
 export class RectangularNodeView extends ShapeView {
     override render(
         node: Readonly<GNode>,
-        context: RenderingContext
+        context: RenderingContext,
+        args?: IViewArgs
     ): VNode {
         const w = node.size.width;
         const totalH = node.size.height;
+        const background = (node as any).args?.background;
 
         const headerH = 30;
         const footerH = 30;
@@ -23,7 +25,7 @@ export class RectangularNodeView extends ShapeView {
         return <g>
             {/* Top rectangle */}
             <g>
-                <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH}/>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH} fill={background}/>
                 <g transform={`translate(${w/2},${headerH/2})`}>
                     {context.renderChildren(node)}
                 </g>
@@ -41,7 +43,7 @@ export class RectangularNodeView extends ShapeView {
 
             {/* Bottom rectangle */}
             <g transform={`translate(0, ${lifeLineEnd})`}>
-                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH}/>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
                 <g transform={`translate(${w/2},${footerH/2})`}>
                     {context.renderChildren(node)}
                 </g>
@@ -58,6 +60,7 @@ export class ActorNodeView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
+        const background = (node as any).args?.background;
 
         const headerH = 15;
         const footerH = 15;
@@ -71,7 +74,7 @@ export class ActorNodeView extends ShapeView {
         const drawStickman = (offsetY: number) => (
             <g transform={`translate(0, ${offsetY})`}>
                 {/* Head */}
-                <circle cx={cx} cy={headRadius} r={headRadius} stroke="black" fill="#5d4949" />
+                <circle cx={cx} cy={headRadius} r={headRadius} stroke="black" fill={background} />
                 {/* Body */}
                 <line x1={cx} y1={bodyStartY} x2={cx} y2={bodyEndY} stroke="black" />
                 {/* Arms */}
@@ -129,6 +132,7 @@ export class BoundaryNodeView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
+        const background = (node as any).args?.background;
 
         const headerH = 15;
         const footerH = 15;
@@ -166,7 +170,7 @@ export class BoundaryNodeView extends ShapeView {
                         cy={offsetY}
                         r={circleRadius}
                         stroke="black"
-                        fill="#5d4949"
+                        fill={background}
                     />
                 </g>
             );
@@ -219,6 +223,7 @@ export class ControlNodeView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
+        const background = (node as any).args?.background;
 
         const headerH = 15;
         const footerH = 15;
@@ -244,7 +249,7 @@ export class ControlNodeView extends ShapeView {
                         cy={offsetY}
                         r={circleRadius}
                         stroke="black"
-                        fill="#5d4949"
+                        fill={background}
                     />
 
                     {/* Arrowhead */}
@@ -307,6 +312,7 @@ export class EntityNodeView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
+        const background = (node as any).args?.background;
 
         const headerH = 15;
         const footerH = 15;
@@ -325,7 +331,7 @@ export class EntityNodeView extends ShapeView {
                         cy={offsetY}
                         r={circleRadius}
                         stroke="black"
-                        fill="#5d4949"
+                        fill={background}
                     />
 
                     {/* Line under the circle */}
@@ -387,6 +393,7 @@ export class DatabaseNodeView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
+        const background = (node as any).args?.background;
 
         const headerH = 15;
         const footerH = 15;
@@ -409,7 +416,7 @@ export class DatabaseNodeView extends ShapeView {
                         y={offsetY}
                         width={width}
                         height={height - 6}
-                        fill="#5d4949"
+                        fill={background}
                         stroke="none"
                         strokeWidth="1"
                         rx={rx}
@@ -443,7 +450,7 @@ export class DatabaseNodeView extends ShapeView {
                         rx={rx}
                         ry={ry}
                         stroke="black"
-                        fill="#5d4949"
+                        fill={background}
                     />
 
                     {/* Half bottom ellipse */}
@@ -453,7 +460,7 @@ export class DatabaseNodeView extends ShapeView {
                             A ${rx} ${ry} 0 0 0 ${cx + rx} ${offsetY + height - ry}
                         `}
                         stroke="black"
-                        fill="#5d4949"
+                        fill={background}
                     />
                 </g>
             );
@@ -503,6 +510,7 @@ export class CollectionNodeView extends ShapeView {
     override render(node: Readonly<GNode>, context: RenderingContext): VNode {
         const w = node.size.width;
         const totalH = node.size.height;
+        const background = (node as any).args?.background;
 
         const headerH = 30;
         const footerH = 30;
@@ -517,12 +525,13 @@ export class CollectionNodeView extends ShapeView {
                 y={-6}
                 width={w}
                 height={headerH}
+                fill={background}
                 class-sprotty-node={true}
             />
 
             {/* Front rectangle */}
             <g>
-                <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH}/>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH} fill={background}/>
                 <g transform={`translate(${w / 2}, ${headerH / 2})`}>
                     {context.renderChildren(node)}
                 </g>
@@ -544,12 +553,13 @@ export class CollectionNodeView extends ShapeView {
                 y={lifeLineEnd}
                 width={w}
                 height={headerH}
+                fill={background}
                 class-sprotty-node={true}
             />
 
             {/* Bottom rectangle */}
             <g transform={`translate(0, ${lifeLineEnd + 6})`}>
-                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH}/>
+                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
                 <g transform={`translate(${w / 2}, ${footerH / 2})`}>
                     {context.renderChildren(node)}
                 </g>
@@ -561,9 +571,100 @@ export class CollectionNodeView extends ShapeView {
 @injectable()
 export class QueueNodeView extends ShapeView {
     override render(node: Readonly<GNode>, context: RenderingContext): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+        const background = (node as any).args?.background;
+
+        const headerH = 30;
+        const footerH = 30;
+
+        const drawQueue = (offsetY: number) => {
+            const cy = offsetY;
+            const rx = 6; // Radius for the side ellipses
+            const ry = 7;
+
+            const cylinderBodyX = 3;
+            const cylinderBodyWidth = w - 2 * rx;
+
+            return (
+                <g>
+                    {/* Left half ellipse */}
+                    <path
+                        d={`
+                            M ${3} ${cy - ry}
+                            A ${rx} ${ry} 0 0 0 ${3} ${cy + ry}
+                        `}
+                        fill={background}
+                        stroke="black"
+                    />
+
+                    {/* Rectangle without borders */}
+                    <rect
+                        x={cylinderBodyX}
+                        y={cy - ry}
+                        width={cylinderBodyWidth + 5}
+                        height={2 * ry}
+                        fill={background}
+                        stroke="none"
+                    />
+
+                    {/* Top line of the rectangle*/}
+                    <line
+                        x1={cylinderBodyX}
+                        y1={cy - ry}
+                        x2={cylinderBodyWidth + 5}
+                        y2={cy - ry}
+                        stroke="black"
+                    />
+
+                    {/* Bottom line of the rectangle*/}
+                    <line
+                        x1={cylinderBodyX}
+                        y1={cy + ry}
+                        x2={cylinderBodyWidth + 5}
+                        y2={cy + ry}
+                        stroke="black"
+                    />
+
+                    {/* Right ellipse */}
+                    <ellipse
+                        cx={w - rx}
+                        cy={cy}
+                        rx={rx}
+                        ry={ry}
+                        fill={background}
+                        stroke="black"
+                    />
+
+                    {/* Centered label */}
+                    <g transform={`translate(${w / 2}, ${cy})`}>
+                        {context.renderChildren(node)}
+                    </g>
+                </g>
+            );
+        }
+
+        // Lifeline line coordinates to be between the two labels
+        const lifeLineStart = headerH - 8;
+        const lifeLineEnd = h - footerH + 15;
+
         return (
             <g>
-                {/* TODO */}
+                {/* Top queue symbol */}
+                {drawQueue(15)}
+
+                {/* Dashed lifeline, auto‐size */}
+                <line
+                    x1={w/2}
+                    y1={lifeLineStart}
+                    x2={w/2}
+                    y2={lifeLineEnd}
+                    stroke="black"
+                    stroke-dasharray="4 2"
+                />
+
+                {/*Bottom queue symbol */}
+                {drawQueue(lifeLineEnd + 5)}
             </g>
         );
     }
