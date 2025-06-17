@@ -37,6 +37,11 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             Diagram d = block.getDiagram();
             if (d instanceof SequenceDiagram sd) {
 
+                // Check for complete diagram related attributes
+                handleHeader(model, sd);
+                handleFooter(model, sd);
+                handleTitle(model, sd);
+
                 // Record all participants, even if unused
                 Collection<Participant> participants = sd.participants();
                 for (Participant participant : participants) {
@@ -125,6 +130,36 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         // Add to last position
         participants.add(node);
+    }
+
+    void handleTitle(SequenceModel model, SequenceDiagram diagram) {
+        if (diagram.getTitle() != null
+                && diagram.getTitle().getDisplay() != null
+                && diagram.getTitle().getDisplay().size() > 0) {
+            model.title = diagram.getTitle().getDisplay().get(0).toString();
+        } else {
+            model.title = "";
+        }
+    }
+
+    void handleHeader(SequenceModel model, SequenceDiagram diagram) {
+        if (diagram.getHeader() != null
+                && diagram.getHeader().getDisplay() != null
+                && diagram.getHeader().getDisplay().size() > 0) {
+            model.header = diagram.getHeader().getDisplay().get(0).toString();
+        } else {
+            model.header = "";
+        }
+    }
+
+    void handleFooter(SequenceModel model, SequenceDiagram diagram) {
+        if (diagram.getFooter() != null
+                && diagram.getFooter().getDisplay() != null
+                && diagram.getFooter().getDisplay().size() > 0) {
+            model.footer = diagram.getFooter().getDisplay().get(0).toString();
+        } else {
+            model.footer = "";
+        }
     }
 }
 

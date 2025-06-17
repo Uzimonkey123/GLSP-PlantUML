@@ -109,6 +109,24 @@ public class SequenceModelFactory implements GModelFactory {
             elements.add(eb.build());
         }
 
+        elements.add(new GLabelBuilder("label:header")
+                .id("header")
+                .position(cursor / 2, -40)
+                .text(model.header)
+                .build());
+
+        elements.add(new GLabelBuilder("label:title")
+                .id("title")
+                .position(cursor / 2, -20)
+                .text(model.title)
+                .build());
+
+        elements.add(new GLabelBuilder("label:footer")
+                .id("footer")
+                .position(cursor / 2, totalHeight + 80)
+                .text(model.footer)
+                .build());
+
         // Build the graph
         GGraph newGModel = new GGraphBuilder() //
                 .id("sequence-diagram") //

@@ -140,5 +140,10 @@ public class SequenceModel {
     public List<SequenceNode> participants = new ArrayList<>();
     public List<SequenceMessage> messages = new ArrayList<>();
 
+    public String footer;
+    public String header;
+    public String title;
+
+
     public SequenceModel() {}
 }
