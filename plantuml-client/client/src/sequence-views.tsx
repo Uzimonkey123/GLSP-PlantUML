@@ -399,3 +399,35 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		 }
 	 }
 }
+
+@injectable()
+export class SequenceHeaderFooter extends GLabelView {
+	override render(label: Readonly<GLabel>,
+					context: RenderingContext,
+					args?: IViewArgs): VNode {
+		const text = label.text ?? '';
+
+		return (
+			<text text-anchor="middle"
+			      fill="grey"
+			      font-size="10">
+				<tspan fill="grey" font-size="10">{text}</tspan>
+			</text>
+		);
+	}
+}
+
+@injectable()
+export class SequenceTitle extends GLabelView {
+	override render(label: Readonly<GLabel>,
+					context: RenderingContext,
+					args?: IViewArgs): VNode {
+		const text = label.text ?? '';
+
+		return (
+			<text class-sprotty-label={true} text-anchor="middle">
+				<tspan>{text}</tspan>
+			</text>
+		);
+	}
+}
