@@ -37,7 +37,6 @@ public class SequenceModelFactory implements GModelFactory {
 
         double cursor = 40; // Start of the first node
         double gap = Math.max(40, getMaxMessageLength(model));
-        System.err.println(gap);
 
         Map<String, Double> centre = new HashMap<>(); // Map to store the middle of all nodes for lifeline
         List<GModelElement> elements = new ArrayList<>();
@@ -135,11 +134,13 @@ public class SequenceModelFactory implements GModelFactory {
             targetId = routingTwo;
             x1 = msg.getFrom().equals("[") ? 0 : cursor;
             x2 = centre.get(routingTwo);
+
         } else if (outgoing) {
             sourceId = routingOne;
             targetId = "]";
             x1 = centre.get(routingOne);
             x2 = msg.getTo().equals("]") ? cursor : 0;
+
         } else {
             sourceId = routingOne;
             targetId = routingTwo;
@@ -179,8 +180,13 @@ public class SequenceModelFactory implements GModelFactory {
         }
 
         if (incoming || outgoing) {
-            eb.addArgument("incoming", true);
+            eb.addArgument("incoming", incoming);
+            eb.addArgument("outgoing", outgoing);
             eb.addArgument("isShort", msg.isShort());
+
+            // For short arrows
+            eb.addArgument("fromX", x1);
+            eb.addArgument("toX", x2);
         }
 
         elements.add(eb.build());

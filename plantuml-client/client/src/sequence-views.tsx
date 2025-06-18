@@ -220,6 +220,8 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		this.end = interior[interior.length - 1];
 
 		this.self = (edge.args?.self as boolean) ?? false;
+		const incoming = (edge.args?.incoming as boolean) ?? false;
+		const outgoing = (edge.args?.outgoing as boolean) ?? false;
 
 		// Getting heads, parts and style for a single arrow
 		this.style = (edge.args?.style as string) ?? 'solid';
@@ -236,7 +238,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		if (this.circleEndPart !== "none") this.circleEnd = true;
 
 		if(!this.self) {
-			this.drawSimpleArrow(additionals);
+			incoming || outgoing
+				? this.drawOutInArrow(additionals, edge, incoming)
+				: this.drawSimpleArrow(additionals);
 		} else {
 			this.drawSelfArrow(additionals);
 		}
@@ -244,6 +248,79 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		this.placeLabel(context, additionals, edge, args);
 		return additionals;
 	 }
+
+	private drawOutInArrow(additionals: VNode[], edge: GEdge, incoming: boolean) {
+		 // Additional arguments to get distance between two nodes who have short arrows
+		const fromX = edge.args?.fromX as number;
+		const toX = edge.args?.toX as number;
+		const short = (edge.args?.isShort as boolean) ?? false;
+
+		// Default lengths
+		let drawStartX = this.start.x;
+		let drawEndX = this.end.x;
+		let drawStartY = this.start.y;
+		let drawEndY = this.end.y;
+
+		// Check for short arrow, since they start between the given nodes
+		if (short) {
+			if (incoming) {
+				drawStartX = (fromX + toX) / 2;
+				drawEndX = this.end.x;
+			} else {
+				drawStartX = this.start.x;
+				drawEndX = (fromX + toX) / 2;
+			}
+		}
+
+		const dx = drawEndX - drawStartX;
+		const dy = drawEndY - drawStartY;
+		const norm = Math.hypot(dx, dy) || 1;
+
+		const strokeWidth = this.style === 'bold' ? 2.5 : 1.5;
+		const dashed = this.style === 'dotted' ? '2 2' : undefined;
+
+		// Setting offset according to if needed to start or end earlier
+		const lineStartOffset = this.headStart === 'cross' ? -10 : 0;
+		const lineEndOffset = this.headEnd === 'cross' ? 10 : 0;
+
+		const lineStartX = drawStartX - (dx / norm) * lineStartOffset;
+		const lineStartY = drawStartY - (dy / norm) * lineStartOffset;
+
+		const lineEndX = drawEndX - (dx / norm) * lineEndOffset;
+		const lineEndY = drawEndY - (dy / norm) * lineEndOffset;
+
+		additionals.unshift(
+			<path
+				d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
+				stroke={this.arrColor}
+				strokeWidth={strokeWidth}
+				{...(dashed ? { 'stroke-dasharray': dashed } : {})}
+				marker-end="none"
+				fill="none"
+				class-sprotty-edge={true}
+			/>
+		);
+
+		// Calculation of angle of the arrow + setting the shift according to it
+		const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+		const shift = 10;
+
+		// Saving new end and start arrow positions according to side they are facing
+		const endArrowPos = {
+			x: drawEndX + (dx === 0 ? 0 : dx > 0 ? -shift : shift),
+			y: drawEndY
+		};
+		const startArrowPos = {
+			x: drawStartX + (dx === 0 ? 0 : dx > 0 ? shift : -shift),
+			y: drawStartY
+		};
+
+		this.drawHead(this.headStart, startArrowPos, angle + 180, "start", this.circleStart, additionals, strokeWidth);
+		this.drawHead(this.headEnd, endArrowPos, angle, "end", this.circleEnd, additionals, strokeWidth);
+
+		if (this.circleStart) this.drawCircle({ x: drawStartX, y: drawStartY }, additionals);
+		if (this.circleEnd) this.drawCircle({ x: drawEndX, y: drawEndY }, additionals);
+	}
 
 	 private drawSelfArrow(additionals: VNode[]) {
 		 const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
