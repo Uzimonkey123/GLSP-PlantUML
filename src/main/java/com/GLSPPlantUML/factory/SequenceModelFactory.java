@@ -63,50 +63,27 @@ public class SequenceModelFactory implements GModelFactory {
             cursor += nodeWidth + gap;
         }
 
+        elements.add(new GNodeBuilder()
+                .id("[")
+                .layout("vbox")
+                .position(0, 0)
+                .size(0, 0)
+                .build());
+        centre.put("[", 0.0);
+
+        elements.add(new GNodeBuilder()
+                .id("]")
+                .layout("vbox")
+                .position(cursor, 0)
+                .size(0, 0)
+                .build());
+        centre.put("]", cursor);
+
         // Add messages as edges with proper text, source and target
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceModel.SequenceMessage msg = model.messages.get(i);
             double y = firstMsgY + i * msgGap;
-            String routingOne, two;
-            if(msg.getType().equals("edge:delay") || msg.getType().equals("edge:divider")) {
-                routingOne = model.participants.getFirst().getName();
-                two = model.participants.getLast().getName();
-            } else {
-                routingOne = msg.getFrom();
-                two = msg.getTo();
-            }
-
-            GEdgeBuilder eb = new GEdgeBuilder(msg.getType())
-                    .id("msg-" + i)
-                    .sourceId(routingOne)
-                    .targetId(two)
-                    .addRoutingPoint(point(centre.get(routingOne), y))
-                    .addRoutingPoint(point(centre.get(two), y))
-                    .add(new GLabelBuilder("label:html")
-                            .text(msg.getMessage())
-                            .addArgument("numbering", msg.getNumbering())
-                            .edgePlacement(new GEdgePlacementBuilder()
-                                    .side(GConstants.EdgeSide.TOP) // above the line
-                                    .position(0.5d) // center
-                                    .offset(8d)
-                                    .rotate(false)
-                                    .build())
-                            .build());
-
-            // Additional arguments to get every side and aspect of the arrow
-            if (msg.getType().equals("edge")) {
-                eb.addArgument("headStart", msg.getStartHead());
-                eb.addArgument("headEnd", msg.getEndHead());
-                eb.addArgument("partStart", msg.getStartPart());
-                eb.addArgument("partEnd", msg.getEndPart());
-                eb.addArgument("circleStart", msg.getStartDecor());
-                eb.addArgument("circleEnd", msg.getEndDecor());
-                eb.addArgument("style", msg.isDotted() ? "dotted" : "solid");
-                eb.addArgument("self", msg.isSelf());
-                eb.addArgument("arrColor", msg.getColor());
-            }
-
-            elements.add(eb.build());
+            addEdges(msg, elements, y, model, cursor, centre, i);
         }
 
         elements.add(new GLabelBuilder("label:header")
@@ -136,6 +113,77 @@ public class SequenceModelFactory implements GModelFactory {
         // Update model state
         modelState.updateRoot(newGModel);
         modelState.getRoot().setRevision(-1);
+    }
+
+    private void addEdges(SequenceModel.SequenceMessage msg, List<GModelElement> elements, double y,
+                          SequenceModel model, double cursor, Map<String, Double> centre, int msgI) {
+        String sourceId, targetId;
+        double x1, x2;
+
+        String routingOne = msg.getFrom();
+        String routingTwo = msg.getTo();
+        if (msg.getType().equals("edge:delay") || msg.getType().equals("edge:divider")) {
+            routingOne = model.participants.getFirst().getName();
+            routingTwo = model.participants.getLast().getName();
+        }
+
+        boolean incoming = msg.decideWay().equals("incoming");
+        boolean outgoing = msg.decideWay().equals("outgoing");
+
+        if (incoming) {
+            sourceId = "[";
+            targetId = routingTwo;
+            x1 = msg.getFrom().equals("[") ? 0 : cursor;
+            x2 = centre.get(routingTwo);
+        } else if (outgoing) {
+            sourceId = routingOne;
+            targetId = "]";
+            x1 = centre.get(routingOne);
+            x2 = msg.getTo().equals("]") ? 0 : cursor;
+        } else {
+            sourceId = routingOne;
+            targetId = routingTwo;
+            x1 = centre.get(routingOne);
+            x2 = centre.get(routingTwo);
+        }
+
+        GEdgeBuilder eb;
+        eb = new GEdgeBuilder(msg.getType())
+                .id("msg-" + msgI)
+                .sourceId(sourceId)
+                .targetId(targetId)
+                .addRoutingPoint(point(x1, y))
+                .addRoutingPoint(point(x2, y))
+                .add(new GLabelBuilder("label:html")
+                        .text(msg.getMessage())
+                        .addArgument("numbering", msg.getNumbering())
+                        .edgePlacement(new GEdgePlacementBuilder()
+                                .side(GConstants.EdgeSide.TOP) // above the line
+                                .position(0.5d) // center
+                                .offset(8d)
+                                .rotate(false)
+                                .build())
+                        .build());
+
+        // Additional arguments to get every side and aspect of the arrow
+        if (msg.getType().equals("edge")) {
+            eb.addArgument("headStart", msg.getStartHead());
+            eb.addArgument("headEnd", msg.getEndHead());
+            eb.addArgument("partStart", msg.getStartPart());
+            eb.addArgument("partEnd", msg.getEndPart());
+            eb.addArgument("circleStart", msg.getStartDecor());
+            eb.addArgument("circleEnd", msg.getEndDecor());
+            eb.addArgument("style", msg.isDotted() ? "dotted" : "solid");
+            eb.addArgument("self", msg.isSelf());
+            eb.addArgument("arrColor", msg.getColor());
+            eb.addArgument("shortType", "none");
+        }
+
+        if (incoming || outgoing) {
+            eb.addArgument("incoming", true);
+        }
+
+        elements.add(eb.build());
     }
 
     private double getMaxMessageLength(SequenceModel model) {

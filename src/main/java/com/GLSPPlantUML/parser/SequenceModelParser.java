@@ -83,16 +83,16 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageExoHandler(MessageExo msg, SequenceModel model) {
-        // TODO
-        MessageExoType type = msg.getType();
-        String from, to;
-        if (type.equals(MessageExoType.FROM_LEFT) || type.equals(MessageExoType.FROM_RIGHT)) {
-            from = "[";
-            to = msg.getParticipant().toString();
-        } else {
-            from = msg.getParticipant().toString();
-            to = "]";
-        }
+        String participant = msg.getParticipant().toString();
+
+        record Direction(String from, String to, boolean incoming, boolean outgoing) {}
+
+        Direction exoMsg = switch (msg.getType()) {
+            case FROM_LEFT -> new Direction("[", participant, true, false);
+            case FROM_RIGHT -> new Direction("]", participant, true, false);
+            case TO_LEFT -> new Direction(participant, "[", false, true);
+            case TO_RIGHT -> new Direction(participant, "]", false, true);
+        };
 
         String num = msg.getMessageNumber();
         if(num == null) {
@@ -100,11 +100,11 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
 
         String label = String.join(" ", msg.getLabel());
-
         ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
 
-        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge", num, false));
-        System.err.println("Message: " + from + " -> " + to);
+        model.messages.add(new SequenceModel.SequenceMessage(
+                exoMsg.from(), exoMsg.to(), label, arrowConfig, "edge", num,
+                false, exoMsg.incoming(), exoMsg.outgoing()));
     }
 
     private void MessageHandler(Message msg, SequenceModel model) {
@@ -127,7 +127,11 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void DelayHandler(Delay delay, SequenceModel model) {
-        String label = delay.getText().get(0).toString();
+        String label = "";
+        if(delay.getText() != null
+            && delay.getText().size() > 0) {
+            label = delay.getText().get(0).toString();
+        }
 
         model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay"));
     }

@@ -20,8 +20,11 @@ public class SequenceModel {
         private String numbering = "";
         private boolean isShort = false;
         private boolean isSelf = false;
+        private boolean incoming = false;
+        private boolean outgoing = false;
 
-        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType, String numbering, boolean isShort, boolean isSelf) {
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration,
+                               String messageType, String numbering, boolean isShort, boolean isSelf) {
             this.from = from;
             this.to = to;
             this.message = message;
@@ -32,7 +35,8 @@ public class SequenceModel {
             this.isSelf = isSelf;
         }
 
-        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType) {
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration,
+                               String messageType) {
             this.from = from;
             this.to = to;
             this.message = message;
@@ -40,7 +44,8 @@ public class SequenceModel {
             this.messageType = messageType;
         }
 
-        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration, String messageType, String numbering, boolean isShort) {
+        public SequenceMessage(String from, String to, String message, ArrowConfiguration arrowConfiguration,
+                               String messageType, String numbering, boolean isShort, boolean incoming, boolean outgoing) {
             this.from = from;
             this.to = to;
             this.message = message;
@@ -48,6 +53,8 @@ public class SequenceModel {
             this.messageType = messageType;
             this.numbering = numbering;
             this.isShort = isShort;
+            this.incoming = incoming;
+            this.outgoing = outgoing;
         }
 
         public String getNumbering() {
@@ -126,6 +133,13 @@ public class SequenceModel {
             }
 
             return color.asString();
+        }
+
+        public String decideWay() {
+            if (this.incoming) return "incoming";
+            if (this.outgoing) return "outgoing";
+
+            return "normal";
         }
     }
 
