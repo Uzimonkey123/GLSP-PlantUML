@@ -83,7 +83,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageExoHandler(MessageExo msg, SequenceModel model) {
-        String participant = msg.getParticipant().toString();
+        String participant = msg.getParticipant().getDisplay(false).get(0).toString();
 
         record Direction(String from, String to, boolean incoming, boolean outgoing) {}
 

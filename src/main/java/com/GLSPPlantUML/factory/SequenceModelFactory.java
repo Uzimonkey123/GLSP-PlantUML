@@ -66,16 +66,16 @@ public class SequenceModelFactory implements GModelFactory {
         elements.add(new GNodeBuilder()
                 .id("[")
                 .layout("vbox")
-                .position(0, 0)
-                .size(0, 0)
+                .position(0, nodeY)
+                .size(0, totalHeight)
                 .build());
         centre.put("[", 0.0);
 
         elements.add(new GNodeBuilder()
                 .id("]")
                 .layout("vbox")
-                .position(cursor, 0)
-                .size(0, 0)
+                .position(cursor, nodeY)
+                .size(0, totalHeight)
                 .build());
         centre.put("]", cursor);
 
@@ -139,7 +139,7 @@ public class SequenceModelFactory implements GModelFactory {
             sourceId = routingOne;
             targetId = "]";
             x1 = centre.get(routingOne);
-            x2 = msg.getTo().equals("]") ? 0 : cursor;
+            x2 = msg.getTo().equals("]") ? cursor : 0;
         } else {
             sourceId = routingOne;
             targetId = routingTwo;
