@@ -141,6 +141,10 @@ public class SequenceModel {
 
             return "normal";
         }
+
+        public boolean isShort() {
+            return this.isShort;
+        }
     }
 
     public static class SequenceNode {

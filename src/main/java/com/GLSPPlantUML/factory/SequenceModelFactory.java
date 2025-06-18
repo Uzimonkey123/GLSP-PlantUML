@@ -176,11 +176,11 @@ public class SequenceModelFactory implements GModelFactory {
             eb.addArgument("style", msg.isDotted() ? "dotted" : "solid");
             eb.addArgument("self", msg.isSelf());
             eb.addArgument("arrColor", msg.getColor());
-            eb.addArgument("shortType", "none");
         }
 
         if (incoming || outgoing) {
             eb.addArgument("incoming", true);
+            eb.addArgument("isShort", msg.isShort());
         }
 
         elements.add(eb.build());

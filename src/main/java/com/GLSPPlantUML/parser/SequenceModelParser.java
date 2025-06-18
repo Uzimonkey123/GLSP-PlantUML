@@ -94,6 +94,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             case TO_RIGHT -> new Direction(participant, "]", false, true);
         };
 
+        boolean isShort = msg.isShortArrow();
         String num = msg.getMessageNumber();
         if(num == null) {
             num = "";
@@ -104,7 +105,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         model.messages.add(new SequenceModel.SequenceMessage(
                 exoMsg.from(), exoMsg.to(), label, arrowConfig, "edge", num,
-                false, exoMsg.incoming(), exoMsg.outgoing()));
+                isShort, exoMsg.incoming(), exoMsg.outgoing()));
     }
 
     private void MessageHandler(Message msg, SequenceModel model) {
