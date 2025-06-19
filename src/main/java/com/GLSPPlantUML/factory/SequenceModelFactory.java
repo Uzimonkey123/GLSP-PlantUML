@@ -1,6 +1,8 @@
 package com.GLSPPlantUML.factory;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
+import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.state.SequenceModelState;
 import jakarta.inject.Inject;
 import org.eclipse.glsp.graph.GGraph;
@@ -17,6 +19,9 @@ import java.util.Map;
 import static org.eclipse.glsp.graph.util.GraphUtil.point;
 
 public class SequenceModelFactory implements GModelFactory {
+    private Map<String, Double> centre;
+    private Map<String, Double> halfWidth;
+    private List<GModelElement> elements;
 
     @Inject
     protected SequenceModelState modelState;
@@ -38,70 +43,48 @@ public class SequenceModelFactory implements GModelFactory {
         double cursor = 40; // Start of the first node
         double gap = Math.max(40, getMaxMessageLength(model));
 
-        Map<String, Double> centre = new HashMap<>(); // Map to store the middle of all nodes for lifeline
-        List<GModelElement> elements = new ArrayList<>();
+        this.centre = new HashMap<>(); // Map to store the middle of all nodes for lifeline
+        this.halfWidth = new HashMap<>();
+        this.elements = new ArrayList<>();
 
         // Add participants as nodes to the list
-        for (SequenceModel.SequenceNode node: model.participants) {
+        for (SequenceNode node: model.participants) {
             String p = node.getName();
             double textWidth = p.length() * 8;
             double nodeWidth = textWidth + 10 * 2;
 
             double centreX = cursor + nodeWidth / 2;
             centre.put(p, centreX);
+            halfWidth.put(p, nodeWidth / 2);
+
+            int creationIndex = node.isCreatedNode() ? node.getCreatedIndex() : 0;
+            double yOffset = creationIndex * msgGap;
+            double nodeStartY = nodeY + yOffset;
 
             elements.add(new GNodeBuilder(node.getType())
                     .id(p)
                     .layout("vbox")
-                    .position(cursor, nodeY)
+                    .position(cursor, nodeStartY)
                     .addArgument("background", node.getBackground())
-                    .size(nodeWidth, totalHeight)
+                    .size(nodeWidth, totalHeight - yOffset)
                     .add(new GLabelBuilder().text(p).build())
                     .build());
 
             cursor += nodeWidth + gap;
         }
 
-        elements.add(new GNodeBuilder()
-                .id("[")
-                .layout("vbox")
-                .position(0, nodeY)
-                .size(0, totalHeight)
-                .build());
-        centre.put("[", 0.0);
-
-        elements.add(new GNodeBuilder()
-                .id("]")
-                .layout("vbox")
-                .position(cursor, nodeY)
-                .size(0, totalHeight)
-                .build());
-        centre.put("]", cursor);
+        // Add invisible nodes for incoming or outgoing messages
+        generateInvisibleNodes(cursor, nodeY, totalHeight);
 
         // Add messages as edges with proper text, source and target
         for (int i = 0; i < model.messages.size(); i++) {
-            SequenceModel.SequenceMessage msg = model.messages.get(i);
+            SequenceMessage msg = model.messages.get(i);
             double y = firstMsgY + i * msgGap;
-            addEdges(msg, elements, y, model, cursor, centre, i);
+            addEdges(msg, y, model, cursor);
         }
 
-        elements.add(new GLabelBuilder("label:header")
-                .id("header")
-                .position(cursor / 2, -40)
-                .text(model.header)
-                .build());
-
-        elements.add(new GLabelBuilder("label:title")
-                .id("title")
-                .position(cursor / 2, -20)
-                .text(model.title)
-                .build());
-
-        elements.add(new GLabelBuilder("label:footer")
-                .id("footer")
-                .position(cursor / 2, totalHeight + 80)
-                .text(model.footer)
-                .build());
+        // Add page details like header, title, footer
+        addPageDetails(model, cursor, totalHeight);
 
         // Build the graph
         GGraph newGModel = new GGraphBuilder() //
@@ -114,8 +97,7 @@ public class SequenceModelFactory implements GModelFactory {
         modelState.getRoot().setRevision(-1);
     }
 
-    private void addEdges(SequenceModel.SequenceMessage msg, List<GModelElement> elements, double y,
-                          SequenceModel model, double cursor, Map<String, Double> centre, int msgI) {
+    private void addEdges(SequenceMessage msg, double y, SequenceModel model, double cursor) {
         String sourceId, targetId;
         double x1, x2;
 
@@ -150,7 +132,7 @@ public class SequenceModelFactory implements GModelFactory {
 
         GEdgeBuilder eb;
         eb = new GEdgeBuilder(msg.getType())
-                .id("msg-" + msgI)
+                .id(msg.getMsgId())
                 .sourceId(sourceId)
                 .targetId(targetId)
                 .addRoutingPoint(point(x1, y))
@@ -177,6 +159,9 @@ public class SequenceModelFactory implements GModelFactory {
             eb.addArgument("style", msg.isDotted() ? "dotted" : "solid");
             eb.addArgument("self", msg.isSelf());
             eb.addArgument("arrColor", msg.getColor());
+
+            eb.addArgument("creating", msg.isCreating());
+            eb.addArgument("toWidth", halfWidth.get(targetId));
         }
 
         if (incoming || outgoing) {
@@ -192,14 +177,51 @@ public class SequenceModelFactory implements GModelFactory {
         elements.add(eb.build());
     }
 
+    private void generateInvisibleNodes(double cursor, double nodeY, double totalHeight) {
+        elements.add(new GNodeBuilder()
+                .id("[")
+                .layout("vbox")
+                .position(0, nodeY)
+                .size(0, totalHeight)
+                .build());
+        centre.put("[", 0.0);
+
+        elements.add(new GNodeBuilder()
+                .id("]")
+                .layout("vbox")
+                .position(cursor, nodeY)
+                .size(0, totalHeight)
+                .build());
+        centre.put("]", cursor);
+    }
+
+    private void addPageDetails(SequenceModel model, double cursor, double totalHeight) {
+        elements.add(new GLabelBuilder("label:header")
+                .id("header")
+                .position(cursor / 2, -40)
+                .text(model.header)
+                .build());
+
+        elements.add(new GLabelBuilder("label:title")
+                .id("title")
+                .position(cursor / 2, -20)
+                .text(model.title)
+                .build());
+
+        elements.add(new GLabelBuilder("label:footer")
+                .id("footer")
+                .position(cursor / 2, totalHeight + 80)
+                .text(model.footer)
+                .build());
+    }
+
     private double getMaxMessageLength(SequenceModel model) {
         double charWidth = 4;
         double padding = 5;
 
         double maxWidth = 0;
-        for (SequenceModel.SequenceMessage msg : model.messages) {
+        for (SequenceMessage msg : model.messages) {
             int len = msg.getMessage() != null ? msg.getMessage().length() + msg.getNumbering().length() : 0;
-            System.err.println(msg.getMessage() + " " + len);
             double width = charWidth * len + padding;
             if (maxWidth < width) {
                 maxWidth = width;

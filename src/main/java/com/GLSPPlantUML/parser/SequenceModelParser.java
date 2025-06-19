@@ -1,6 +1,8 @@
 package com.GLSPPlantUML.parser;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
+import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
@@ -65,6 +67,11 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     if (event instanceof Divider div) {
                         DividerHandler(div, model);
                     }
+
+                    if(event instanceof LifeEvent le) {
+                        LifeEventHandler(le, model);
+                    }
+
                 }
             }
         }
@@ -78,7 +85,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         HColor background = participant.getColors().getColor(ColorType.BACK);
 
         if(!hasParticipant(name, model)) {
-            addParticipants(model.participants, new SequenceModel.SequenceNode(name, type, order, background));
+            addParticipants(model.participants, new SequenceNode(name, type, order, background, false));
         }
     }
 
@@ -103,8 +110,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         String label = String.join(" ", msg.getLabel());
         ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
 
-        model.messages.add(new SequenceModel.SequenceMessage(
-                exoMsg.from(), exoMsg.to(), label, arrowConfig, "edge", num,
+        String msgId = "msg-" + model.messages.size();
+
+        model.messages.add(new SequenceMessage(
+                msgId, exoMsg.from(), exoMsg.to(), label, arrowConfig, "edge", num,
                 isShort, exoMsg.incoming(), exoMsg.outgoing()));
     }
 
@@ -123,8 +132,11 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
         boolean isSelf = msg.isSelfMessage();
 
+        String msgId = "msg-" + model.messages.size();
+
         // Record message
-        model.messages.add(new SequenceModel.SequenceMessage(from, to, label, arrowConfig, "edge", num, false, isSelf));
+        model.messages.add(new SequenceMessage(msgId, msg.isCreate(), from, to, label, arrowConfig,
+                "edge", num, false, isSelf));
     }
 
     private void DelayHandler(Delay delay, SequenceModel model) {
@@ -134,17 +146,36 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             label = delay.getText().get(0).toString();
         }
 
-        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:delay"));
+        String msgId = "msg-" + model.messages.size();
+
+        model.messages.add(new SequenceMessage(msgId, null, null, label,
+                null, "edge:delay"));
     }
 
     private void DividerHandler(Divider div, SequenceModel model) {
         String label = div.getText().get(0).toString();
 
-        model.messages.add(new SequenceModel.SequenceMessage(null, null, label, null, "edge:divider"));
+        String msgId = "msg-" + model.messages.size();
+
+        model.messages.add(new SequenceMessage(msgId, null, null, label,
+                null, "edge:divider"));
+    }
+
+    private void LifeEventHandler(LifeEvent le, SequenceModel model) {
+        // Temp code for dealing only with the CREATE life event
+        if (le.getType() == LifeEventType.CREATE) {
+            String participant = le.getParticipant().getDisplay(false).get(0).toString();
+            for(SequenceNode node : model.participants) {
+                if(node.getName().equals(participant)) {
+                    node.setCreatedNode(true);
+                    node.setCreatedIndex(model.messages.size());
+                }
+            }
+        }
     }
 
     private boolean hasParticipant(String name, SequenceModel model) {
-        for (SequenceModel.SequenceNode node : model.participants) {
+        for (SequenceNode node : model.participants) {
             if (node.getName().equals(name)) {
                 return true;
             }
@@ -153,7 +184,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         return false;
     }
 
-    private void addParticipants(List<SequenceModel.SequenceNode> participants, SequenceModel.SequenceNode node) {
+    private void addParticipants(List<SequenceNode> participants, SequenceNode node) {
         for (int i = 0; i < participants.size(); i++) {
             int existingOrder = participants.get(i).getOrder();
             if (node.getOrder() < existingOrder) {
