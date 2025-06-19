@@ -158,8 +158,8 @@ export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersection
 @injectable()
 export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
 
-	private start! : Point;
-	private end! : Point;
+	private start = {x: 0, y: 0};
+	private end = {x: 0, y: 0};
 	private circleStart = false;
 	private circleEnd = false;
 
@@ -218,6 +218,19 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 
 		this.start = interior[0];
 		this.end = interior[interior.length - 1];
+
+		const halfWidth = (edge.args?.toWidth as number) ?? 0;
+		const creating = (edge.args?.creating as boolean) ?? false;
+
+
+		// Check if the node is created. If yes, adjust the ending x coord
+		if(creating) {
+			if (this.end.x > this.start.x) {
+				this.end.x -= halfWidth;
+			} else {
+				this.end.x += halfWidth;
+			}
+		}
 
 		this.self = (edge.args?.self as boolean) ?? false;
 		const incoming = (edge.args?.incoming as boolean) ?? false;
