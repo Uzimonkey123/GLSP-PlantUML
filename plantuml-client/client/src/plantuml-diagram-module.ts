@@ -33,7 +33,7 @@ import {
     SequenceMessageEdgeView,
     SequenceMessageDelay,
     HtmlLabelView,
-    SequenceMessageDivider, SequenceHeaderFooter, SequenceTitle
+    SequenceMessageDivider, SequenceHeaderFooter, SequenceTitle, AnchorEdgeView
 } from './sequence-views';
 
 import {
@@ -95,6 +95,8 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "label:header", GLabel, SequenceHeaderFooter);
         configureModelElement(context, "label:footer", GLabel, SequenceHeaderFooter);
         configureModelElement(context, "label:title", GLabel, SequenceTitle);
+
+        configureModelElement(context, "anchor-arrow", GEdge, AnchorEdgeView);
     }
 );
 

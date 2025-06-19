@@ -19,6 +19,9 @@ public class SequenceMessage {
     private boolean incoming = false;
     private boolean outgoing = false;
     private boolean creating = false;
+    private boolean anchorStart = false;
+    private boolean anchorEnd = false;
+    private String anchorId = "";
 
     public SequenceMessage(String msgId, boolean creating, String from, String to, String message, ArrowConfiguration arrowConfiguration,
                            String messageType, String numbering, boolean isShort, boolean isSelf) {
@@ -153,5 +156,29 @@ public class SequenceMessage {
 
     public boolean isCreating() {
         return this.creating;
+    }
+
+    public void setAnchorStart(boolean anchorStart) {
+        this.anchorStart = anchorStart;
+    }
+
+    public void setAnchorEnd(boolean anchorEnd) {
+        this.anchorEnd = anchorEnd;
+    }
+
+    public boolean isAnchorStart() {
+        return this.anchorStart;
+    }
+
+    public boolean isAnchorEnd() {
+        return this.anchorEnd;
+    }
+
+    public String getAnchorId() {
+        return this.anchorId;
+    }
+
+    public void setAnchorId(String anchorId) {
+        this.anchorId = anchorId;
     }
 }
