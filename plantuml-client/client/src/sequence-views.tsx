@@ -521,3 +521,64 @@ export class SequenceTitle extends GLabelView {
 		);
 	}
 }
+
+@injectable()
+export class AnchorEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
+	protected override renderAdditionals(
+		edge: GEdge,
+		segments: Point[],
+		context: RenderingContext,
+	): VNode[] {
+
+		const additionals = super.renderAdditionals(edge, segments, context);
+
+		const start = segments[0];
+		const end = segments[segments.length - 1];
+
+		const lineStartX = start.x;
+		const lineStartY = start.y;
+		const lineEndX = start.x;
+		const lineEndY = end.y;
+
+		const arrowShape = `M 0 -4 L 10 0 L 0 4 Z`;
+
+		const dx = lineEndX - lineStartX;
+		const dy = lineEndY - lineStartY;
+		const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+		// Draw line
+		additionals.unshift(
+			<path
+				d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
+				stroke="black"
+				strokeWidth={1.5}
+				markerEnd="none"
+				fill="none"
+			/>
+		);
+
+		// Draw bottom arrow
+		additionals.push(
+			<path
+				d={arrowShape}
+				transform={`translate(${lineStartX} ${lineStartY + 10}) rotate(${angle + 180})`}
+				fill="black"
+				stroke="black"
+				strokeWidth={1.5}
+			/>
+		);
+
+		// Draw top arrow
+		additionals.push(
+			<path
+				d={arrowShape}
+				transform={`translate(${lineEndX} ${lineEndY - 10}) rotate(${angle})`}
+				fill="black"
+				stroke="black"
+				strokeWidth={1.5}
+			/>
+		);
+
+		return additionals;
+	}
+}
