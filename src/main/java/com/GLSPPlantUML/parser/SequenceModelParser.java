@@ -46,6 +46,8 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             if (d instanceof SequenceDiagram sd) {
                 this.sequenceDiagram = sd;
 
+                model.showFoot = sequenceDiagram.isShowFootbox();
+
                 // Check for complete diagram related attributes
                 handleHeader();
                 handleFooter();

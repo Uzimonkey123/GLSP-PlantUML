@@ -15,6 +15,7 @@ public class SequenceModel {
     public String footer;
     public String header;
     public String title;
+    public boolean showFoot;
 
 
     public SequenceModel() {}

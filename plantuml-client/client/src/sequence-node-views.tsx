@@ -14,6 +14,7 @@ export class RectangularNodeView extends ShapeView {
         const w = node.size.width;
         const totalH = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 30;
         const footerH = 30;
@@ -42,12 +43,14 @@ export class RectangularNodeView extends ShapeView {
             />
 
             {/* Bottom rectangle */}
-            <g transform={`translate(0, ${lifeLineEnd})`}>
-                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
-                <g transform={`translate(${w/2},${footerH/2})`}>
-                    {context.renderChildren(node)}
+            {showFoot && (
+                <g transform={`translate(0, ${lifeLineEnd})`}>
+                    <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
+                    <g transform={`translate(${w/2},${footerH/2})`}>
+                        {context.renderChildren(node)}
+                    </g>
                 </g>
-            </g>
+            )}
         </g>;
     }
 }
@@ -61,6 +64,7 @@ export class ActorNodeView extends ShapeView {
         const w = node.size.width;
         const h = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 15;
         const footerH = 15;
@@ -112,13 +116,17 @@ export class ActorNodeView extends ShapeView {
                     stroke-dasharray="4 2"
                 />
 
-                {/* Bottom label */}
-                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
-                    {context.renderChildren(node)}
-                </g>
+                {showFoot && (
+                    <g>
+                        {/* Bottom label */}
+                        <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                            {context.renderChildren(node)}
+                        </g>
 
-                {/* Bottom stickman */}
-                {drawStickman(lifeLineEnd + 10)}
+                        {/* Bottom stickman */}
+                        {drawStickman(lifeLineEnd + 10)}
+                    </g>
+                )}
             </g>
         );
     }
@@ -133,6 +141,7 @@ export class BoundaryNodeView extends ShapeView {
         const w = node.size.width;
         const h = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 15;
         const footerH = 15;
@@ -203,13 +212,17 @@ export class BoundaryNodeView extends ShapeView {
                     stroke-dasharray="4 2"
                 />
 
-                {/* Bottom label */}
-                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
-                    {context.renderChildren(node)}
-                </g>
+                {showFoot && (
+                    <g>
+                        {/* Bottom label */}
+                        <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                            {context.renderChildren(node)}
+                        </g>
 
-                {/* Bottom boundary */}
-                {drawBoundary(lifeLineEnd + 20)}
+                        {/* Bottom boundary */}
+                        {drawBoundary(lifeLineEnd + 20)}
+                    </g>
+                )}
             </g>
         );
     }
@@ -224,6 +237,7 @@ export class ControlNodeView extends ShapeView {
         const w = node.size.width;
         const h = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 15;
         const footerH = 15;
@@ -292,13 +306,17 @@ export class ControlNodeView extends ShapeView {
                     stroke-dasharray="4 2"
                 />
 
-                {/* Bottom label */}
-                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
-                    {context.renderChildren(node)}
-                </g>
+                {showFoot && (
+                    <g>
+                        {/* Bottom label */}
+                        <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                            {context.renderChildren(node)}
+                        </g>
 
-                {/* Bottom control */}
-                {drawControl(lifeLineEnd + 20)}
+                        {/* Bottom control */}
+                        {drawControl(lifeLineEnd + 20)}
+                    </g>
+                )}
             </g>
         );
     }
@@ -313,6 +331,7 @@ export class EntityNodeView extends ShapeView {
         const w = node.size.width;
         const h = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 15;
         const footerH = 15;
@@ -373,13 +392,17 @@ export class EntityNodeView extends ShapeView {
                     stroke-dasharray="4 2"
                 />
 
-                {/* Bottom label */}
-                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
-                    {context.renderChildren(node)}
-                </g>
+                {showFoot && (
+                    <g>
+                        {/* Bottom label */}
+                        <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                            {context.renderChildren(node)}
+                        </g>
 
-                {/* Bottom entity */}
-                {drawEntitySymbol(lifeLineEnd + 20)}
+                        {/* Bottom entity */}
+                        {drawEntitySymbol(lifeLineEnd + 20)}
+                    </g>
+                )}
             </g>
         );
     }
@@ -394,6 +417,7 @@ export class DatabaseNodeView extends ShapeView {
         const w = node.size.width;
         const h = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 15;
         const footerH = 15;
@@ -493,13 +517,17 @@ export class DatabaseNodeView extends ShapeView {
                     stroke-dasharray="4 2"
                 />
 
-                {/* Bottom label */}
-                <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
-                    {context.renderChildren(node)}
-                </g>
+                {showFoot && (
+                    <g>
+                        {/* Bottom label */}
+                        <g transform={`translate(${cx}, ${lifeLineEnd + 5})`}>
+                            {context.renderChildren(node)}
+                        </g>
 
-                {/* Bottom database */}
-                {drawDatabase(lifeLineEnd + 25)}
+                        {/* Bottom database */}
+                        {drawDatabase(lifeLineEnd + 25)}
+                    </g>
+                )}
             </g>
         );
     }
@@ -511,6 +539,7 @@ export class CollectionNodeView extends ShapeView {
         const w = node.size.width;
         const totalH = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 30;
         const footerH = 30;
@@ -547,23 +576,27 @@ export class CollectionNodeView extends ShapeView {
                 stroke-dasharray="4 2"
             />
 
-            {/* Back of bottom rectangle */}
-            <rect
-                x={6}
-                y={lifeLineEnd}
-                width={w}
-                height={headerH}
-                fill={background}
-                class-sprotty-node={true}
-            />
+            {showFoot && (
+                <g>
+                    {/* Back of bottom rectangle */}
+                    <rect
+                        x={6}
+                        y={lifeLineEnd}
+                        width={w}
+                        height={headerH}
+                        fill={background}
+                        class-sprotty-node={true}
+                    />
 
-            {/* Bottom rectangle */}
-            <g transform={`translate(0, ${lifeLineEnd + 6})`}>
-                <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
-                <g transform={`translate(${w / 2}, ${footerH / 2})`}>
-                    {context.renderChildren(node)}
+                    {/* Bottom rectangle */}
+                    <g transform={`translate(0, ${lifeLineEnd + 6})`}>
+                        <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
+                        <g transform={`translate(${w / 2}, ${footerH / 2})`}>
+                            {context.renderChildren(node)}
+                        </g>
+                    </g>
                 </g>
-            </g>
+            )}
         </g>;
     }
 }
@@ -574,6 +607,7 @@ export class QueueNodeView extends ShapeView {
         const w = node.size.width;
         const h = node.size.height;
         const background = (node as any).args?.background;
+        const showFoot = (node as any).args?.showFoot;
 
         const headerH = 30;
         const footerH = 30;
@@ -663,8 +697,12 @@ export class QueueNodeView extends ShapeView {
                     stroke-dasharray="4 2"
                 />
 
-                {/*Bottom queue symbol */}
-                {drawQueue(lifeLineEnd + 5)}
+                {showFoot && (
+                    <g>
+                        {/*Bottom queue symbol */}
+                        {drawQueue(lifeLineEnd + 5)}
+                    </g>
+                )}
             </g>
         );
     }
