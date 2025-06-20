@@ -36,9 +36,13 @@ public class SequenceModelFactory implements GModelFactory {
         double nodeHeight = 30;
 
         double firstMsgY = nodeY + nodeHeight + 20;
-        double msgGap    = 30;
+        double msgGap    = 25;
         double extraBottom = 50;
-        double lifelineLength = (messagesCount - 1) * msgGap + extraBottom;
+
+        int hspace = 0;
+        int additionalSpace = model.messageSpaces.values().stream().mapToInt(Integer::intValue).sum();
+
+        double lifelineLength = (messagesCount - 1) * msgGap + extraBottom + additionalSpace;
         double totalHeight = nodeHeight + lifelineLength + nodeHeight;
 
         double cursor = 40; // Start of the first node
@@ -89,7 +93,14 @@ public class SequenceModelFactory implements GModelFactory {
 
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceMessage msg = model.messages.get(i);
-            double y = firstMsgY + i * msgGap;
+
+            // If a vertical space is here, add it to the overall hspace
+            if (model.messageSpaces.containsKey(i)) {
+                hspace += model.messageSpaces.get(i);
+            }
+
+            double y = firstMsgY + i * msgGap + hspace;
+
             addEdges(msg, y, model, cursor);
 
             // Additionally to adding edges, check for anchors and create them if needed
@@ -202,7 +213,7 @@ public class SequenceModelFactory implements GModelFactory {
                         .edgePlacement(new GEdgePlacementBuilder()
                                 .side(GConstants.EdgeSide.TOP) // above the line
                                 .position(0.5d) // center
-                                .offset(8d)
+                                .offset(7d)
                                 .rotate(false)
                                 .build())
                         .build());

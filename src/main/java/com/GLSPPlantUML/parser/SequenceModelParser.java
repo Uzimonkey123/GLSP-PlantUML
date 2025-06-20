@@ -69,7 +69,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         MessageHandler(msg);
                     }
 
-                    if(event instanceof Delay delay) {
+                    if (event instanceof Delay delay) {
                         DelayHandler(delay);
                     }
 
@@ -77,8 +77,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         DividerHandler(div);
                     }
 
-                    if(event instanceof LifeEvent le) {
+                    if (event instanceof LifeEvent le) {
                         LifeEventHandler(le);
+                    }
+
+                    if (event instanceof HSpace hSpace) {
+                        hSpaceHandler(hSpace);
                     }
                 }
             }
@@ -263,6 +267,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         } else {
             model.footer = "";
         }
+    }
+
+    void hSpaceHandler(HSpace hspace) {
+        int gapLength = hspace.getPixel();
+
+        model.messageSpaces.put(model.messages.size(), gapLength);
     }
 }
 
