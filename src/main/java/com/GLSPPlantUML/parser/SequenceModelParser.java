@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.parser;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.google.inject.Inject;
@@ -16,10 +17,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
+    private SequenceDiagram sequenceDiagram;
+    private SequenceModel model;
+
+    private int anchorCounter = 0; // For counting how many anchors started
+    private final Stack<String> anchorIdStack = new Stack<>(); // To keep track of the nesting of anchors
+
     @Inject
     public SequenceModelParser() {}
 
@@ -33,63 +39,63 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         // Parse with PlantUML
         SourceStringReader reader = new SourceStringReader(text);
         List<BlockUml> blocks = reader.getBlocks();
-        SequenceModel model = new SequenceModel();
+        this.model = new SequenceModel();
 
         for (BlockUml block : blocks) {
             Diagram d = block.getDiagram();
             if (d instanceof SequenceDiagram sd) {
+                this.sequenceDiagram = sd;
 
                 // Check for complete diagram related attributes
-                handleHeader(model, sd);
-                handleFooter(model, sd);
-                handleTitle(model, sd);
+                handleHeader();
+                handleFooter();
+                handleTitle();
 
                 // Record all participants, even if unused
                 Collection<Participant> participants = sd.participants();
                 for (Participant participant : participants) {
-                    ParticipantHandler(participant, model);
+                    ParticipantHandler(participant);
                 }
 
                 // Extract participants and messages with API
                 for (Event event : sd.events()) {
                     if (event instanceof MessageExo msg) {
-                        MessageExoHandler(msg, model);
+                        MessageExoHandler(msg);
                     }
 
                     if (event instanceof Message msg) {
-                        MessageHandler(msg, model);
+                        MessageHandler(msg);
                     }
 
                     if(event instanceof Delay delay) {
-                        DelayHandler(delay, model);
+                        DelayHandler(delay);
                     }
 
                     if (event instanceof Divider div) {
-                        DividerHandler(div, model);
+                        DividerHandler(div);
                     }
 
                     if(event instanceof LifeEvent le) {
-                        LifeEventHandler(le, model);
+                        LifeEventHandler(le);
                     }
-
                 }
             }
         }
         return model;
     }
 
-    private void ParticipantHandler(Participant participant, SequenceModel model) {
+    private void ParticipantHandler(Participant participant) {
         String name = participant.getDisplay(false).get(0).toString();
         String type = participant.getType().toString();
         int order = participant.getOrder();
         HColor background = participant.getColors().getColor(ColorType.BACK);
 
-        if(!hasParticipant(name, model)) {
+        if(!hasParticipant(name)) {
             addParticipants(model.participants, new SequenceNode(name, type, order, background, false));
         }
     }
 
-    private void MessageExoHandler(MessageExo msg, SequenceModel model) {
+    private void MessageExoHandler(MessageExo msg) {
         String participant = msg.getParticipant().getDisplay(false).get(0).toString();
 
         record Direction(String from, String to, boolean incoming, boolean outgoing) {}
@@ -117,7 +123,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 isShort, exoMsg.incoming(), exoMsg.outgoing()));
     }
 
-    private void MessageHandler(Message msg, SequenceModel model) {
+    private void MessageHandler(Message msg) {
         String from = msg.getParticipant1().getDisplay(false).get(0).toString();
 
         String to = msg.getParticipant2().getDisplay(false).get(0).toString();
@@ -137,9 +143,39 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         // Record message
         model.messages.add(new SequenceMessage(msgId, msg.isCreate(), from, to, label, arrowConfig,
                 "edge", num, false, isSelf));
+
+        if (msg.getAnchor() != null) {
+            setupAnchor(msg, from, to);
+        }
     }
 
-    private void DelayHandler(Delay delay, SequenceModel model) {
+    private void setupAnchor(Message msg, String from, String to) {
+        if (msg.getAnchor().equals("start")) {
+            // For the start of an anchor create ID and save it on stack,
+            // + set it up in the last message that it connects to.
+            String anchorId = "anchor-" + anchorCounter++;
+            model.messages.getLast().setAnchorStart(true);
+            model.messages.getLast().setAnchorId(anchorId);
+            anchorIdStack.push(anchorId);
+
+        } else if (msg.getAnchor().equals("end")) {
+            // If it comes to end and stack is empty, error
+            if (anchorIdStack.isEmpty()) {
+                throw new RuntimeException("Empty anchor stack in parser. Start anchor point missing!");
+            }
+
+            // Get the anchor ID from stack and set up the last message as end holder
+            String anchorId = anchorIdStack.pop();
+            model.messages.getLast().setAnchorEnd(true);
+            model.messages.getLast().setAnchorId(anchorId);
+
+            // Get the message from the diagram linked anchors and create the anchor in the model list
+            String anchorLabel = sequenceDiagram.getLinkAnchors().get(model.anchors.size()).getMessage();
+            model.anchors.add(new SequenceAnchor(from, to, anchorId, anchorLabel));
+        }
+    }
+
+    private void DelayHandler(Delay delay) {
         String label = "";
         if(delay.getText() != null
             && delay.getText().size() > 0) {
@@ -152,7 +188,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 null, "edge:delay"));
     }
 
-    private void DividerHandler(Divider div, SequenceModel model) {
+    private void DividerHandler(Divider div) {
         String label = div.getText().get(0).toString();
 
         String msgId = "msg-" + model.messages.size();
@@ -161,7 +197,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 null, "edge:divider"));
     }
 
-    private void LifeEventHandler(LifeEvent le, SequenceModel model) {
+    private void LifeEventHandler(LifeEvent le) {
         // Temp code for dealing only with the CREATE life event
         if (le.getType() == LifeEventType.CREATE) {
             String participant = le.getParticipant().getDisplay(false).get(0).toString();
@@ -174,7 +210,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
-    private boolean hasParticipant(String name, SequenceModel model) {
+    private boolean hasParticipant(String name) {
         for (SequenceNode node : model.participants) {
             if (node.getName().equals(name)) {
                 return true;
@@ -197,31 +233,31 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         participants.add(node);
     }
 
-    void handleTitle(SequenceModel model, SequenceDiagram diagram) {
-        if (diagram.getTitle() != null
-                && diagram.getTitle().getDisplay() != null
-                && diagram.getTitle().getDisplay().size() > 0) {
-            model.title = diagram.getTitle().getDisplay().get(0).toString();
+    void handleTitle() {
+        if (sequenceDiagram.getTitle() != null
+                && sequenceDiagram.getTitle().getDisplay() != null
+                && sequenceDiagram.getTitle().getDisplay().size() > 0) {
+            model.title = sequenceDiagram.getTitle().getDisplay().get(0).toString();
         } else {
             model.title = "";
         }
     }
 
-    void handleHeader(SequenceModel model, SequenceDiagram diagram) {
-        if (diagram.getHeader() != null
-                && diagram.getHeader().getDisplay() != null
-                && diagram.getHeader().getDisplay().size() > 0) {
-            model.header = diagram.getHeader().getDisplay().get(0).toString();
+    void handleHeader() {
+        if (sequenceDiagram.getHeader() != null
+                && sequenceDiagram.getHeader().getDisplay() != null
+                && sequenceDiagram.getHeader().getDisplay().size() > 0) {
+            model.header = sequenceDiagram.getHeader().getDisplay().get(0).toString();
         } else {
             model.header = "";
         }
     }
 
-    void handleFooter(SequenceModel model, SequenceDiagram diagram) {
-        if (diagram.getFooter() != null
-                && diagram.getFooter().getDisplay() != null
-                && diagram.getFooter().getDisplay().size() > 0) {
-            model.footer = diagram.getFooter().getDisplay().get(0).toString();
+    void handleFooter() {
+        if (sequenceDiagram.getFooter() != null
+                && sequenceDiagram.getFooter().getDisplay() != null
+                && sequenceDiagram.getFooter().getDisplay().size() > 0) {
+            model.footer = sequenceDiagram.getFooter().getDisplay().get(0).toString();
         } else {
             model.footer = "";
         }

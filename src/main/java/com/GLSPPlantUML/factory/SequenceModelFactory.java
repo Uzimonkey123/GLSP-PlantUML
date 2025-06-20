@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.factory;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.state.SequenceModelState;
@@ -11,17 +12,17 @@ import org.eclipse.glsp.graph.builder.impl.*;
 import org.eclipse.glsp.graph.util.GConstants;
 import org.eclipse.glsp.server.features.core.model.GModelFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.eclipse.glsp.graph.util.GraphUtil.point;
 
 public class SequenceModelFactory implements GModelFactory {
-    private Map<String, Double> centre;
-    private Map<String, Double> halfWidth;
+    private Map<String, Double> centre; // Map to store the middle of all nodes for lifeline
+    private Map<String, Double> halfWidth; // Half size of nodes for created node arrows
     private List<GModelElement> elements;
+
+    private Stack<SequenceAnchor> anchors; // Stack for anchors in the diagram
+    private Map<String, SequenceAnchor> anchorMap; // Map to store anchors with their ID for easier search
 
     @Inject
     protected SequenceModelState modelState;
@@ -43,7 +44,7 @@ public class SequenceModelFactory implements GModelFactory {
         double cursor = 40; // Start of the first node
         double gap = Math.max(40, getMaxMessageLength(model));
 
-        this.centre = new HashMap<>(); // Map to store the middle of all nodes for lifeline
+        this.centre = new HashMap<>();
         this.halfWidth = new HashMap<>();
         this.elements = new ArrayList<>();
 
@@ -77,10 +78,21 @@ public class SequenceModelFactory implements GModelFactory {
         generateInvisibleNodes(cursor, nodeY, totalHeight);
 
         // Add messages as edges with proper text, source and target
+        this.anchors = new Stack<>();
+        this.anchorMap = new HashMap<>();
+
+        // Populate anchor map with all anchors and match them with their ID
+        for (SequenceAnchor anchor : model.anchors) {
+            anchorMap.put(anchor.getAnchorId(), anchor);
+        }
+
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceMessage msg = model.messages.get(i);
             double y = firstMsgY + i * msgGap;
             addEdges(msg, y, model, cursor);
+
+            // Additionally to adding edges, check for anchors and create them if needed
+            setupAnchors(msg, y, gap);
         }
 
         // Add page details like header, title, footer
@@ -95,6 +107,52 @@ public class SequenceModelFactory implements GModelFactory {
         // Update model state
         modelState.updateRoot(newGModel);
         modelState.getRoot().setRevision(-1);
+    }
+
+    private void setupAnchors(SequenceMessage msg, double y, double gap) {
+        // If message is an anchor start, get the top Y coordinate of it
+        // and save it inside the anchors stack
+        if (msg.isAnchorStart()) {
+            SequenceAnchor concreteAnchor = anchorMap.get(msg.getAnchorId());
+            concreteAnchor.setTopY(y);
+            anchors.push(concreteAnchor);
+        }
+
+        if (msg.isAnchorEnd()) {
+            SequenceAnchor concreteAnchor = anchors.pop();
+
+            String from = concreteAnchor.getParticipant1();
+            String to = concreteAnchor.getParticipant2();
+            double xCoord;
+
+            // Calculate the x coordinate to know if it is left or right from the give nodes
+            if (centre.get(from) > centre.get(to)) {
+                xCoord = centre.get(from) - gap / 2;
+            } else {
+                xCoord = centre.get(to) - gap / 2;
+            }
+
+            // Create anchor points in the middle of the messages
+            generateAnchorPoints(concreteAnchor, from, xCoord, y);
+
+            elements.add(new GEdgeBuilder("anchor-arrow")
+                    .id(concreteAnchor.getAnchorId())
+                    .sourceId(concreteAnchor.getAnchorId() + "-top")
+                    .targetId(concreteAnchor.getAnchorId() + "-bottom")
+                    .addRoutingPoint(point(xCoord, concreteAnchor.getTopY()))
+                    .addRoutingPoint(point(xCoord, y))
+                    .add(new GLabelBuilder("label:html")
+                            .text(concreteAnchor.getLabel())
+                            .addArgument("numbering", msg.getNumbering())
+                            .edgePlacement(new GEdgePlacementBuilder()
+                                    .side(GConstants.EdgeSide.RIGHT) // To the right from the label
+                                    .position(0.5d) // center
+                                    .offset(-4d)
+                                    .rotate(false)
+                                    .build())
+                            .build())
+                    .build());
+        }
     }
 
     private void addEdges(SequenceMessage msg, double y, SequenceModel model, double cursor) {
@@ -175,6 +233,22 @@ public class SequenceModelFactory implements GModelFactory {
         }
 
         elements.add(eb.build());
+    }
+
+    private void generateAnchorPoints(SequenceAnchor anchor, String from, double xCoord, double y) {
+        elements.add(new GNodeBuilder()
+                .id(anchor.getAnchorId() + "-top")
+                .layout("vbox")
+                .position(xCoord - halfWidth.get(from), anchor.getTopY())
+                .size(0, 0)
+                .build());
+
+        elements.add(new GNodeBuilder()
+                .id(anchor.getAnchorId() + "-bottom")
+                .layout("vbox")
+                .position(xCoord - halfWidth.get(from), y)
+                .size(0, 0)
+                .build());
     }
 
     private void generateInvisibleNodes(double cursor, double nodeY, double totalHeight) {
