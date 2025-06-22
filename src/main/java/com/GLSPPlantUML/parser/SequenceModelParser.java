@@ -2,6 +2,7 @@ package com.GLSPPlantUML.parser;
 
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
+import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.google.inject.Inject;
@@ -25,6 +26,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
     private int anchorCounter = 0; // For counting how many anchors started
     private final Stack<String> anchorIdStack = new Stack<>(); // To keep track of the nesting of anchors
+
+    // Map of Participant name - activate life event to store life event start for deactivation
+    private final Map<String, Stack<Integer>> activationStacks = new HashMap<>();
 
     @Inject
     public SequenceModelParser() {}
@@ -204,13 +208,46 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void LifeEventHandler(LifeEvent le) {
-        // Temp code for dealing only with the CREATE life event
-        if (le.getType() == LifeEventType.CREATE) {
-            String participant = le.getParticipant().getDisplay(false).get(0).toString();
-            for(SequenceNode node : model.participants) {
-                if(node.getName().equals(participant)) {
-                    node.setCreatedNode(true);
-                    node.setCreatedIndex(model.messages.size());
+        String participant = le.getParticipant().getDisplay(false).get(0).toString();
+
+        // Initialize stack for this participant
+        activationStacks.putIfAbsent(participant, new Stack<>());
+        Stack<Integer> stack = activationStacks.get(participant);
+        int index = model.messages.size() - 1;
+
+        switch (le.getType()) {
+            case ACTIVATE -> {
+                stack.push(index); // Save current index
+            }
+
+            case DEACTIVATE -> {
+                if (stack.isEmpty()) return;
+
+                int startIndex = stack.pop(); // Last start for participant is ending first, on top of stack
+
+                // Search for participant node in model and add the life event to its list
+                for (SequenceNode node : model.participants) {
+                    if (node.getName().equals(participant)) {
+                        SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index);
+                        // Set the depth of the life event for offset in factory
+                        lifeEvent.setLevel(stack.size());
+
+                        node.addLifeEvent(lifeEvent);
+                        break;
+                    }
+                }
+            }
+
+            case DESTROY -> {
+
+            }
+
+            case CREATE -> {
+                for (SequenceNode node : model.participants) {
+                    if (node.getName().equals(participant)) {
+                        node.setCreatedNode(true);
+                        node.setCreatedIndex(model.messages.size());
+                    }
                 }
             }
         }

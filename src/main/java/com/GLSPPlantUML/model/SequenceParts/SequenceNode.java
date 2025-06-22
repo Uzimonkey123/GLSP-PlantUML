@@ -2,6 +2,9 @@ package com.GLSPPlantUML.model.SequenceParts;
 
 import net.sourceforge.plantuml.klimt.color.HColor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SequenceNode {
     private final String name;
     private final String type;
@@ -9,6 +12,7 @@ public class SequenceNode {
     private final HColor background;
     private boolean createdNode;
     private int createdIndex;
+    private final List<SequenceLifeEvent> lifeEvents = new ArrayList<>();
 
     public SequenceNode(String name, String type, int order, HColor background, boolean createdNode) {
         this.name = name;
@@ -48,5 +52,13 @@ public class SequenceNode {
 
     public String getBackground() {
         return this.background != null ? this.background.asString() : "#5d4949";
+    }
+
+    public List<SequenceLifeEvent> getLifeEvents() {
+        return lifeEvents;
+    }
+
+    public void addLifeEvent(SequenceLifeEvent lifeEvent) {
+        this.lifeEvents.add(lifeEvent);
     }
 }
