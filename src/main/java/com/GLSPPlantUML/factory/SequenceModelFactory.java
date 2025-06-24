@@ -218,10 +218,17 @@ public class SequenceModelFactory implements GModelFactory {
                 .addRoutingPoint(point(x1, y))
                 .addRoutingPoint(point(x2, y));
 
+        double labelShift;
+        if (msg.isSelf()) {
+            labelShift = (centre.get(routingOne) + centre.get(model.getNextParticipant(routingOne))) / 2;
+        } else {
+            labelShift = (x1 + x2) / 2;
+        }
+
         elements.add(new GLabelBuilder("label:html")
                 .text(msg.getMessage())
                 .addArgument("numbering", msg.getNumbering())
-                .position((x1 + x2) / 2, y - 6)
+                .position(labelShift, y - 6)
                 .build());
 
         // Additional arguments to get every side and aspect of the arrow

@@ -27,4 +27,14 @@ public class SequenceModel {
                 // Get warning ignore, since node definitely exists at this point
                 .get();
     }
+
+    public String getNextParticipant(String current) {
+        for (int i = 0; i < participants.size() - 1; i++) {
+            if (participants.get(i).getName().equals(current)) {
+                return participants.get(i + 1).getName();
+            }
+        }
+
+        return current;
+    }
 }
