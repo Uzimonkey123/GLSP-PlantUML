@@ -707,3 +707,25 @@ export class QueueNodeView extends ShapeView {
         );
     }
 }
+
+export class LifeEventBar extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+
+        return (
+            <g>
+                <rect
+                    x={0}
+                    y={0}
+                    width={node.size.width}
+                    height={node.size.height}
+                    fill={(node as any).args?.background}
+                    stroke="black"
+                    stroke-width={1}
+                />
+            </g>
+        );
+    }
+}

@@ -216,17 +216,13 @@ public class SequenceModelFactory implements GModelFactory {
                 .sourceId(sourceId)
                 .targetId(targetId)
                 .addRoutingPoint(point(x1, y))
-                .addRoutingPoint(point(x2, y))
-                .add(new GLabelBuilder("label:html")
-                        .text(msg.getMessage())
-                        .addArgument("numbering", msg.getNumbering())
-                        .edgePlacement(new GEdgePlacementBuilder()
-                                .side(GConstants.EdgeSide.TOP) // above the line
-                                .position(0.5d) // center
-                                .offset(7d)
-                                .rotate(false)
-                                .build())
-                        .build());
+                .addRoutingPoint(point(x2, y));
+
+        elements.add(new GLabelBuilder("label:html")
+                .text(msg.getMessage())
+                .addArgument("numbering", msg.getNumbering())
+                .position((x1 + x2) / 2, y - 6)
+                .build());
 
         // Additional arguments to get every side and aspect of the arrow
         if (msg.getType().equals("edge")) {
@@ -267,10 +263,11 @@ public class SequenceModelFactory implements GModelFactory {
 
                 double x = center + shift;
 
-                elements.add(new GNodeBuilder()
+                elements.add(new GNodeBuilder("lifeEvent")
                         .id("act-" + node.getName() + "-" + le.getStartMessage())
                         .position(x, y1)
                         .size(6, y2 - y1)
+                        .addArgument("background", le.getBackground())
                         .build());
             }
         }
@@ -353,7 +350,7 @@ public class SequenceModelFactory implements GModelFactory {
         return lifeEventPos
                 // Set the arrow more to the right if there is life event/nesting
                 // or just return normal participant middle X
-                .map(lifeEvent -> centre.get(participant) + lifeEvent.getLevel() * 6)
+                .map(lifeEvent -> centre.get(participant) + (lifeEvent.getLevel() + 1) * 3)
                 .orElse(centre.get(participant));
     }
 }

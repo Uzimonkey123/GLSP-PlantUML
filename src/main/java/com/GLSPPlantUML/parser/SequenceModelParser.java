@@ -29,6 +29,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
     // Map of Participant name - activate life event to store life event start for deactivation
     private final Map<String, Stack<Integer>> activationStacks = new HashMap<>();
+    private final Map<String, Stack<HColor>> activationColorStacks = new HashMap<>();
 
     @Inject
     public SequenceModelParser() {}
@@ -209,26 +210,35 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
     private void LifeEventHandler(LifeEvent le) {
         String participant = le.getParticipant().getDisplay(false).get(0).toString();
+        HColor background = le.getSpecificColors().getBackColor();
 
         // Initialize stack for this participant
         activationStacks.putIfAbsent(participant, new Stack<>());
-        Stack<Integer> stack = activationStacks.get(participant);
+        activationColorStacks.putIfAbsent(participant, new Stack<>());
+
+        Stack<Integer> messageStack = activationStacks.get(participant);
+        Stack<HColor> colorStack = activationColorStacks.get(participant);
+
         int index = model.messages.size() - 1;
 
         switch (le.getType()) {
-            case ACTIVATE -> stack.push(index); // Save current index
+            case ACTIVATE -> {
+                messageStack.push(index); // Save current index
+                colorStack.push(background); // Save the color
+            }
 
             case DEACTIVATE -> {
-                if (stack.isEmpty()) return;
+                if (messageStack.isEmpty()) return;
 
-                int startIndex = stack.pop(); // Last start for participant is ending first, on top of stack
+                int startIndex = messageStack.pop(); // Last start for participant is ending first, on top of stack
+                HColor color = colorStack.pop();
 
                 // Search for participant node in model and add the life event to its list
                 for (SequenceNode node : model.participants) {
                     if (node.getName().equals(participant)) {
-                        SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index);
+                        SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
                         // Set the depth of the life event for offset in factory
-                        lifeEvent.setLevel(stack.size());
+                        lifeEvent.setLevel(messageStack.size());
 
                         node.addLifeEvent(lifeEvent);
                         break;

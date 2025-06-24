@@ -3,6 +3,7 @@ package com.GLSPPlantUML.model.SequenceParts;
 import net.sourceforge.plantuml.klimt.color.HColor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,7 +57,9 @@ public class SequenceNode {
     }
 
     public List<SequenceLifeEvent> getLifeEvents() {
-        return lifeEvents;
+        List<SequenceLifeEvent> reversed = new ArrayList<>(lifeEvents);
+        Collections.reverse(reversed);
+        return reversed;
     }
 
     public void addLifeEvent(SequenceLifeEvent lifeEvent) {

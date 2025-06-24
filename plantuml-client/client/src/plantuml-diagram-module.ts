@@ -44,7 +44,7 @@ import {
     EntityNodeView,
     DatabaseNodeView,
     CollectionNodeView,
-    QueueNodeView
+    QueueNodeView, LifeEventBar
 } from "./sequence-node-views";
 
 import { PlantUmlStartup } from './plantuml-startup';
@@ -97,6 +97,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "label:title", GLabel, SequenceTitle);
 
         configureModelElement(context, "anchor-arrow", GEdge, AnchorEdgeView);
+        configureModelElement(context, "lifeEvent", GNode, LifeEventBar);
     }
 );
 
