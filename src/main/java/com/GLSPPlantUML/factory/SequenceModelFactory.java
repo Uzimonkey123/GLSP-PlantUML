@@ -38,7 +38,7 @@ public class SequenceModelFactory implements GModelFactory {
         double nodeHeight = 30;
 
         double firstMsgY = nodeY + nodeHeight + 20;
-        double msgGap    = 25;
+        double msgGap    = 35;
         double extraBottom = 50;
 
         int hspace = 0;
