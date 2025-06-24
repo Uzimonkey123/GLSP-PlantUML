@@ -4,6 +4,7 @@ import net.sourceforge.plantuml.klimt.color.HColor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SequenceNode {
     private final String name;
@@ -60,5 +61,13 @@ public class SequenceNode {
 
     public void addLifeEvent(SequenceLifeEvent lifeEvent) {
         this.lifeEvents.add(lifeEvent);
+    }
+
+    public Optional<SequenceLifeEvent> getLifeEventAt(int messageIndex) {
+        return lifeEvents.stream()
+                .filter(lifeEvent ->
+                        messageIndex >= lifeEvent.getStartMessage() &&
+                        messageIndex <= lifeEvent.getEndMessage())
+                .findFirst();
     }
 }

@@ -216,9 +216,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         int index = model.messages.size() - 1;
 
         switch (le.getType()) {
-            case ACTIVATE -> {
-                stack.push(index); // Save current index
-            }
+            case ACTIVATE -> stack.push(index); // Save current index
 
             case DEACTIVATE -> {
                 if (stack.isEmpty()) return;

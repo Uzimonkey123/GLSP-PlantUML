@@ -2,6 +2,7 @@ package com.GLSPPlantUML.factory;
 
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
+import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.state.SequenceModelState;
@@ -23,6 +24,7 @@ public class SequenceModelFactory implements GModelFactory {
 
     private Stack<SequenceAnchor> anchors; // Stack for anchors in the diagram
     private Map<String, SequenceAnchor> anchorMap; // Map to store anchors with their ID for easier search
+    private List<Double> lifeEventYPos;
 
     @Inject
     protected SequenceModelState modelState;
@@ -51,6 +53,7 @@ public class SequenceModelFactory implements GModelFactory {
         this.centre = new HashMap<>();
         this.halfWidth = new HashMap<>();
         this.elements = new ArrayList<>();
+        this.lifeEventYPos = new ArrayList<>();
 
         // Add participants as nodes to the list
         for (SequenceNode node: model.participants) {
@@ -100,12 +103,19 @@ public class SequenceModelFactory implements GModelFactory {
             }
 
             double y = firstMsgY + i * msgGap + hspace;
+            // If message is self call activation, the start of life event is lower
+            final boolean b = msg.isSelf()
+                    ? lifeEventYPos.add(y + 15)
+                    : lifeEventYPos.add(y);
 
-            addEdges(msg, y, model, cursor);
+            addEdges(msg, y, model, cursor, i);
 
             // Additionally to adding edges, check for anchors and create them if needed
             setupAnchors(msg, y, gap);
         }
+
+        // Add life event boxes if they exist
+        generateLifeEvents(model);
 
         // Add page details like header, title, footer
         addPageDetails(model, cursor, totalHeight);
@@ -167,7 +177,7 @@ public class SequenceModelFactory implements GModelFactory {
         }
     }
 
-    private void addEdges(SequenceMessage msg, double y, SequenceModel model, double cursor) {
+    private void addEdges(SequenceMessage msg, double y, SequenceModel model, double cursor, int msgIndex) {
         String sourceId, targetId;
         double x1, x2;
 
@@ -185,19 +195,19 @@ public class SequenceModelFactory implements GModelFactory {
             sourceId = "[";
             targetId = routingTwo;
             x1 = msg.getFrom().equals("[") ? 0 : cursor;
-            x2 = centre.get(routingTwo);
+            x2 = setX(routingTwo, msgIndex);
 
         } else if (outgoing) {
             sourceId = routingOne;
             targetId = "]";
-            x1 = centre.get(routingOne);
+            x1 = setX(routingOne, msgIndex);
             x2 = msg.getTo().equals("]") ? cursor : 0;
 
         } else {
             sourceId = routingOne;
             targetId = routingTwo;
-            x1 = centre.get(routingOne);
-            x2 = centre.get(routingTwo);
+            x1 = setX(routingOne, msgIndex);
+            x2 = setX(routingTwo, msgIndex);
         }
 
         GEdgeBuilder eb;
@@ -245,6 +255,25 @@ public class SequenceModelFactory implements GModelFactory {
         }
 
         elements.add(eb.build());
+    }
+
+    private void generateLifeEvents(SequenceModel model) {
+        for (SequenceNode node : model.participants) {
+            for (SequenceLifeEvent le : node.getLifeEvents()) {
+                double center = centre.get(node.getName()) - 3;
+                double shift = 4 * le.getLevel();
+                double y1 = lifeEventYPos.get(le.getStartMessage());
+                double y2 = lifeEventYPos.get(le.getEndMessage());
+
+                double x = center + shift;
+
+                elements.add(new GNodeBuilder()
+                        .id("act-" + node.getName() + "-" + le.getStartMessage())
+                        .position(x, y1)
+                        .size(6, y2 - y1)
+                        .build());
+            }
+        }
     }
 
     private void generateAnchorPoints(SequenceAnchor anchor, String from, double xCoord, double y) {
@@ -315,5 +344,16 @@ public class SequenceModelFactory implements GModelFactory {
         }
 
         return maxWidth;
+    }
+
+    private double setX(String participant, int messageIndex) {
+        SequenceNode node = modelState.getModel().getNode(participant);
+        Optional<SequenceLifeEvent> lifeEventPos = node.getLifeEventAt(messageIndex);
+
+        return lifeEventPos
+                // Set the arrow more to the right if there is life event/nesting
+                // or just return normal participant middle X
+                .map(lifeEvent -> centre.get(participant) + lifeEvent.getLevel() * 6)
+                .orElse(centre.get(participant));
     }
 }

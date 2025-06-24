@@ -4,10 +4,7 @@ import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SequenceModel {
     public List<SequenceNode> participants = new ArrayList<>();
@@ -22,4 +19,12 @@ public class SequenceModel {
 
 
     public SequenceModel() {}
+
+    public SequenceNode getNode(String name) {
+        return participants.stream()
+                .filter(p -> p.getName().equals(name))
+                .findFirst()
+                // Get warning ignore, since node definitely exists at this point
+                .get();
+    }
 }
