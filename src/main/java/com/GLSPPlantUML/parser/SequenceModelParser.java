@@ -141,7 +141,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         String num = msg.getMessageNumber();
 
-        String label = String.join(" ", msg.getLabel());
+        String label = String.join("<br>", msg.getLabel());
         if(num == null) {
             num = "";
         }
