@@ -5,7 +5,7 @@ import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
 
-public class NodeBuild implements FactoryAttributes {
+public class NodeBuild implements FactoryBuild {
     private final SequenceNode node;
     private final double cursor;
     private final double nodeY;

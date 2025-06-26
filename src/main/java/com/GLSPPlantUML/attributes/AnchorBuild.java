@@ -9,7 +9,7 @@ import org.eclipse.glsp.graph.util.GConstants;
 
 import static org.eclipse.glsp.graph.util.GraphUtil.point;
 
-public class AnchorBuild implements FactoryAttributes{
+public class AnchorBuild implements FactoryBuild {
     private final SequenceAnchor anchor;
     private double xCoord;
     private final double bottomY;
