@@ -22,7 +22,9 @@ import {
     GEdge,
     EditorContextService,
     EditMode,
-    SetEditModeAction, configureModelElement, GLabel
+    SetEditModeAction,
+    configureModelElement,
+    GLabel
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
@@ -33,7 +35,10 @@ import {
     SequenceMessageEdgeView,
     SequenceMessageDelay,
     HtmlLabelView,
-    SequenceMessageDivider, SequenceHeaderFooter, SequenceTitle, AnchorEdgeView
+    SequenceMessageDivider,
+    SequenceHeaderFooter,
+    SequenceTitle,
+    AnchorEdgeView
 } from './sequence-views';
 
 import {
@@ -44,7 +49,9 @@ import {
     EntityNodeView,
     DatabaseNodeView,
     CollectionNodeView,
-    QueueNodeView, LifeEventBar
+    QueueNodeView,
+    LifeEventBar,
+    DestroyCross
 } from "./sequence-node-views";
 
 import { PlantUmlStartup } from './plantuml-startup';
@@ -98,6 +105,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
 
         configureModelElement(context, "anchor-arrow", GEdge, AnchorEdgeView);
         configureModelElement(context, "lifeEvent", GNode, LifeEventBar);
+        configureModelElement(context, "destroy", GNode, DestroyCross)
     }
 );
 

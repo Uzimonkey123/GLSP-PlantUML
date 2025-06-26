@@ -729,3 +729,22 @@ export class LifeEventBar extends ShapeView {
         );
     }
 }
+
+export class DestroyCross extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const size = 10;
+        const half = size / 2;
+
+        return (
+            <g>
+                <line x1={-half} y1={-half} x2={half} y2={half}
+                      stroke="red" stroke-width="2" />
+                <line x1={-half} y1={half} x2={half} y2={-half}
+                      stroke="red" stroke-width="2" />
+            </g>
+        );
+    }
+}
