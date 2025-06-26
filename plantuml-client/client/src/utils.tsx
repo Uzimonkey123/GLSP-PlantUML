@@ -1,48 +1,77 @@
 import {VNode} from "snabbdom";
 import {svg} from "@eclipse-glsp/client";
 
-export function TspanConverter(html: string): VNode[] {
-    type Style = {
+export function TspanConverter(html: string): VNode[][] {
+    type Style = { //TODO: Add more styles according to plantuml
         bold?: boolean;
         italic?: boolean;
         underline?: boolean;
         color?: string };
-    const stack: Style[] = [{}];
-    const out: VNode[] = [];
+    const stack: Style[] = [{}]; // Stack for styles
+    const result: VNode[][] = [];
+    let currentLine: VNode[] = [];
 
-    const push = (t: string) => {
-        if (!t) return;
-        const s = stack[stack.length - 1];
-        out.push(
+    const applyStyle = (text: string) => {
+        if (!text) return;
+        const style = stack[stack.length - 1];
+
+        currentLine.push(
             <tspan
-                font-weight={s.bold ? 'bold' : undefined}
-        font-style={s.italic ? 'italic' : undefined}
-        text-decoration={s.underline ? 'underline' : undefined}
-        fill={s.color}>
-            {t}
-            </tspan>);
+                font-weight={style.bold ? 'bold' : undefined}
+                font-style={style.italic ? 'italic' : undefined}
+                text-decoration={style.underline ? 'underline' : undefined}
+                fill={style.color}
+            >
+                {text}
+            </tspan>
+        );
     };
 
-    html.replace(/<\/?[^>]+>|[^<]+/g, token => {
-        if (token.startsWith('</')) {
-            stack.pop();
-        } else if (token.startsWith('<')) {
-            const top = { ...stack[stack.length - 1] };
-            if (token.startsWith('<b')) top.bold = true;
-            if (token.startsWith('<i')) top.italic = true;
-            if (token.startsWith('<u')) top.underline = true;
-            if (token.startsWith('<font')) {
-                const matcher = token.match(/color\s*=\s*['"]?([^'">]+)/i);
-                if (matcher) top.color = matcher[1];
-            }
-            stack.push(top);
+    // Replace <br> with \n
+    const normalized = html.replace(/<br\s*\/?>/gi, '\n');
 
-        } else {
-            push(token);
+    // Tokenize the input so it takes the \n, <.., />
+    const tokens = normalized.match(/<\/?[^>]+>|[^<\n]+|\n/g) || [];
+
+    for (const token of tokens) {
+        if (token === '\n') {
+            result.push(currentLine);
+            currentLine = [];
+            continue;
         }
 
-        return '';
-    });
+        if (token.startsWith('</')) {
+            stack.pop(); // End style
 
-    return out;
+        } else if (token.startsWith('<')) {
+            // Opening tag
+            const currentStyle = { ...stack[stack.length - 1] };
+
+            // To match the booleans styles defined before
+            if (token.startsWith('<b')) currentStyle.bold = true;
+            if (token.startsWith('<i')) currentStyle.italic = true;
+            if (token.startsWith('<u')) currentStyle.underline = true;
+
+            // To get the color from <font color=...>
+            if (token.startsWith('<font')) {
+                const colorMatch = token.match(/color=['"]?([^'">]+)/i);
+                if (colorMatch) {
+                    currentStyle.color = colorMatch[1];
+                } else {
+                    throw new Error("Error: Wrong usage of <font. Use: <font color=color");
+                }
+            }
+
+            stack.push(currentStyle);
+
+        } else {
+            applyStyle(token); // Normal text without anything in it
+        }
+    }
+
+    if (currentLine.length > 0) {
+        result.push(currentLine);
+    }
+
+    return result;
 }

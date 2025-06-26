@@ -58,7 +58,7 @@ import 'balloon-css/balloon.min.css';
 class ReadOnlyEditorContextService extends EditorContextService {
     protected initialize(): void {
         super.initialize();
-        this._editMode = EditMode.READONLY;
+        this._editMode = EditMode.EDITABLE;
     }
 
     // To ignore SetEditModeAction in case it is called

@@ -18,19 +18,37 @@ import { TspanConverter } from "./utils";
 
 @injectable()
 export class HtmlLabelView extends GLabelView {
-	override render(label: Readonly<GLabel>,
-					context: RenderingContext,
-					args?: IViewArgs): VNode {
+	override render(label: Readonly<GLabel>, context: RenderingContext, args?: IViewArgs): VNode {
 		const num = (label as any).args?.numbering as string | undefined;
 		const text = label.text ?? '';
 
-		const numSpans = num ? TspanConverter(num) : [];
+		// Get the Tspan lines instead of just raw text
+		const numLines = num ? TspanConverter(num) : [];
+		const textLines = TspanConverter(text);
+
+		const lines: VNode[] = [];
+
+		// The amount of lines to render
+		const max = Math.max(numLines.length, textLines.length);
+
+		// Loop through lines and push them up with the given tspan
+		for (let i = 0; i < max; i++) {
+			const numSpans = numLines[i] ?? [];
+			const textSpans = textLines[i] ?? [];
+			const dy = i === 0 ? "0" : "1.2em"; // Vertical offset
+
+			lines.push(
+				<tspan x="0" dy={dy}>
+					{numSpans}
+					{numSpans.length > 0 && textSpans.length > 0 ? <tspan> </tspan> : null}
+					{textSpans}
+				</tspan>
+			);
+		}
 
 		return (
-			<text class-sprotty-label={true} text-anchor="middle">
-				{numSpans}
-				{num ? <tspan> </tspan> : undefined }
-				<tspan>{text}</tspan>
+			<text class-sprotty-label={true} text-anchor="start" x="0" y="0">
+				{lines}
 			</text>
 		);
 	}
