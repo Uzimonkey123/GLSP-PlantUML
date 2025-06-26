@@ -211,6 +211,15 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     private void LifeEventHandler(LifeEvent le) {
         String participant = le.getParticipant().getDisplay(false).get(0).toString();
         HColor background = le.getSpecificColors().getBackColor();
+        SequenceNode currentNode = null;
+
+        // Search for node in the participant list
+        for (SequenceNode node : model.participants) {
+            if (node.getName().equals(participant)) {
+                currentNode = node;
+                break;
+            }
+        }
 
         // Initialize stack for this participant
         activationStacks.putIfAbsent(participant, new Stack<>());
@@ -233,30 +242,38 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 int startIndex = messageStack.pop(); // Last start for participant is ending first, on top of stack
                 HColor color = colorStack.pop();
 
-                // Search for participant node in model and add the life event to its list
-                for (SequenceNode node : model.participants) {
-                    if (node.getName().equals(participant)) {
-                        SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
-                        // Set the depth of the life event for offset in factory
-                        lifeEvent.setLevel(messageStack.size());
+                // Add life event to the list
+                SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
+                // Set the depth of the life event for offset in factory
+                lifeEvent.setLevel(messageStack.size());
 
-                        node.addLifeEvent(lifeEvent);
-                        break;
-                    }
-                }
+                assert currentNode != null;
+                currentNode.addLifeEvent(lifeEvent);
             }
 
             case DESTROY -> {
+                if (!messageStack.isEmpty()) {
+                    int startIndex = messageStack.pop();
+                    HColor color = colorStack.pop();
 
+                    // Add life event to the list
+                    SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
+                    // Set the depth of the life event for offset in factory
+                    lifeEvent.setLevel(messageStack.size());
+
+                    assert currentNode != null;
+                    currentNode.addLifeEvent(lifeEvent);
+                }
+
+                // Set the destroy index for the node
+                assert currentNode != null;
+                currentNode.setDestroyIndex(index);
             }
 
             case CREATE -> {
-                for (SequenceNode node : model.participants) {
-                    if (node.getName().equals(participant)) {
-                        node.setCreatedNode(true);
-                        node.setCreatedIndex(model.messages.size());
-                    }
-                }
+                assert currentNode != null;
+                currentNode.setCreatedNode(true);
+                currentNode.setCreatedIndex(model.messages.size());
             }
         }
     }

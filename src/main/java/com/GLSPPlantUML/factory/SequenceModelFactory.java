@@ -76,8 +76,13 @@ public class SequenceModelFactory implements GModelFactory {
             halfWidth.put(node.getName(), nodeAttr.getHalfWidth());
             cursor += nodeAttr.getNodeWidth() + gap;
 
+            int destroyIndex = node.getDestroyIndex() == -1 ? 0 : node.getDestroyIndex();
+
             // Add life event boxes if they exist
             generateLifeEvents(node);
+
+            // Add destroy X if they exist
+            addDestroyCross(node, destroyIndex);
         }
 
         // Add invisible nodes for incoming or outgoing messages
@@ -113,6 +118,16 @@ public class SequenceModelFactory implements GModelFactory {
         // Update model state
         modelState.updateRoot(newGModel);
         modelState.getRoot().setRevision(-1);
+    }
+
+    private void addDestroyCross(SequenceNode node, int destroyIndex) {
+        if (destroyIndex == 0) return;
+
+        elements.add(new GNodeBuilder("destroy")
+                .id("dest-" + node.getName() + "-" + destroyIndex)
+                .position(centre.get(node.getName()), messagesYPos.get(destroyIndex))
+                .size(1, 1)
+                .build());
     }
 
     private void calculateYPositions(SequenceModel model, double firstMsgY) {

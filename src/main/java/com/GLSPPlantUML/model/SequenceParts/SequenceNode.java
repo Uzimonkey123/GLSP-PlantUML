@@ -15,6 +15,7 @@ public class SequenceNode {
     private boolean createdNode;
     private int createdIndex;
     private final List<SequenceLifeEvent> lifeEvents = new ArrayList<>();
+    private int destroyIndex = -1;
 
     public SequenceNode(String name, String type, int order, HColor background, boolean createdNode) {
         this.name = name;
@@ -72,5 +73,13 @@ public class SequenceNode {
                         messageIndex >= lifeEvent.getStartMessage() &&
                         messageIndex <= lifeEvent.getEndMessage())
                 .findFirst();
+    }
+
+    public int getDestroyIndex() {
+        return destroyIndex;
+    }
+
+    public void setDestroyIndex(int destroyIndex) {
+        this.destroyIndex = destroyIndex;
     }
 }
