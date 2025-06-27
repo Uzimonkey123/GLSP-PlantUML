@@ -8,6 +8,7 @@ import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.state.SequenceModelState;
+import com.GLSPPlantUML.utils.NodeGap;
 import jakarta.inject.Inject;
 import org.eclipse.glsp.graph.GGraph;
 import org.eclipse.glsp.graph.GModelElement;
@@ -22,6 +23,7 @@ public class SequenceModelFactory implements GModelFactory {
     private Map<String, Double> centre; // Map to store the middle of all nodes for lifeline
     private Map<String, Double> halfWidth; // Half size of nodes for created node arrows
     private List<GModelElement> elements;
+    private NodeGap gapCalculator;
 
     private Stack<SequenceAnchor> anchors; // Stack for anchors in the diagram
     private Map<String, SequenceAnchor> anchorMap; // Map to store anchors with their ID for easier search
@@ -52,11 +54,11 @@ public class SequenceModelFactory implements GModelFactory {
         double lifelineLength = (messagesCount - 1) * msgGap + extraBottom + additionalSpace;
         double totalHeight = nodeHeight + lifelineLength + nodeHeight;
 
-        double gap = Math.max(40, getMaxMessageLength(model));
-
         this.centre = new HashMap<>();
         this.halfWidth = new HashMap<>();
         this.elements = new ArrayList<>();
+
+        this.gapCalculator = new NodeGap(model.messages);
 
         // Add participants as nodes to the list
         for (SequenceNode node: model.participants) {
@@ -74,7 +76,12 @@ public class SequenceModelFactory implements GModelFactory {
 
             centre.put(node.getName(), nodeAttr.getCenter());
             halfWidth.put(node.getName(), nodeAttr.getHalfWidth());
-            cursor += nodeAttr.getNodeWidth() + gap;
+
+            String nextName = model.getNextParticipant(node.getName());
+            if (!nextName.equals(node.getName())) {
+                double gap = gapCalculator.getGaps(node.getName(), nextName);
+                cursor += nodeAttr.getNodeWidth() + gap + halfWidth.get(node.getName());
+            }
 
             int destroyIndex = node.getDestroyIndex() == -1 ? 0 : node.getDestroyIndex();
 
@@ -84,6 +91,8 @@ public class SequenceModelFactory implements GModelFactory {
             // Add destroy X if they exist
             addDestroyCross(node, destroyIndex);
         }
+
+        cursor += halfWidth.get(model.participants.getLast().getName()) + 40;
 
         // Add invisible nodes for incoming or outgoing messages
         generateInvisibleNodes(totalHeight);
@@ -103,7 +112,7 @@ public class SequenceModelFactory implements GModelFactory {
             addEdges(msg, model, i);
 
             // Additionally to adding edges, check for anchors and create them if needed
-            setupAnchors(msg, i, gap);
+            setupAnchors(msg, i);
         }
 
         // Add page details like header, title, footer
@@ -153,7 +162,7 @@ public class SequenceModelFactory implements GModelFactory {
         }
     }
 
-    private void setupAnchors(SequenceMessage msg, int msgIndex, double gap) {
+    private void setupAnchors(SequenceMessage msg, int msgIndex) {
         double y = messagesYPos.get(msgIndex);
         // If message is an anchor start, get the top Y coordinate of it
         // and save it inside the anchors stack
@@ -165,6 +174,7 @@ public class SequenceModelFactory implements GModelFactory {
 
         if (msg.isAnchorEnd()) {
             SequenceAnchor concreteAnchor = anchors.pop();
+            double gap = gapCalculator.getGaps(concreteAnchor.getParticipant1(), concreteAnchor.getParticipant2());
 
             AnchorBuild anchor = new AnchorBuild(concreteAnchor, y, gap);
             double xCoord = anchor.getXCoord(centre.get(concreteAnchor.getParticipant1()),
@@ -200,11 +210,11 @@ public class SequenceModelFactory implements GModelFactory {
 
         if (incoming) {
             sourceId = "[";
-            x1 = msg.getFrom().equals("[") ? 0 : cursor;
+            x1 = msg.getFrom().equals("[") ? 0 : cursor + halfWidth.get(model.participants.getLast().getName());
 
         } else if (outgoing) {
             targetId = "]";
-            x2 = msg.getTo().equals("]") ? cursor : 0;
+            x2 = msg.getTo().equals("]") ? cursor + halfWidth.get(model.participants.getLast().getName()) : 0;
 
         }
 
@@ -216,8 +226,9 @@ public class SequenceModelFactory implements GModelFactory {
                 .addRoutingPoint(point(x1, y))
                 .addRoutingPoint(point(x2, y));
 
-        // Add labels to messages
-        addLabels(msg, model, msgIndex, x1, x2, routingOne);
+        if (msg.getType().equals("edge:divider")) {
+            eb.addArgument("labelWidth", msg.getMessage().length());
+        }
 
         // Additional arguments to get every side and aspect of the arrow
         if (msg.getType().equals("edge")) {
@@ -246,6 +257,9 @@ public class SequenceModelFactory implements GModelFactory {
         }
 
         elements.add(eb.build());
+
+        // Add labels to messages
+        addLabels(msg, model, msgIndex, x1, x2, routingOne);
     }
 
     private void addLabels(SequenceMessage msg, SequenceModel model, int msgIndex, double x1, double x2,
@@ -316,7 +330,7 @@ public class SequenceModelFactory implements GModelFactory {
         elements.add(new GNodeBuilder()
                 .id("]")
                 .layout("vbox")
-                .position(cursor, nodeY)
+                .position(cursor * 2, nodeY)
                 .size(0, totalHeight)
                 .build());
         centre.put("]", cursor);
@@ -342,23 +356,11 @@ public class SequenceModelFactory implements GModelFactory {
                 .build());
     }
 
-    private double getMaxMessageLength(SequenceModel model) {
-        double charWidth = 4;
-        double padding = 5;
-
-        double maxWidth = 0;
-        for (SequenceMessage msg : model.messages) {
-            int len = msg.getMessage() != null ? msg.getMessage().length() + msg.getNumbering().length() : 0;
-            double width = charWidth * len + padding;
-            if (maxWidth < width) {
-                maxWidth = width;
-            }
+    private double setX(String participant, int messageIndex) {
+        if (participant.equals("[") || participant.equals("]")) {
+            return centre.getOrDefault(participant, 0.0);
         }
 
-        return maxWidth;
-    }
-
-    private double setX(String participant, int messageIndex) {
         SequenceNode node = modelState.getModel().getNode(participant);
         Optional<SequenceLifeEvent> lifeEventPos = node.getLifeEventAt(messageIndex);
 
