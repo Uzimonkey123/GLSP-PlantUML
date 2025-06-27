@@ -57,7 +57,7 @@ export class HtmlLabelView extends GLabelView {
 @injectable()
 export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersections {
 	protected override renderAdditionals(
-		edge: SEdgeImpl,
+		edge: GEdge,
 		segments: Point[],
 		context: RenderingContext,
 		args? : IViewArgs
@@ -77,13 +77,11 @@ export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersecti
 		const centerY = (start.y + end.y) / 2;
 
 		// Label text
-		const label = context.renderChildren(edge, args);
 
 		const labelPadding = 4;
 		const fontSize = 11;
-		const textVNode = label[0]; // Get the first and only label
-		const textContent = String(textVNode.children ?? "");
-		const labelWidth = textContent.length * 4.5; // Calculate an approx. width of letters
+		const labelLength = (edge.args?.labelWidth as number)
+		const labelWidth = labelLength * 4.5
 
 		additionals.push(
 			<g>
@@ -115,16 +113,6 @@ export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersecti
 					stroke="black"
 					stroke-width={2}
 				/>
-
-				<text
-					x={centerX}
-					y={centerY - 2}
-					text-anchor="middle"
-					alignment-baseline="middle"
-					font-size={fontSize}
-				>
-					{label}
-				</text>
 			</g>
 		);
 
