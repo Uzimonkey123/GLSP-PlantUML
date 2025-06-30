@@ -13,6 +13,7 @@ import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.sequencediagram.*;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
+import net.sourceforge.plantuml.text.Guillemet;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,7 +97,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void ParticipantHandler(Participant participant) {
-        String name = participant.getDisplay(false).get(0).toString();
+        String name = String.join("<br>", participant.getDisplay(false));
         String type = participant.getType().toString();
         int order = participant.getOrder();
         HColor background = participant.getColors().getColor(ColorType.BACK);
@@ -107,7 +108,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageExoHandler(MessageExo msg) {
-        String participant = msg.getParticipant().getDisplay(false).get(0).toString();
+        String participant = String.join("<br>", msg.getParticipant().getDisplay(false));
 
         record Direction(String from, String to, boolean incoming, boolean outgoing) {}
 
@@ -135,9 +136,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageHandler(Message msg) {
-        String from = msg.getParticipant1().getDisplay(false).get(0).toString();
+        String from = String.join("<br>", msg.getParticipant1().getDisplay(false));
 
-        String to = msg.getParticipant2().getDisplay(false).get(0).toString();
+        String to = String.join("<br>", msg.getParticipant2().getDisplay(false));
 
         String num = msg.getMessageNumber();
 
@@ -209,7 +210,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void LifeEventHandler(LifeEvent le) {
-        String participant = le.getParticipant().getDisplay(false).get(0).toString();
+        String participant = String.join("<br>", le.getParticipant().getDisplay(false));
         HColor background = le.getSpecificColors().getBackColor();
         SequenceNode currentNode = null;
 

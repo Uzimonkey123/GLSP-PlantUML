@@ -5,6 +5,8 @@ import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
 
+import java.util.Arrays;
+
 public class NodeBuild implements FactoryBuild {
     private final SequenceNode node;
     private final double cursor;
@@ -27,8 +29,12 @@ public class NodeBuild implements FactoryBuild {
     }
 
     public double getCenter() {
-        double textWidth = node.getName().length() * 8;
-        this.nodeWidth = textWidth + 20;
+        int lengthOnLine = Arrays.stream(node.getName().split("<br>"))
+                .mapToInt(String::length)
+                .max()
+                .orElse(0);
+
+        this.nodeWidth = lengthOnLine * 8 + 20;
 
         return cursor + nodeWidth / 2;
     }
@@ -44,20 +50,34 @@ public class NodeBuild implements FactoryBuild {
 
     @Override
     public GModelElement build() {
-        double textWidth = node.getName().length() * 8;
-        this.nodeWidth = textWidth + 20;
+        int lengthOnLine = Arrays.stream(node.getName().split("<br>"))
+                .mapToInt(String::length)
+                .max()
+                .orElse(0);
+
+        this.nodeWidth = lengthOnLine * 8 + 20;
 
         double yOffset = creationIndex * 35 + extraOffset;
         double nodeStartY = nodeY + yOffset;
 
+        String label = node.getName();
+        int lineCount = label.split("<br>").length;
+        int lineHeight = 14;
+        int headerHeight = lineCount * lineHeight + 10;
+
         return new GNodeBuilder(node.getType())
                 .id(node.getName())
                 .layout("vbox")
-                .position(cursor, nodeStartY)
+                .position(cursor, nodeStartY - headerHeight)
                 .addArgument("background", node.getBackground())
                 .addArgument("showFoot", showFoot)
-                .size(nodeWidth, totalHeight - yOffset)
-                .add(new GLabelBuilder().text(node.getName()).build())
+                .addArgument("name", node.getName())
+                .size(nodeWidth, totalHeight - yOffset + 2*headerHeight)
+                .addArgument("headerHeight", headerHeight)
+                .add(new GLabelBuilder("label:participant")
+                        .text(node.getName())
+                        .addArgument("width", nodeWidth)
+                        .build())
                 .build();
     }
 }

@@ -16,8 +16,10 @@ export class RectangularNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 30;
-        const footerH = 30;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
+
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
 
         // Lifeline between header and footer
         const lifeLineStart = headerH;
@@ -27,7 +29,7 @@ export class RectangularNodeView extends ShapeView {
             {/* Top rectangle */}
             <g>
                 <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH} fill={background}/>
-                <g transform={`translate(${w/2},${headerH/2})`}>
+                <g transform={`translate(${w/2},${headerH - (labelLines) * 14})`}>
                     {context.renderChildren(node)}
                 </g>
             </g>
@@ -46,7 +48,7 @@ export class RectangularNodeView extends ShapeView {
             {showFoot && (
                 <g transform={`translate(0, ${lifeLineEnd})`}>
                     <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
-                    <g transform={`translate(${w/2},${footerH/2})`}>
+                    <g transform={`translate(${w/2},${footerH - (labelLines) * 14})`}>
                         {context.renderChildren(node)}
                     </g>
                 </g>
@@ -66,8 +68,12 @@ export class ActorNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 15;
-        const footerH = 15;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
+
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
+        const lineHeight = 14;
+        const labelHeight = labelLines * lineHeight;
 
         const cx = w / 2; // Center of circle
         const headRadius = 6;
@@ -90,19 +96,19 @@ export class ActorNodeView extends ShapeView {
         );
 
         // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH + 5;
-        const lifeLineEnd = h - footerH - 5;
+        const lifeLineStart = headerH;
+        const lifeLineEnd = h - footerH;
 
         // Position for the label
-        const labelY = headerH;
+        const topLabelY = headerH - labelHeight;
 
         return (
             <g>
                 {/* Top stickman */}
-                {drawStickman(labelY - 65)}
+                {drawStickman(topLabelY - 65)}
 
                 {/* Top label */}
-                <g transform={`translate(${cx}, ${labelY})`}>
+                <g transform={`translate(${cx}, ${topLabelY})`}>
                     {context.renderChildren(node)}
                 </g>
 
@@ -124,7 +130,7 @@ export class ActorNodeView extends ShapeView {
                         </g>
 
                         {/* Bottom stickman */}
-                        {drawStickman(lifeLineEnd + 10)}
+                        {drawStickman(lifeLineEnd + labelHeight)}
                     </g>
                 )}
             </g>
@@ -143,8 +149,12 @@ export class BoundaryNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 15;
-        const footerH = 15;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
+
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
+        const lineHeight = 14;
+        const labelHeight = labelLines * lineHeight;
 
         const cx = w / 2; // Center of circle
 
@@ -186,11 +196,11 @@ export class BoundaryNodeView extends ShapeView {
         };
 
         // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH + 5;
-        const lifeLineEnd = h - footerH - 5;
+        const lifeLineStart = headerH;
+        const lifeLineEnd = h - footerH;
 
         // Position for the label
-        const labelY = headerH;
+        const labelY = headerH - labelHeight;
 
         return (
             <g>
@@ -220,7 +230,7 @@ export class BoundaryNodeView extends ShapeView {
                         </g>
 
                         {/* Bottom boundary */}
-                        {drawBoundary(lifeLineEnd + 20)}
+                        {drawBoundary(lifeLineEnd + labelHeight + 10)}
                     </g>
                 )}
             </g>
@@ -239,8 +249,12 @@ export class ControlNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 15;
-        const footerH = 15;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
+
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
+        const lineHeight = 14;
+        const labelHeight = labelLines * lineHeight;
 
         const cx = w / 2; // Center of circle
 
@@ -280,11 +294,11 @@ export class ControlNodeView extends ShapeView {
         };
 
         // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH + 5;
-        const lifeLineEnd = h - footerH - 5;
+        const lifeLineStart = headerH;
+        const lifeLineEnd = h - footerH;
 
         // Position for the label
-        const labelY = headerH;
+        const labelY = headerH - labelHeight;
 
         return (
             <g>
@@ -314,7 +328,7 @@ export class ControlNodeView extends ShapeView {
                         </g>
 
                         {/* Bottom control */}
-                        {drawControl(lifeLineEnd + 20)}
+                        {drawControl(lifeLineEnd + labelHeight + 10)}
                     </g>
                 )}
             </g>
@@ -333,8 +347,12 @@ export class EntityNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 15;
-        const footerH = 15;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
+
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
+        const lineHeight = 14;
+        const labelHeight = labelLines * lineHeight;
 
         const cx = w / 2;
 
@@ -366,11 +384,11 @@ export class EntityNodeView extends ShapeView {
         };
 
         // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH + 5;
-        const lifeLineEnd = h - footerH - 5;
+        const lifeLineStart = headerH;
+        const lifeLineEnd = h - footerH;
 
         // Position for the label
-        const labelY = headerH;
+        const labelY = headerH - labelHeight;
 
         return (
             <g>
@@ -400,7 +418,7 @@ export class EntityNodeView extends ShapeView {
                         </g>
 
                         {/* Bottom entity */}
-                        {drawEntitySymbol(lifeLineEnd + 20)}
+                        {drawEntitySymbol(lifeLineEnd + labelHeight + 5)}
                     </g>
                 )}
             </g>
@@ -419,8 +437,12 @@ export class DatabaseNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 15;
-        const footerH = 15;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
+
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
+        const lineHeight = 14;
+        const labelHeight = labelLines * lineHeight;
 
         const cx = w / 2;
 
@@ -491,11 +513,11 @@ export class DatabaseNodeView extends ShapeView {
         };
 
         // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH + 5;
-        const lifeLineEnd = h - footerH - 5;
+        const lifeLineStart = headerH;
+        const lifeLineEnd = h - footerH;
 
-        // Label position
-        const labelY = headerH;
+        // Position for the label
+        const labelY = headerH - labelHeight;
 
         return (
             <g>
@@ -525,7 +547,7 @@ export class DatabaseNodeView extends ShapeView {
                         </g>
 
                         {/* Bottom database */}
-                        {drawDatabase(lifeLineEnd + 25)}
+                        {drawDatabase(lifeLineEnd + labelHeight + 10)}
                     </g>
                 )}
             </g>
@@ -541,9 +563,14 @@ export class CollectionNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 30;
-        const footerH = 30;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
 
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
+        const lineHeight = 14;
+        const labelHeight = labelLines * lineHeight;
+
+        // Lifeline between header and footer
         const lifeLineStart = headerH;
         const lifeLineEnd = totalH - footerH;
 
@@ -561,7 +588,7 @@ export class CollectionNodeView extends ShapeView {
             {/* Front rectangle */}
             <g>
                 <rect class-sprotty-node={true} x={0} y={0} width={w} height={headerH} fill={background}/>
-                <g transform={`translate(${w / 2}, ${headerH / 2})`}>
+                <g transform={`translate(${w / 2}, ${headerH - (labelLines) * 14})`}>
                     {context.renderChildren(node)}
                 </g>
             </g>
@@ -591,7 +618,7 @@ export class CollectionNodeView extends ShapeView {
                     {/* Bottom rectangle */}
                     <g transform={`translate(0, ${lifeLineEnd + 6})`}>
                         <rect class-sprotty-node={true} x={0} y={0} width={w} height={footerH} fill={background}/>
-                        <g transform={`translate(${w / 2}, ${footerH / 2})`}>
+                        <g transform={`translate(${w / 2}, ${footerH - (labelLines) * 14})`}>
                             {context.renderChildren(node)}
                         </g>
                     </g>
@@ -609,13 +636,17 @@ export class QueueNodeView extends ShapeView {
         const background = (node as any).args?.background;
         const showFoot = (node as any).args?.showFoot;
 
-        const headerH = 30;
-        const footerH = 30;
+        const headerH = (node as any).args?.headerHeight;
+        const footerH = (node as any).args?.headerHeight;
+
+        const labelLines = ((node as any).args?.name || "").split("<br>").length;
+        const lineHeight = 14;
+        const labelHeight = labelLines * lineHeight;
 
         const drawQueue = (offsetY: number) => {
-            const cy = offsetY;
+            const ry = headerH / 2;
+            const cy = offsetY + ry;
             const rx = 6; // Radius for the side ellipses
-            const ry = 7;
 
             const cylinderBodyX = 3;
             const cylinderBodyWidth = w - 2 * rx;
@@ -671,7 +702,7 @@ export class QueueNodeView extends ShapeView {
                     />
 
                     {/* Centered label */}
-                    <g transform={`translate(${w / 2}, ${cy})`}>
+                    <g transform={`translate(${w / 2}, ${offsetY + headerH - labelHeight})`}>
                         {context.renderChildren(node)}
                     </g>
                 </g>
@@ -679,13 +710,13 @@ export class QueueNodeView extends ShapeView {
         }
 
         // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH - 8;
-        const lifeLineEnd = h - footerH + 15;
+        const lifeLineStart = headerH;
+        const lifeLineEnd = h - footerH;
 
         return (
             <g>
                 {/* Top queue symbol */}
-                {drawQueue(15)}
+                {drawQueue(0)}
 
                 {/* Dashed lifeline, auto‐size */}
                 <line
@@ -700,7 +731,7 @@ export class QueueNodeView extends ShapeView {
                 {showFoot && (
                     <g>
                         {/*Bottom queue symbol */}
-                        {drawQueue(lifeLineEnd + 5)}
+                        {drawQueue(lifeLineEnd)}
                     </g>
                 )}
             </g>
