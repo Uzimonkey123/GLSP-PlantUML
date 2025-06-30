@@ -31,9 +31,14 @@ export function TspanConverter(html: string): VNode[][] {
     const normalized = html.replace(/<br\s*\/?>/gi, '\n');
 
     // Tokenize the input so it takes the \n, <.., />
-    const tokens = normalized.match(/<\/?[^>]+>|[^<\n]+|\n/g) || [];
+    const tokens = normalized.match(/<<[^<>]+>>|<\/?[^>]+>|[^<\n]+|\n/g) || [];
 
     for (const token of tokens) {
+        if (token.startsWith('<<') && token.endsWith('>>')) {
+            applyStyle(token);
+            continue;
+        }
+
         if (token === '\n') {
             result.push(currentLine);
             currentLine = [];
