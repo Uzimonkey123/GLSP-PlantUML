@@ -3,10 +3,7 @@ package com.GLSPPlantUML.factory;
 import com.GLSPPlantUML.attributes.AnchorBuild;
 import com.GLSPPlantUML.attributes.NodeBuild;
 import com.GLSPPlantUML.model.SequenceModel;
-import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
-import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
-import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
-import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
+import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;
 import com.GLSPPlantUML.utils.NodeGap;
 import jakarta.inject.Inject;
@@ -200,6 +197,11 @@ public class SequenceModelFactory implements GModelFactory {
             routingTwo = model.participants.getLast().getName();
         }
 
+        if (msg.getType().equals("edge:ref")) { // If it is reference, just handle that and exit
+            addReference(msg, model, msgIndex);
+            return;
+        }
+
         boolean incoming = msg.decideWay().equals("incoming");
         boolean outgoing = msg.decideWay().equals("outgoing");
 
@@ -282,6 +284,39 @@ public class SequenceModelFactory implements GModelFactory {
                 .addArgument("numbering", msg.getNumbering())
                 .position(labelShift, y - labelYOffset)
                 .build());
+    }
+
+    private void addReference(SequenceMessage msg, SequenceModel model, int msgIndex) {
+        String from = msg.getFrom();
+        String to = msg.getTo();
+
+        double x1 = centre.get(from) - 25;
+        double x2 = centre.get(to) + 25;
+
+        // If first message is not ref, move the ref up to the bottom of the last message, else start normally
+        double y1 = (msgIndex > 0) ? messagesYPos.get(msgIndex - 1) + 8 : messagesYPos.get(msgIndex) - 29;
+        double y2 = messagesYPos.get(msgIndex);
+
+        String[] lines = msg.getMessage().split("<br>");
+        int maxLineLength = Arrays.stream(lines).mapToInt(String::length).max().orElse(0);
+        int labelWidth = maxLineLength * 8 + 5;
+
+        double baseWidth = x2 - x1;
+        if (labelWidth > baseWidth) {
+            x2 = x1 + labelWidth; // Move the ref just towards the right, no further extension to the left
+        }
+
+        elements.add(new GEdgeBuilder("edge:ref")
+                .id(msg.getMsgId())
+                .sourceId(from)
+                .targetId(to)
+                .addArgument("x1", x1)
+                .addArgument("x2", x2)
+                .addArgument("y1", y1)
+                .addArgument("y2", y2)
+                .build());
+
+        addLabels(msg, model, msgIndex, x1, x2, from);
     }
 
     private void generateLifeEvents(SequenceNode node) {

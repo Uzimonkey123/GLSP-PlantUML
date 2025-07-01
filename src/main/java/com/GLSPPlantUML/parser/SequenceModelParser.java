@@ -1,10 +1,7 @@
 package com.GLSPPlantUML.parser;
 
 import com.GLSPPlantUML.model.SequenceModel;
-import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
-import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
-import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
-import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
+import com.GLSPPlantUML.model.SequenceParts.*;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
@@ -26,6 +23,8 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
     private int anchorCounter = 0; // For counting how many anchors started
     private final Stack<String> anchorIdStack = new Stack<>(); // To keep track of the nesting of anchors
+
+    private int referenceCounter = 0;
 
     // Map of Participant name - activate life event to store life event start for deactivation
     private final Map<String, Stack<Integer>> activationStacks = new HashMap<>();
@@ -89,6 +88,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     if (event instanceof HSpace hSpace) {
                         hSpaceHandler(hSpace);
                     }
+
+                    if (event instanceof Reference reference) {
+                        ReferenceHandler(reference);
+                    }
                 }
             }
         }
@@ -115,6 +118,20 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 node.setCharColor(participant.getStereotype().getHtmlColor().asString());
             }
         }
+    }
+
+    private void ReferenceHandler(Reference reference) {
+        String firstParticipant = String.join("<br>",
+                reference.getParticipant().getFirst().getDisplay(false));
+
+        String lastParticipant = String.join("<br>",
+                reference.getParticipant().getLast().getDisplay(false));
+
+        String label = String.join("<br>", reference.getStrings());
+
+        String msgId = "msg-" + model.messages.size();
+
+        model.messages.add(new SequenceMessage(msgId, firstParticipant, lastParticipant, label, null, "edge:ref"));
     }
 
     private void MessageExoHandler(MessageExo msg) {
