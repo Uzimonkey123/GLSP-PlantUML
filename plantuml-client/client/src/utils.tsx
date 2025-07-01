@@ -80,3 +80,34 @@ export function TspanConverter(html: string): VNode[][] {
 
     return result;
 }
+
+export function createIcon(width: number, background: String, stereotypeChar: String) {
+    const lineHeight = 14; // Base height across client and server
+    const iconRadius = 8;
+    const iconCenterX = -width / 2 + iconRadius + 5; // 5px padding from left edge
+    const iconCenterY = lineHeight / 2;
+
+    return (
+        <g>
+            <circle
+                cx={iconCenterX}
+                cy={iconCenterY}
+                r={iconRadius}
+                fill={background}
+                stroke="black"
+                stroke-width={1}
+            />
+            <text
+                x={iconCenterX}
+                y={iconCenterY}
+                fill="white"
+                font-weight="bold"
+                font-size="12"
+                text-anchor="middle"
+                alignment-baseline="middle"
+            >
+                {stereotypeChar}
+            </text>
+        </g>
+    );
+}

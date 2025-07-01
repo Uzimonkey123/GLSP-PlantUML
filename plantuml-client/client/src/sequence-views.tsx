@@ -12,9 +12,74 @@ import {
 } from '@eclipse-glsp/client';
 import { VNode } from "snabbdom";
 import '../css/diagram.css';
-import { TspanConverter } from "./utils";
+import {createIcon, TspanConverter} from "./utils";
 
 /** @jsx svg */
+
+@injectable()
+export class ParticipantLabelView extends GLabelView {
+	override render(label: Readonly<GLabel>, context: RenderingContext, args?: IViewArgs): VNode {
+		// TODO: Formating for creol and html (monospace, italic etc..)
+		const text = label.text ?? '';
+		const lines = text.split("<br>");
+		const lineHeight = 14;
+
+		const width = (label as any).args?.width;
+		const background = (label as any).args?.stereotypeCharColor;
+		const stereotypeChar = (label as any).args?.stereotypeChar;
+		const hasIcon = stereotypeChar.length > 0 && stereotypeChar !== '-';
+
+		const elements: VNode[] = [];
+		let currentY = -lineHeight * 0.75;
+
+		if (hasIcon) {
+			// Render the icon circle and letter on top, aligned vertically with first line
+			const iconGroup = createIcon(width, background, stereotypeChar);
+			elements.push(iconGroup);
+		}
+
+		lines.forEach((line) => {
+			// ---- is horizontal line
+			if (/^[-]{4,}$/.test(line)) {
+				const y = currentY + lineHeight / 2;
+				elements.push(
+					<line
+						x1={-width / 2}
+						y1={y}
+						x2={width / 2}
+						y2={y}
+						stroke="black"
+						stroke-width={1}
+					/>
+				);
+
+				currentY += lineHeight;
+				return;
+			}
+
+			const isBold = line.startsWith('=');
+			const content = isBold ? line.slice(1).trim() : line;
+
+			// Normal text push
+			elements.push(
+				<text
+					x={hasIcon ? 10 : 0}
+					y={currentY + lineHeight * 0.75}
+					style={{ fontWeight: isBold ? 'bold' : 'normal' }}
+					class-sprotty-label={true}
+					text-anchor="start"
+				>
+					{content}
+				</text>
+			);
+
+			// Go to the next line
+			currentY += lineHeight;
+		});
+
+		return <g>{elements}</g>;
+	}
+}
 
 @injectable()
 export class HtmlLabelView extends GLabelView {
@@ -127,7 +192,7 @@ export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersection
 		segments: Point[],
 		context: RenderingContext,
 		args?: IViewArgs
-		): VNode[]
+	): VNode[]
 	{
 
 		const additionals = super.renderAdditionals(edge, segments, context);
@@ -147,12 +212,12 @@ export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersection
 			additionals.push(
 				<g transform={`translate(${midX},${midY})`}>
 					{labels.map((l, i) =>
-					 <text key={i}
-						   {...(l.data?.props as any)}
-						   text-anchor="middle"
-						   fill="black">
-						 {l.children}
-					 </text>
+						<text key={i}
+							  {...(l.data?.props as any)}
+							  text-anchor="middle"
+							  fill="black">
+							{l.children}
+						</text>
 					)}
 				</g>
 			);
@@ -179,40 +244,40 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 	private circleStartPart! : string;
 	private circleEndPart! : string;
 
-	 private headPath(kind: string, part: 'top' | 'bottom' | 'full', circle: boolean): string | undefined {
-		 let circleOffset = circle ? 5 : 10;
+	private headPath(kind: string, part: 'top' | 'bottom' | 'full', circle: boolean): string | undefined {
+		let circleOffset = circle ? 5 : 10;
 
-		 switch (`${kind}:${part}`) {
-			 case 'block:full':
-				 return `M0,-4 L${circleOffset},0 L0,4 Z`;
-			 case 'block:top':
-				 return `M0,-4 L${circleOffset},0 L0,0 Z`;
-			 case 'block:bottom':
-				 return `M0,4 L${circleOffset},0 L0,0 Z`;
+		switch (`${kind}:${part}`) {
+			case 'block:full':
+				return `M0,-4 L${circleOffset},0 L0,4 Z`;
+			case 'block:top':
+				return `M0,-4 L${circleOffset},0 L0,0 Z`;
+			case 'block:bottom':
+				return `M0,4 L${circleOffset},0 L0,0 Z`;
 
-			 case 'open:full':
-				 return `M0,-4 L${circleOffset + 1},0 M0,4 L${circleOffset + 1},0, M0,0 L${circleOffset + 1},0`;
-			 case 'open:top':
-				 return `M0,-4 L${circleOffset + 1},0 M0,0 L${circleOffset + 1},0`;
-			 case 'open:bottom':
-				 return `M0,4 L${circleOffset + 1},0 M0,0 L${circleOffset + 1},0`;
+			case 'open:full':
+				return `M0,-4 L${circleOffset + 1},0 M0,4 L${circleOffset + 1},0, M0,0 L${circleOffset + 1},0`;
+			case 'open:top':
+				return `M0,-4 L${circleOffset + 1},0 M0,0 L${circleOffset + 1},0`;
+			case 'open:bottom':
+				return `M0,4 L${circleOffset + 1},0 M0,0 L${circleOffset + 1},0`;
 
-			 case 'cross:full':
-				 return 'M-4,-4 L4,4 M4,-4 L-4,4'
+			case 'cross:full':
+				return 'M-4,-4 L4,4 M4,-4 L-4,4'
 
-			 default:
-				 return undefined;
-		 }
-	 }
+			default:
+				return undefined;
+		}
+	}
 
-	 protected override renderAdditionals(
-		 edge: GEdge,
-		 segments: Point[],
-		 context: RenderingContext,
-		 args?: IViewArgs
-	 ): VNode[] {
+	protected override renderAdditionals(
+		edge: GEdge,
+		segments: Point[],
+		context: RenderingContext,
+		args?: IViewArgs
+	): VNode[] {
 
-	 	const additionals = super.renderAdditionals(edge, segments, context);
+		const additionals = super.renderAdditionals(edge, segments, context);
 
 		this.circleStart = false;
 		this.circleEnd = false;
@@ -266,10 +331,10 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 
 		this.placeLabel(context, additionals, edge, args);
 		return additionals;
-	 }
+	}
 
 	private drawOutInArrow(additionals: VNode[], edge: GEdge, incoming: boolean) {
-		 // Additional arguments to get distance between two nodes who have short arrows
+		// Additional arguments to get distance between two nodes who have short arrows
 		const fromX = edge.args?.fromX as number;
 		const toX = edge.args?.toX as number;
 		const short = (edge.args?.isShort as boolean) ?? false;
@@ -341,159 +406,159 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		if (this.circleEnd) this.drawCircle({ x: drawEndX, y: drawEndY }, additionals);
 	}
 
-	 private drawSelfArrow(additionals: VNode[]) {
-		 const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
-		 const dashed = this.style === 'dotted' ? '2 2' : undefined;
+	private drawSelfArrow(additionals: VNode[]) {
+		const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
+		const dashed = this.style === 'dotted' ? '2 2' : undefined;
 
-		 let crossOffsetStart = this.headStart == 'cross' ? -10 : 0;
-		 let crossOffsetEnd = this.headEnd == 'cross' ? -10 : 0;
-		 const lineStart = this.start.x - crossOffsetStart;
-		 const lineEnd = this.start.x - crossOffsetEnd;
+		let crossOffsetStart = this.headStart == 'cross' ? -10 : 0;
+		let crossOffsetEnd = this.headEnd == 'cross' ? -10 : 0;
+		const lineStart = this.start.x - crossOffsetStart;
+		const lineEnd = this.start.x - crossOffsetEnd;
 
-		 additionals.unshift(
-			 <path
-				 d={`M ${lineStart} ${this.start.y}
+		additionals.unshift(
+			<path
+				d={`M ${lineStart} ${this.start.y}
 				 	L ${lineStart + 50 + crossOffsetStart} ${this.start.y}
 				 	M ${lineEnd} ${this.start.y + 15}
 				 	L ${lineEnd + 50 + crossOffsetEnd} ${this.start.y + 15}
 				 	M ${lineStart + 50 + crossOffsetStart} ${this.start.y}
 				 	L ${lineStart + 50 + crossOffsetStart} ${this.start.y + 15}`}
-				 stroke={this.arrColor}
-				 strokeWidth={strokeWidth}
-				 {...(dashed ? {'stroke-dasharray': dashed} : {})}
-				 marker-end="none"
-				 fill="none"
-				 class-sprotty-edge={true}
-			 />
-		 );
+				stroke={this.arrColor}
+				strokeWidth={strokeWidth}
+				{...(dashed ? {'stroke-dasharray': dashed} : {})}
+				marker-end="none"
+				fill="none"
+				class-sprotty-edge={true}
+			/>
+		);
 
-		 const endArrowPos = {
-			 x: this.end.x + 10,
-			 y: this.end.y + 15
-		 }
-		 const startArrowPos = {
-			 x: this.start.x + 10,
-			 y: this.start.y
-		 }
+		const endArrowPos = {
+			x: this.end.x + 10,
+			y: this.end.y + 15
+		}
+		const startArrowPos = {
+			x: this.start.x + 10,
+			y: this.start.y
+		}
 
-		 this.drawHead(this.headStart, startArrowPos, 180, "start", this.circleStart, additionals, strokeWidth);
-		 this.drawHead(this.headEnd, endArrowPos, 180, "end", this.circleEnd, additionals, strokeWidth);
+		this.drawHead(this.headStart, startArrowPos, 180, "start", this.circleStart, additionals, strokeWidth);
+		this.drawHead(this.headEnd, endArrowPos, 180, "end", this.circleEnd, additionals, strokeWidth);
 
-		 if (this.circleStart) this.drawCircle(this.start, additionals);
-		 if (this.circleEnd) {
-			 const endCircle = {
-				 x: this.end.x,
-				 y: this.end.y + 15
-			 }
-			 this.drawCircle(endCircle, additionals);
-		 }
-	 }
+		if (this.circleStart) this.drawCircle(this.start, additionals);
+		if (this.circleEnd) {
+			const endCircle = {
+				x: this.end.x,
+				y: this.end.y + 15
+			}
+			this.drawCircle(endCircle, additionals);
+		}
+	}
 
-	 private drawSimpleArrow(additionals: VNode[]) {
+	private drawSimpleArrow(additionals: VNode[]) {
 
-		 const dx = this.end.x - this.start.x;
-		 const dy = this.end.y - this.start.y;
-		 const norm = Math.hypot(dx, dy) || 1;
+		const dx = this.end.x - this.start.x;
+		const dy = this.end.y - this.start.y;
+		const norm = Math.hypot(dx, dy) || 1;
 
-		 const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
-		 const dashed = this.style === 'dotted' ? '2 2' : undefined;
+		const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
+		const dashed = this.style === 'dotted' ? '2 2' : undefined;
 
-		 // Setting offset according to if needed to start or end earlier
-		 let lineStartOffset = this.headStart == 'cross' ? -10 : 0;
-		 let lineEndOffset = this.headEnd == 'cross' ? 10 : 0;
+		// Setting offset according to if needed to start or end earlier
+		let lineStartOffset = this.headStart == 'cross' ? -10 : 0;
+		let lineEndOffset = this.headEnd == 'cross' ? 10 : 0;
 
-		 const lineStartX = this.start.x - (dx / norm) * lineStartOffset;
-		 const lineStartY = this.start.y - (dy / norm) * lineStartOffset;
+		const lineStartX = this.start.x - (dx / norm) * lineStartOffset;
+		const lineStartY = this.start.y - (dy / norm) * lineStartOffset;
 
-		 const lineEndX = this.end.x - (dx / norm) * lineEndOffset;
-		 const lineEndY = this.end.y - (dy / norm) * lineEndOffset;
+		const lineEndX = this.end.x - (dx / norm) * lineEndOffset;
+		const lineEndY = this.end.y - (dy / norm) * lineEndOffset;
 
-		 additionals.unshift(
-			 <path
-				 d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
-				 stroke={this.arrColor}
-				 strokeWidth={strokeWidth}
-				 {...(dashed ? {'stroke-dasharray': dashed} : {})}
-				 marker-end="none"
-				 fill="none"
-				 class-sprotty-edge={true}
-			 />
-		 );
+		additionals.unshift(
+			<path
+				d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
+				stroke={this.arrColor}
+				strokeWidth={strokeWidth}
+				{...(dashed ? {'stroke-dasharray': dashed} : {})}
+				marker-end="none"
+				fill="none"
+				class-sprotty-edge={true}
+			/>
+		);
 
-		 // Calculation of angle of the arrow + setting the shift according to it
-		 const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-		 const shift = 10;
+		// Calculation of angle of the arrow + setting the shift according to it
+		const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+		const shift = 10;
 
-		 // Saving new end and start arrow positions according to side they are facing
-		 const endArrowPos = {
-			 x: this.end.x + (dx === 0 ? 0 : (dx > 0 ? -shift : shift)),
-			 y: this.end.y
-		 }
-		 const startArrowPos = {
-			 x: this.start.x + (dx === 0 ? 0 : (dx > 0 ? shift : -shift)),
-			 y: this.start.y
-		 }
+		// Saving new end and start arrow positions according to side they are facing
+		const endArrowPos = {
+			x: this.end.x + (dx === 0 ? 0 : (dx > 0 ? -shift : shift)),
+			y: this.end.y
+		}
+		const startArrowPos = {
+			x: this.start.x + (dx === 0 ? 0 : (dx > 0 ? shift : -shift)),
+			y: this.start.y
+		}
 
-		 this.drawHead(this.headStart, startArrowPos, angle + 180, "start", this.circleStart, additionals, strokeWidth);
-		 this.drawHead(this.headEnd, endArrowPos, angle, "end", this.circleEnd, additionals, strokeWidth);
+		this.drawHead(this.headStart, startArrowPos, angle + 180, "start", this.circleStart, additionals, strokeWidth);
+		this.drawHead(this.headEnd, endArrowPos, angle, "end", this.circleEnd, additionals, strokeWidth);
 
-		 if (this.circleStart) this.drawCircle(this.start, additionals);
-		 if (this.circleEnd) this.drawCircle(this.end, additionals);
-	 }
+		if (this.circleStart) this.drawCircle(this.start, additionals);
+		if (this.circleEnd) this.drawCircle(this.end, additionals);
+	}
 
-	 private drawHead(kind: string, at: Point, ang: number, pos: string, circle: boolean, additionals: VNode[], strokeWidth: number) {
-		 if (kind == 'none') return;
+	private drawHead(kind: string, at: Point, ang: number, pos: string, circle: boolean, additionals: VNode[], strokeWidth: number) {
+		if (kind == 'none') return;
 
-		 const part = pos == "end" ? this.partEnd : this.partStart
-		 const d = this.headPath(kind, part as 'top' | 'bottom' | 'full', circle);
-		 if (d) {
-			 additionals.push(
-				 <path d={d}
-					   transform={`translate(${at.x} ${at.y}) rotate(${ang})`}
-					   style={{ fill: kind === 'block' ? this.arrColor : 'none' }}
-					   stroke={this.arrColor} strokeWidth={strokeWidth}
-				 />
-			 );
-		 }
-	 }
+		const part = pos == "end" ? this.partEnd : this.partStart
+		const d = this.headPath(kind, part as 'top' | 'bottom' | 'full', circle);
+		if (d) {
+			additionals.push(
+				<path d={d}
+					  transform={`translate(${at.x} ${at.y}) rotate(${ang})`}
+					  style={{ fill: kind === 'block' ? this.arrColor : 'none' }}
+					  stroke={this.arrColor} strokeWidth={strokeWidth}
+				/>
+			);
+		}
+	}
 
-	 private drawCircle(at: Point, additionals: VNode[]) {
-		 additionals.push(
-			 <circle
-				 cx={at.x}
-				 cy={at.y}
-				 r={3}
-				 fill={this.arrColor}
-				 stroke={this.arrColor}
-				 strokeWidth={1}
-			 />
-		 )
-	 }
+	private drawCircle(at: Point, additionals: VNode[]) {
+		additionals.push(
+			<circle
+				cx={at.x}
+				cy={at.y}
+				r={3}
+				fill={this.arrColor}
+				stroke={this.arrColor}
+				strokeWidth={1}
+			/>
+		)
+	}
 
-	 private placeLabel(context: RenderingContext, additionals: VNode[], edge: GEdge, args?: IViewArgs) {
-		 const midX = (this.start.x + this.end.x) / 2;
-		 const midY = (this.start.y + this.end.y) / 2;
-		 const labels = context.renderChildren(edge, args);
-		 if (labels.length) {
-			 additionals.push(
-				 <g transform={`translate(${midX},${midY})`}>
-					 {labels.map((l, i) => {
-						 const raw = (l.text as string | undefined) ?? '';
-						 return (
-							 <text key={i}
-								   {...(l.data?.props as any)}
-								   text-anchor="middle"
-								   dominant-baseline="central"
-								   fill="black">
+	private placeLabel(context: RenderingContext, additionals: VNode[], edge: GEdge, args?: IViewArgs) {
+		const midX = (this.start.x + this.end.x) / 2;
+		const midY = (this.start.y + this.end.y) / 2;
+		const labels = context.renderChildren(edge, args);
+		if (labels.length) {
+			additionals.push(
+				<g transform={`translate(${midX},${midY})`}>
+					{labels.map((l, i) => {
+						const raw = (l.text as string | undefined) ?? '';
+						return (
+							<text key={i}
+								  {...(l.data?.props as any)}
+								  text-anchor="middle"
+								  dominant-baseline="central"
+								  fill="black">
 
-								 {TspanConverter(raw)}
-							 </text>
-						 );
-					 })}
-				 </g>
-			 );
-		 }
-	 }
+								{TspanConverter(raw)}
+							</text>
+						);
+					})}
+				</g>
+			);
+		}
+	}
 }
 
 @injectable()
@@ -505,8 +570,8 @@ export class SequenceHeaderFooter extends GLabelView {
 
 		return (
 			<text text-anchor="middle"
-			      fill="grey"
-			      font-size="10">
+				  fill="grey"
+				  font-size="10">
 				<tspan fill="grey" font-size="10">{text}</tspan>
 			</text>
 		);
