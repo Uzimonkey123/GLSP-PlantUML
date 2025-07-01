@@ -13,7 +13,6 @@ import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.sequencediagram.*;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
-import net.sourceforge.plantuml.text.Guillemet;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,9 +100,20 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         String type = participant.getType().toString();
         int order = participant.getOrder();
         HColor background = participant.getColors().getColor(ColorType.BACK);
+        SequenceNode node = null;
 
         if(!hasParticipant(name)) {
-            addParticipants(model.participants, new SequenceNode(name, type, order, background, false));
+            node = new SequenceNode(name, type, order, background, false);
+            addParticipants(model.participants, node);
+        }
+        
+        if (participant.getStereotype() != null) {
+            assert node != null;
+            node.setStereotype(true);
+            node.setStereotypeChar(participant.getStereotype().getCharacter());
+            if (participant.getStereotype().getHtmlColor() != null) {
+                node.setCharColor(participant.getStereotype().getHtmlColor().asString());
+            }
         }
     }
 

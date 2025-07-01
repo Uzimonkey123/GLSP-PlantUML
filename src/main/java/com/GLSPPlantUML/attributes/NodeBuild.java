@@ -29,13 +29,6 @@ public class NodeBuild implements FactoryBuild {
     }
 
     public double getCenter() {
-        int lengthOnLine = Arrays.stream(node.getName().split("<br>"))
-                .mapToInt(String::length)
-                .max()
-                .orElse(0);
-
-        this.nodeWidth = lengthOnLine * 8 + 20;
-
         return cursor + nodeWidth / 2;
     }
 
@@ -47,23 +40,64 @@ public class NodeBuild implements FactoryBuild {
         return nodeWidth;
     }
 
-
-    @Override
-    public GModelElement build() {
-        int lengthOnLine = Arrays.stream(node.getName().split("<br>"))
+    private int getMaxLength(String lines) {
+        return Arrays.stream(lines.split("<br>"))
                 .mapToInt(String::length)
                 .max()
                 .orElse(0);
+    }
 
+    private StringBuilder removeSpecialChar() {
+        // Get the lines of the original name
+        String[] lines = node.getName().split("<br>");
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+
+            // If there is a special char in stereotype, remove it
+            if (i == 0 && node.getStereotypeChar() != '-') {
+                line = line.substring(1).trim();
+            }
+
+            // Add the line to the string
+            result.append(line);
+
+            // If not last line, add br to indicate new line
+            if (i < lines.length - 1) {
+                result.append("<br>");
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public GModelElement build() {
+        // Get the label of the node, in case of stereotype check for first char
+        String label = node.isStereotype()
+                ? this.removeSpecialChar().toString()
+                : node.getName();
+
+        int lengthOnLine = getMaxLength(node.getName());
         this.nodeWidth = lengthOnLine * 8 + 20;
 
         double yOffset = creationIndex * 35 + extraOffset;
         double nodeStartY = nodeY + yOffset;
 
-        String label = node.getName();
         int lineCount = label.split("<br>").length;
         int lineHeight = 14;
         int headerHeight = lineCount * lineHeight + 10;
+
+        GLabelBuilder labelBuilder = new GLabelBuilder("label:participant")
+                .text(label)
+                .addArgument("width", nodeWidth);
+
+        // Add stereotype char and color of its background if present
+        if (node.isStereotype()) {
+            labelBuilder.addArgument("stereotypeChar", String.valueOf(node.getStereotypeChar()));
+            labelBuilder.addArgument("stereotypeCharColor", node.getCharColor());
+        }
 
         return new GNodeBuilder(node.getType())
                 .id(node.getName())
@@ -71,13 +105,10 @@ public class NodeBuild implements FactoryBuild {
                 .position(cursor, nodeStartY - headerHeight)
                 .addArgument("background", node.getBackground())
                 .addArgument("showFoot", showFoot)
-                .addArgument("name", node.getName())
-                .size(nodeWidth, totalHeight - yOffset + 2*headerHeight)
+                .addArgument("name", label)
+                .size(nodeWidth, totalHeight - yOffset + 2 * headerHeight)
                 .addArgument("headerHeight", headerHeight)
-                .add(new GLabelBuilder("label:participant")
-                        .text(node.getName())
-                        .addArgument("width", nodeWidth)
-                        .build())
+                .add(labelBuilder.build())
                 .build();
     }
 }

@@ -16,6 +16,9 @@ public class SequenceNode {
     private int createdIndex;
     private final List<SequenceLifeEvent> lifeEvents = new ArrayList<>();
     private int destroyIndex = -1;
+    private char stereotypeChar = '-';
+    private String charColor = "#ADD1B2";
+    private boolean isStereotype = false;
 
     public SequenceNode(String name, String type, int order, HColor background, boolean createdNode) {
         this.name = name;
@@ -81,5 +84,34 @@ public class SequenceNode {
 
     public void setDestroyIndex(int destroyIndex) {
         this.destroyIndex = destroyIndex;
+    }
+
+    public char getStereotypeChar() {
+        // Empty char, replace it for client
+        if ((int) stereotypeChar == 0) {
+            stereotypeChar = '-';
+        }
+
+        return stereotypeChar;
+    }
+
+    public void setStereotypeChar(char stereotypeChar) {
+        this.stereotypeChar = stereotypeChar;
+    }
+
+    public String getCharColor() {
+        return charColor;
+    }
+
+    public void setCharColor(String charColor) {
+        this.charColor = charColor;
+    }
+
+    public boolean isStereotype() {
+        return isStereotype;
+    }
+
+    public void setStereotype(boolean isStereotype) {
+        this.isStereotype = isStereotype;
     }
 }
