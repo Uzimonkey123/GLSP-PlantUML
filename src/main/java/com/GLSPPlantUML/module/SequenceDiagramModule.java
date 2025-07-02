@@ -8,6 +8,8 @@ import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.GLSPPlantUML.parser.SequenceModelParser;
 import com.GLSPPlantUML.state.SequenceModelState;
 import com.GLSPPlantUML.storage.SequenceModelStorage;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import org.eclipse.glsp.server.actions.ActionHandler;
 import org.eclipse.glsp.server.di.MultiBinding;
@@ -57,5 +59,11 @@ public class SequenceDiagramModule extends DiagramModule {
         // Adding Parsers into the configuration
         bind(new TypeLiteral<PlantUMLParser<SequenceModel>>() {})
                 .to(SequenceModelParser.class);
+    }
+
+    @Provides
+    @Singleton
+    public SequenceModel provideSequenceModel(SequenceModelState modelState) {
+        return modelState.getModel();
     }
 }

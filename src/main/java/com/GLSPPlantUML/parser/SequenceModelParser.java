@@ -19,6 +19,8 @@ import java.util.*;
 
 public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     private SequenceDiagram sequenceDiagram;
+
+    @Inject
     private SequenceModel model;
 
     private int anchorCounter = 0; // For counting how many anchors started
@@ -41,7 +43,6 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         // Parse with PlantUML
         SourceStringReader reader = new SourceStringReader(text);
         List<BlockUml> blocks = reader.getBlocks();
-        this.model = new SequenceModel();
 
         for (BlockUml block : blocks) {
             Diagram d = block.getDiagram();
