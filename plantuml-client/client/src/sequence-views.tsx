@@ -8,7 +8,7 @@ import {
 	svg,
 	SEdgeImpl,
 	GLabelView,
-	GLabel
+	GLabel, GEdgeView
 } from '@eclipse-glsp/client';
 import { VNode } from "snabbdom";
 import '../css/diagram.css';
@@ -26,7 +26,7 @@ export class ParticipantLabelView extends GLabelView {
 
 		const width = (label as any).args?.width;
 		const background = (label as any).args?.stereotypeCharColor;
-		const stereotypeChar = (label as any).args?.stereotypeChar;
+		const stereotypeChar = (label as any).args?.stereotypeChar ?? '-';
 		const hasIcon = stereotypeChar.length > 0 && stereotypeChar !== '-';
 
 		const elements: VNode[] = [];
@@ -100,7 +100,8 @@ export class HtmlLabelView extends GLabelView {
 		for (let i = 0; i < max; i++) {
 			const numSpans = numLines[i] ?? [];
 			const textSpans = textLines[i] ?? [];
-			const dy = i === 0 ? "0" : "1.2em"; // Vertical offset
+			const isOnlyLine = max === 1;
+			const dy = i === 0 ? (isOnlyLine ? "0" : "0.5em") : "1.2em"; // Vertical offset
 
 			lines.push(
 				<tspan x="0" dy={dy}>
@@ -647,6 +648,51 @@ export class AnchorEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
 				fill="black"
 				stroke="black"
 				strokeWidth={1.5}
+			/>
+		);
+
+		return additionals;
+	}
+}
+
+export class ReferenceEdgeView extends GEdgeView {
+	protected override renderAdditionals(edge: GEdge, segments: Point[], _context: RenderingContext): VNode[] {
+		const additionals = super.renderAdditionals(edge, segments, _context);
+
+		const x1 = edge.args?.x1 as number;
+		const x2 = edge.args?.x2 as number;
+		const y1 = edge.args?.y1 as number;
+		const y2 = edge.args?.y2 as number;
+
+		additionals.unshift(
+			<polygon
+				points={`${x1},${y1} ${x1},${y1 + 10}
+				 		${x1 + 25},${y1 + 10} 
+				 		${x1 + 30},${y1 + 5} 
+				 		${x1 + 30},${y1}`}
+				fill="grey"
+				stroke="black"
+				strokeWidth={1}
+			/>,
+
+			<text
+				x={x1 + 12}
+				y={y1 + 9}
+				fontSize="10"
+				fontWeight="bold"
+				fill="white"
+			>
+				ref
+			</text>,
+
+			<rect
+				x={x1}
+				y={y1}
+				width={x2-x1}
+				height={y2-y1}
+				fill="none"
+				stroke="black"
+				strokeWidth={1}
 			/>
 		);
 

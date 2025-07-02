@@ -38,7 +38,9 @@ import {
     SequenceMessageDivider,
     SequenceHeaderFooter,
     SequenceTitle,
-    AnchorEdgeView, ParticipantLabelView
+    AnchorEdgeView,
+    ParticipantLabelView,
+    ReferenceEdgeView
 } from './sequence-views';
 
 import {
@@ -98,6 +100,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
 
         configureModelElement(context, "edge:delay", GEdge, SequenceMessageDelay);
         configureModelElement(context, "edge:divider", GEdge, SequenceMessageDivider);
+        configureModelElement(context, "edge:ref", GEdge, ReferenceEdgeView);
         configureModelElement(context, "label:html", GLabel, HtmlLabelView);
         configureModelElement(context, "label:participant", GLabel, ParticipantLabelView);
         configureModelElement(context, "label:header", GLabel, SequenceHeaderFooter);
