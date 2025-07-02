@@ -1,4 +1,4 @@
-package com.GLSPPlantUML.attributes;
+package com.GLSPPlantUML.builders;
 
 import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
 import org.eclipse.glsp.graph.GModelElement;
@@ -9,7 +9,7 @@ import org.eclipse.glsp.graph.util.GConstants;
 
 import static org.eclipse.glsp.graph.util.GraphUtil.point;
 
-public class AnchorBuild implements FactoryBuild {
+public class AnchorBuild {
     private final SequenceAnchor anchor;
     private double xCoord;
     private final double bottomY;
@@ -33,7 +33,6 @@ public class AnchorBuild implements FactoryBuild {
     }
 
 
-    @Override
     public GModelElement build() {
         return new GEdgeBuilder("anchor-arrow")
                 .id(anchor.getAnchorId())

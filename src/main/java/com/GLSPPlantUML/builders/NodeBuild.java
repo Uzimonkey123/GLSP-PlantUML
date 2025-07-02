@@ -1,12 +1,14 @@
 package com.GLSPPlantUML.builders;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 public class NodeBuild {
     public void buildInvisibleNodes(List<GModelElement> elements, double totalHeight, double cursor, double nodeY) {
@@ -70,5 +72,22 @@ public class NodeBuild {
                 .addArgument("headerHeight", headerHeight)
                 .add(labelBuilder.build())
                 .build();
+    }
+
+    public void buildAnchorPoints(List<GModelElement> elements, SequenceAnchor anchor, double xCoord, double y,
+                                  String from, Map<String, Double> halfWidth) {
+        elements.add(new GNodeBuilder()
+                .id(anchor.getAnchorId() + "-top")
+                .layout("vbox")
+                .position(xCoord - halfWidth.get(from), anchor.getTopY())
+                .size(0, 0)
+                .build());
+
+        elements.add(new GNodeBuilder()
+                .id(anchor.getAnchorId() + "-bottom")
+                .layout("vbox")
+                .position(xCoord - halfWidth.get(from), y)
+                .size(0, 0)
+                .build());
     }
 }
