@@ -13,18 +13,16 @@ public class NodeBuild implements FactoryBuild {
     private final double nodeY;
     private final double totalHeight;
     private double nodeWidth;
-    private final int creationIndex;
     private final double extraOffset;
     private final boolean showFoot;
 
     public NodeBuild(SequenceNode node, double cursor, double nodeY, double totalHeight,
-                     double extraOffset, int creationIndex, boolean showFoot) {
+                     double extraOffset, boolean showFoot) {
         this.node = node;
         this.cursor = cursor;
         this.nodeY = nodeY;
         this.totalHeight = totalHeight;
         this.extraOffset = extraOffset;
-        this.creationIndex = creationIndex;
         this.showFoot = showFoot;
     }
 
@@ -82,7 +80,7 @@ public class NodeBuild implements FactoryBuild {
         int lengthOnLine = getMaxLength(node.getName());
         this.nodeWidth = lengthOnLine * 8 + 20;
 
-        double yOffset = creationIndex * 35 + extraOffset;
+        double yOffset = node.isCreatedNode() ? extraOffset - 24 : extraOffset;
         double nodeStartY = nodeY + yOffset;
 
         int lineCount = label.split("<br>").length;

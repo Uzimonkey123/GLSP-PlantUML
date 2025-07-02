@@ -55,16 +55,15 @@ public class SequenceModelFactory implements GModelFactory {
 
         // Add participants as nodes to the list
         for (SequenceNode node: model.participants) {
-            int creationIndex = node.isCreatedNode() ? node.getCreatedIndex() : 0;
-            int extraOffset = 0;
+            double extraOffset = 0.0;
 
             // To check if there was added extra spaces due to multiline labels
-            for (int i = 0; i < creationIndex; i++) {
-                extraOffset += model.messageSpaces.getOrDefault(i, 0);
+            if (node.isCreatedNode()) {
+                extraOffset = messagesYPos.get(node.getCreatedIndex()) - nodeY;
             }
 
             NodeBuild nodeAttr = new NodeBuild(node, cursor, nodeY, totalHeight,
-                                                            extraOffset, creationIndex, model.showFoot);
+                                                            extraOffset, model.showFoot);
             elements.add(nodeAttr.build());
 
             centre.put(node.getName(), nodeAttr.getCenter());
@@ -152,6 +151,14 @@ public class SequenceModelFactory implements GModelFactory {
 
             // If message is self call activation, the start of life event is lower
             lifeEventYPos.add(msg.isSelf() ? y + 15 : y);
+        }
+
+        int trailing = model.messageSpaces.getOrDefault(model.messages.size(), 0);
+        if (trailing > 0) {
+            // In case HSpace is added after the last message
+            double lastY = messagesYPos.getLast() + msgGap + trailing;
+            messagesYPos.add(lastY);
+            lifeEventYPos.add(lastY);
         }
     }
 
