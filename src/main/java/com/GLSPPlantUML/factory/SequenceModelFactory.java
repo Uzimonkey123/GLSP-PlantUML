@@ -30,7 +30,6 @@ public class SequenceModelFactory implements GModelFactory {
     private final double nodeY = 30;
     private final double nodeHeight = 30;
     private final double msgGap = 35;
-    private final double extraBottom = 50;
     private double cursor = 40; // Start of the first node
 
     @Inject
@@ -40,16 +39,13 @@ public class SequenceModelFactory implements GModelFactory {
     public void createGModel() {
         SequenceModel model = modelState.getModel();
 
-        int messagesCount = model.messages.size();
-        double firstMsgY = nodeY + nodeHeight + 20;
+        double firstMsgY = nodeY + nodeHeight + 10;
 
         this.messagesYPos = new ArrayList<>();
         this.lifeEventYPos = new ArrayList<>();
         calculateYPositions(model, firstMsgY);
 
-        int additionalSpace = model.messageSpaces.values().stream().mapToInt(Integer::intValue).sum();
-        double lifelineLength = (messagesCount - 1) * msgGap + extraBottom + additionalSpace;
-        double totalHeight = nodeHeight + lifelineLength + nodeHeight;
+        double totalHeight = messagesYPos.stream().mapToDouble(Double::doubleValue).max().orElse(firstMsgY);
 
         this.centre = new HashMap<>();
         this.halfWidth = new HashMap<>();
@@ -141,7 +137,7 @@ public class SequenceModelFactory implements GModelFactory {
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceMessage msg = model.messages.get(i);
             int lines = msg.getMessage().split("<br>").length;
-            int extra = Math.max(0, (lines - 1) * 15);
+            int extra = Math.max(0, (lines - 1) * 14);
 
             if (model.messageSpaces.containsKey(i)) {
                 hspace += model.messageSpaces.get(i);
@@ -293,13 +289,16 @@ public class SequenceModelFactory implements GModelFactory {
         double x1 = centre.get(from) - 25;
         double x2 = centre.get(to) + 25;
 
-        // If first message is not ref, move the ref up to the bottom of the last message, else start normally
-        double y1 = (msgIndex > 0) ? messagesYPos.get(msgIndex - 1) + 8 : messagesYPos.get(msgIndex) - 29;
-        double y2 = messagesYPos.get(msgIndex);
-
         String[] lines = msg.getMessage().split("<br>");
         int maxLineLength = Arrays.stream(lines).mapToInt(String::length).max().orElse(0);
         int labelWidth = maxLineLength * 8 + 5;
+
+        int lineCount = lines.length;
+        int labelHeight = lineCount * 14;
+
+        // Get y1 according to the current index - amount of lines and some padding
+        double y1 = messagesYPos.get(msgIndex) - (labelHeight + 10);
+        double y2 = messagesYPos.get(msgIndex);
 
         double baseWidth = x2 - x1;
         if (labelWidth > baseWidth) {

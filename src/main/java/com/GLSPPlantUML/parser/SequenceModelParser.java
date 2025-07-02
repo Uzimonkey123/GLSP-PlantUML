@@ -24,8 +24,6 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     private int anchorCounter = 0; // For counting how many anchors started
     private final Stack<String> anchorIdStack = new Stack<>(); // To keep track of the nesting of anchors
 
-    private int referenceCounter = 0;
-
     // Map of Participant name - activate life event to store life event start for deactivation
     private final Map<String, Stack<Integer>> activationStacks = new HashMap<>();
     private final Map<String, Stack<HColor>> activationColorStacks = new HashMap<>();
