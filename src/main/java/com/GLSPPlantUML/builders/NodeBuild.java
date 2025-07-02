@@ -1,0 +1,74 @@
+package com.GLSPPlantUML.builders;
+
+import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
+import org.eclipse.glsp.graph.GModelElement;
+import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
+import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
+
+import java.util.List;
+
+public class NodeBuild {
+    public void buildInvisibleNodes(List<GModelElement> elements, double totalHeight, double cursor, double nodeY) {
+        elements.add(new GNodeBuilder()
+                .id("[")
+                .layout("vbox")
+                .position(0, nodeY)
+                .size(0, totalHeight)
+                .build());
+
+        elements.add(new GNodeBuilder()
+                .id("]")
+                .layout("vbox")
+                .position(cursor * 2, nodeY)
+                .size(0, totalHeight)
+                .build());
+    }
+
+    public void buildPageDetails(List<GModelElement> elements, SequenceModel model,
+                                 double totalHeight, double cursor) {
+        elements.add(new GLabelBuilder("label:header")
+                .id("header")
+                .position(cursor / 2, -40)
+                .text(model.header)
+                .build());
+
+        elements.add(new GLabelBuilder("label:title")
+                .id("title")
+                .position(cursor / 2, -20)
+                .text(model.title)
+                .build());
+
+        elements.add(new GLabelBuilder("label:footer")
+                .id("footer")
+                .position(cursor / 2, totalHeight + 80)
+                .text(model.footer)
+                .build());
+    }
+
+    public GModelElement buildNode(SequenceNode node, double cursor, double nodeWidth, double headerHeight,
+                                   double height, String label, double nodeStart, boolean showFoot) {
+
+        GLabelBuilder labelBuilder = new GLabelBuilder("label:participant")
+                .text(label)
+                .addArgument("width", nodeWidth);
+
+        // Add stereotype char and color of its background if present
+        if (node.isStereotype()) {
+            labelBuilder.addArgument("stereotypeChar", String.valueOf(node.getStereotypeChar()));
+            labelBuilder.addArgument("stereotypeCharColor", node.getCharColor());
+        }
+
+        return new GNodeBuilder(node.getType())
+                .id(node.getName())
+                .layout("vbox")
+                .position(cursor, nodeStart)
+                .addArgument("background", node.getBackground())
+                .addArgument("showFoot", showFoot)
+                .addArgument("name", label)
+                .size(nodeWidth, height)
+                .addArgument("headerHeight", headerHeight)
+                .add(labelBuilder.build())
+                .build();
+    }
+}

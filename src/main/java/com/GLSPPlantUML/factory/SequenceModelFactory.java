@@ -1,7 +1,7 @@
 package com.GLSPPlantUML.factory;
 
-import com.GLSPPlantUML.attributes.AnchorBuild;
-import com.GLSPPlantUML.attributes.NodeBuild;
+import com.GLSPPlantUML.builders.AnchorBuild;
+import com.GLSPPlantUML.builders.NodeBuild;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;
@@ -19,18 +19,17 @@ import static org.eclipse.glsp.graph.util.GraphUtil.point;
 public class SequenceModelFactory implements GModelFactory {
     private Map<String, Double> centre; // Map to store the middle of all nodes for lifeline
     private Map<String, Double> halfWidth; // Half size of nodes for created node arrows
-    private List<GModelElement> elements;
+    private List<GModelElement> elements = new ArrayList<>();
     private NodeGap gapCalculator;
+    private NodeBuild nodeBuild;
 
-    private Stack<SequenceAnchor> anchors; // Stack for anchors in the diagram
-    private Map<String, SequenceAnchor> anchorMap; // Map to store anchors with their ID for easier search
-    private List<Double> lifeEventYPos;
-    private List<Double> messagesYPos;
+    private Stack<SequenceAnchor> anchors = new Stack<>(); // Stack for anchors in the diagram
+    private Map<String, SequenceAnchor> anchorMap = new HashMap<>(); // Map to store anchors with their ID for easier search
 
-    private final double nodeY = 30;
-    private final double nodeHeight = 30;
-    private final double msgGap = 35;
-    private double cursor = 40; // Start of the first node
+    private final List<Double> lifeEventYPos = new ArrayList<>();
+    private final List<Double> messagesYPos = new ArrayList<>();
+
+    private double cursor;
 
     @Inject
     protected SequenceModelState modelState;
@@ -39,59 +38,30 @@ public class SequenceModelFactory implements GModelFactory {
     public void createGModel() {
         SequenceModel model = modelState.getModel();
 
+        double nodeY = 30;
+        double nodeHeight = 30;
         double firstMsgY = nodeY + nodeHeight + 10;
 
-        this.messagesYPos = new ArrayList<>();
-        this.lifeEventYPos = new ArrayList<>();
-        calculateYPositions(model, firstMsgY);
-
+        calculateYPositions(model, firstMsgY); // Get all Y coordinate information for messages/life events/ ver. spaces
         double totalHeight = messagesYPos.stream().mapToDouble(Double::doubleValue).max().orElse(firstMsgY);
 
-        this.centre = new HashMap<>();
-        this.halfWidth = new HashMap<>();
-        this.elements = new ArrayList<>();
-
         this.gapCalculator = new NodeGap(model.messages);
+        this.nodeBuild = new NodeBuild();
 
-        // Add participants as nodes to the list
-        for (SequenceNode node: model.participants) {
-            double extraOffset = 0.0;
+        // Build all the nodes and create list to get their centers
+        SequenceNodeFactory nodeFactory = new SequenceNodeFactory(model, nodeBuild, totalHeight,
+                                                                    messagesYPos, gapCalculator);
+        nodeFactory.createNodes();
 
-            // To check if there was added extra spaces due to multiline labels
-            if (node.isCreatedNode()) {
-                extraOffset = messagesYPos.get(node.getCreatedIndex()) - nodeY;
-            }
+        this.elements = nodeFactory.getElements();
+        this.centre = nodeFactory.getCentre();
+        this.halfWidth = nodeFactory.getHalfWidth();
+        this.cursor = nodeFactory.getCursor();
 
-            NodeBuild nodeAttr = new NodeBuild(node, cursor, nodeY, totalHeight,
-                                                            extraOffset, model.showFoot);
-            elements.add(nodeAttr.build());
-
-            centre.put(node.getName(), nodeAttr.getCenter());
-            halfWidth.put(node.getName(), nodeAttr.getHalfWidth());
-
-            String nextName = model.getNextParticipant(node.getName());
-            if (!nextName.equals(node.getName())) {
-                double gap = gapCalculator.getGaps(node.getName(), nextName);
-                cursor += nodeAttr.getNodeWidth() + gap + halfWidth.get(node.getName());
-            }
-
-            int destroyIndex = node.getDestroyIndex() == -1 ? 0 : node.getDestroyIndex();
-
-            // Add life event boxes if they exist
-            generateLifeEvents(node);
-
-            // Add destroy X if they exist
-            addDestroyCross(node, destroyIndex);
-        }
-
-        cursor += halfWidth.get(model.participants.getLast().getName()) + 40;
-
-        // Add invisible nodes for incoming or outgoing messages
-        generateInvisibleNodes(totalHeight);
-
-        // Add messages as edges with proper text, source and target
-        this.anchors = new Stack<>();
-        this.anchorMap = new HashMap<>();
+        // Build the necessary life events and destroy icons
+        SequenceLifeEventFactory leFactory = new SequenceLifeEventFactory(model, lifeEventYPos, centre,
+                                                                            elements, messagesYPos);
+        leFactory.createSequenceLifeEvents();
 
         // Populate anchor map with all anchors and match them with their ID
         for (SequenceAnchor anchor : model.anchors) {
@@ -107,13 +77,10 @@ public class SequenceModelFactory implements GModelFactory {
             setupAnchors(msg, i);
         }
 
-        // Add page details like header, title, footer
-        addPageDetails(model, totalHeight);
-
         // Build the graph
-        GGraph newGModel = new GGraphBuilder() //
-                .id("sequence-diagram") //
-                .addAll(elements) //
+        GGraph newGModel = new GGraphBuilder()
+                .id("sequence-diagram")
+                .addAll(elements)
                 .build();
 
         // Update model state
@@ -121,18 +88,10 @@ public class SequenceModelFactory implements GModelFactory {
         modelState.getRoot().setRevision(-1);
     }
 
-    private void addDestroyCross(SequenceNode node, int destroyIndex) {
-        if (destroyIndex == 0) return;
-
-        elements.add(new GNodeBuilder("destroy")
-                .id("dest-" + node.getName() + "-" + destroyIndex)
-                .position(centre.get(node.getName()), messagesYPos.get(destroyIndex))
-                .size(1, 1)
-                .build());
-    }
-
     private void calculateYPositions(SequenceModel model, double firstMsgY) {
         double hspace = 0;
+        double msgGap = 35;
+
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceMessage msg = model.messages.get(i);
             int lines = msg.getMessage().split("<br>").length;
@@ -150,7 +109,14 @@ public class SequenceModelFactory implements GModelFactory {
             messagesYPos.add(y);
 
             // If message is self call activation, the start of life event is lower
-            lifeEventYPos.add(msg.isSelf() ? y + 15 : y);
+            // for deactivation or destroy of self message it does not set offset
+            int finalI = i;
+            boolean isStartOfLifeEvent = msg.isSelf() &&
+                    model.participants.stream()
+                    .anyMatch(node -> node.getLifeEvents().stream()
+                            .anyMatch(event -> event.getStartMessage() == finalI));
+
+            lifeEventYPos.add(isStartOfLifeEvent ? y + 15 : y);
         }
 
         int trailing = model.messageSpaces.getOrDefault(model.messages.size(), 0);
@@ -325,24 +291,6 @@ public class SequenceModelFactory implements GModelFactory {
         addLabels(msg, model, msgIndex, x1, x2, from);
     }
 
-    private void generateLifeEvents(SequenceNode node) {
-        for (SequenceLifeEvent le : node.getLifeEvents()) {
-            double center = centre.get(node.getName()) - 3;
-            double shift = 4 * le.getLevel();
-            double y1 = lifeEventYPos.get(le.getStartMessage());
-            double y2 = lifeEventYPos.get(le.getEndMessage());
-
-            double x = center + shift;
-
-            elements.add(new GNodeBuilder("lifeEvent")
-                    .id("act-" + node.getName() + "-" + le.getStartMessage())
-                    .position(x, y1)
-                    .size(6, y2 - y1)
-                    .addArgument("background", le.getBackground())
-                    .build());
-        }
-    }
-
     private void generateAnchorPoints(SequenceAnchor anchor, String from, double xCoord, double y) {
         elements.add(new GNodeBuilder()
                 .id(anchor.getAnchorId() + "-top")
@@ -356,44 +304,6 @@ public class SequenceModelFactory implements GModelFactory {
                 .layout("vbox")
                 .position(xCoord - halfWidth.get(from), y)
                 .size(0, 0)
-                .build());
-    }
-
-    private void generateInvisibleNodes(double totalHeight) {
-        elements.add(new GNodeBuilder()
-                .id("[")
-                .layout("vbox")
-                .position(0, nodeY)
-                .size(0, totalHeight)
-                .build());
-        centre.put("[", 0.0);
-
-        elements.add(new GNodeBuilder()
-                .id("]")
-                .layout("vbox")
-                .position(cursor * 2, nodeY)
-                .size(0, totalHeight)
-                .build());
-        centre.put("]", cursor);
-    }
-
-    private void addPageDetails(SequenceModel model, double totalHeight) {
-        elements.add(new GLabelBuilder("label:header")
-                .id("header")
-                .position(cursor / 2, -40)
-                .text(model.header)
-                .build());
-
-        elements.add(new GLabelBuilder("label:title")
-                .id("title")
-                .position(cursor / 2, -20)
-                .text(model.title)
-                .build());
-
-        elements.add(new GLabelBuilder("label:footer")
-                .id("footer")
-                .position(cursor / 2, totalHeight + 80)
-                .text(model.footer)
                 .build());
     }
 
