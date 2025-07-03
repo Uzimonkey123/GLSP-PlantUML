@@ -24,7 +24,7 @@ import {
     EditMode,
     SetEditModeAction,
     configureModelElement,
-    GLabel
+    GLabel, editLabelFeature, selectFeature, moveFeature
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
@@ -40,7 +40,7 @@ import {
     SequenceTitle,
     AnchorEdgeView,
     ParticipantLabelView,
-    ReferenceEdgeView
+    ReferenceEdgeView, GroupsView
 } from './sequence-views';
 
 import {
@@ -101,7 +101,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "edge:delay", GEdge, SequenceMessageDelay);
         configureModelElement(context, "edge:divider", GEdge, SequenceMessageDivider);
         configureModelElement(context, "edge:ref", GEdge, ReferenceEdgeView);
-        configureModelElement(context, "label:html", GLabel, HtmlLabelView);
+        configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature] });
         configureModelElement(context, "label:participant", GLabel, ParticipantLabelView);
         configureModelElement(context, "label:header", GLabel, SequenceHeaderFooter);
         configureModelElement(context, "label:footer", GLabel, SequenceHeaderFooter);
@@ -110,6 +110,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "anchor-arrow", GEdge, AnchorEdgeView);
         configureModelElement(context, "lifeEvent", GNode, LifeEventBar);
         configureModelElement(context, "destroy", GNode, DestroyCross)
+        configureModelElement(context, "group", GEdge, GroupsView);
     }
 );
 

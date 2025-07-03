@@ -67,8 +67,10 @@ public class MessageBuild {
         return new GLabelBuilder("label:html")
                 .id("label-"+ msgIndex)
                 .text(msg.getMessage())
+                .size(10, 10)
                 .addArgument("numbering", msg.getNumbering())
                 .position(shift, y - yOffset)
+                .addArgument("selectable", true)
                 .build();
     }
 

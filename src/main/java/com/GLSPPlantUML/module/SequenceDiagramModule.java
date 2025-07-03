@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.module;
 
 import com.GLSPPlantUML.PlantUMLDiagramConfiguration;
+import com.GLSPPlantUML.validators.SequenceLabelValidator;
 import com.GLSPPlantUML.factory.SequenceModelFactory;
 import com.GLSPPlantUML.handlers.SetDirtyStateHandler;
 import com.GLSPPlantUML.model.SequenceModel;
@@ -17,6 +18,7 @@ import org.eclipse.glsp.server.diagram.DiagramConfiguration;
 import org.eclipse.glsp.server.features.core.model.GModelFactory;
 import org.eclipse.glsp.server.features.core.model.SourceModelStorage;
 import org.eclipse.glsp.server.di.DiagramModule;
+import org.eclipse.glsp.server.features.directediting.LabelEditValidator;
 import org.eclipse.glsp.server.model.GModelState;
 
 public class SequenceDiagramModule extends DiagramModule {
@@ -51,6 +53,11 @@ public class SequenceDiagramModule extends DiagramModule {
     protected void configureActionHandlers(MultiBinding<ActionHandler> mb) {
         super.configureActionHandlers(mb);
         mb.add(SetDirtyStateHandler.class); // Suppressing warning about dirty state, since not using edit-mode
+    }
+
+    @Override
+    protected Class<? extends LabelEditValidator> bindLabelEditValidator() {
+        return SequenceLabelValidator.class;
     }
 
     @Override
