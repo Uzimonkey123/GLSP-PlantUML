@@ -30,6 +30,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     private final Map<String, Stack<Integer>> activationStacks = new HashMap<>();
     private final Map<String, Stack<HColor>> activationColorStacks = new HashMap<>();
 
+    // Map for storing leaf group attributes to the corresponding parent group (parent = GroupingStart)
+    private final Map<GroupingStart, SequenceGroup> groupStack = new HashMap<>();
+
     @Inject
     public SequenceModelParser() {}
 
@@ -64,6 +67,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
                 // Extract participants and messages with API
                 for (Event event : sd.events()) {
+                    if (event instanceof GroupingStart gs) {
+                        GroupingStartHandler(gs);
+                    }
+
+                    if (event instanceof GroupingLeaf leaf) {
+                        GroupingLeafHandler(leaf);
+                    }
+
                     if (event instanceof MessageExo msg) {
                         MessageExoHandler(msg);
                     }
@@ -115,6 +126,30 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             node.setStereotypeChar(participant.getStereotype().getCharacter());
             if (participant.getStereotype().getHtmlColor() != null) {
                 node.setCharColor(participant.getStereotype().getHtmlColor().asString());
+            }
+        }
+    }
+
+    private void GroupingStartHandler(GroupingStart groupStart) {
+        SequenceGroup group = new SequenceGroup(model.messages.size(),
+                                                groupStart.getTitle(),
+                                                groupStart.getComment(),
+                                                groupStart.getLevel());
+        groupStack.put(groupStart, group);
+        model.groups.add(group);
+    }
+
+    private void GroupingLeafHandler(GroupingLeaf groupLeaf) {
+        GroupingStart parent = groupLeaf.getGroupingStart();
+        if (parent != null) {
+            SequenceGroup seqGroup = groupStack.get(parent);
+            GroupingType type = groupLeaf.getType();
+            if (type == GroupingType.END) {
+                seqGroup.setEndIndex(model.messages.size());
+            }
+
+            if (type == GroupingType.ELSE) {
+                seqGroup.addSeparator(model.messages.size());
             }
         }
     }

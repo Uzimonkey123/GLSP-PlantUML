@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.model;
 
 import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
+import com.GLSPPlantUML.model.SequenceParts.SequenceGroup;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 
@@ -11,6 +12,7 @@ public class SequenceModel {
     public List<SequenceMessage> messages = new ArrayList<>();
     public List<SequenceAnchor> anchors = new ArrayList<>();
     public Map<Integer, Integer> messageSpaces = new HashMap<>();
+    public List<SequenceGroup> groups = new ArrayList<>();
 
     public String footer;
     public String header;

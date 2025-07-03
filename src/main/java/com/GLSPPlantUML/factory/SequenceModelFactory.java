@@ -20,9 +20,6 @@ public class SequenceModelFactory implements GModelFactory {
     private NodeGap gapCalculator;
     private NodeBuild nodeBuild;
 
-    private final Stack<SequenceAnchor> anchors = new Stack<>(); // Stack for anchors in the diagram
-    private final Map<String, SequenceAnchor> anchorMap = new HashMap<>(); // Map to store anchors with their ID for easier search
-
     private final List<Double> lifeEventYPos = new ArrayList<>();
     private final List<Double> messagesYPos = new ArrayList<>();
 
@@ -55,6 +52,10 @@ public class SequenceModelFactory implements GModelFactory {
         this.centre = nodeFactory.getCentre();
         this.halfWidth = nodeFactory.getHalfWidth();
         this.cursor = nodeFactory.getCursor();
+
+        // Build all groups and separators
+        SequenceGroupFactory groupFactory = new SequenceGroupFactory(model, messagesYPos, centre, elements);
+        groupFactory.createGroups();
 
         // Build the necessary life events and destroy icons
         SequenceLifeEventFactory leFactory = new SequenceLifeEventFactory(model, lifeEventYPos, centre,
