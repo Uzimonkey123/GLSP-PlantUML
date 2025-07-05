@@ -52,17 +52,17 @@ public class SequenceNodeFactory {
                                                         height,  label, nodeStart, model.showFoot);
 
             elements.add(newNode);
-            centre.put(node.getName(), getNodeCenter(nodeWidth));
-            halfWidth.put(node.getName(), getNodeHalfWidth(nodeWidth));
+            centre.put(node.getId(), getNodeCenter(nodeWidth));
+            halfWidth.put(node.getId(), getNodeHalfWidth(nodeWidth));
 
-            String nextName = model.getNextParticipant(node.getName());
-            if (!nextName.equals(node.getName())) {
-                double gap = gapCalculator.getGaps(node.getName(), nextName);
+            String nextName = model.getNextParticipant(node.getId());
+            if (!nextName.equals(node.getId())) {
+                double gap = gapCalculator.getGaps(node.getId(), nextName);
                 cursor += nodeWidth + gap + getNodeHalfWidth(nodeWidth);
             }
         }
 
-        cursor += halfWidth.get(model.participants.getLast().getName()) + 40;
+        cursor += halfWidth.get(model.participants.getLast().getId()) + 40;
 
         // Add invisible nodes for incoming or outgoing messages
         createInvisibleNodes();

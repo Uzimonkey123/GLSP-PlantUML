@@ -10,7 +10,7 @@ public class SequenceMessage {
     private final String msgId;
     private final String from;
     private final String to;
-    private final String message;
+    private String message;
     private final ArrowConfiguration arrowConfiguration;
     private final String messageType;
     private String numbering = "";
@@ -100,6 +100,10 @@ public class SequenceMessage {
 
     public String getMessage() {
         return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public boolean isDotted() {

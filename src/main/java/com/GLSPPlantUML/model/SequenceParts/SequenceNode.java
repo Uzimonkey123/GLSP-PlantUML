@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class SequenceNode {
-    private final String name;
+    private final String id;
+    private String name;
     private final String type;
     private final int order;
     private final HColor background;
@@ -20,7 +21,8 @@ public class SequenceNode {
     private String charColor = "#ADD1B2";
     private boolean isStereotype = false;
 
-    public SequenceNode(String name, String type, int order, HColor background, boolean createdNode) {
+    public SequenceNode(String id, String name, String type, int order, HColor background, boolean createdNode) {
+        this.id = id;
         this.name = name;
         this.type = type;
         this.order = order;
@@ -28,8 +30,16 @@ public class SequenceNode {
         this.createdNode = createdNode;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getType() {

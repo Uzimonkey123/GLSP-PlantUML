@@ -38,6 +38,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
     public SequenceModel parse(File file) throws IOException {
         // Read .puml text
+        System.err.println("We are in the parser");
         String text = Files.readString(file.toPath(), StandardCharsets.UTF_8);
         if (!text.contains("@startuml")) {
             text = "@startuml\n" + text + "\n@enduml";
@@ -114,9 +115,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         int order = participant.getOrder();
         HColor background = participant.getColors().getColor(ColorType.BACK);
         SequenceNode node = null;
+        String id = "par-" + model.participants.size();
 
         if(!hasParticipant(name)) {
-            node = new SequenceNode(name, type, order, background, false);
+            node = new SequenceNode(id, name, type, order, background, false);
             addParticipants(model.participants, node);
         }
         
@@ -169,7 +171,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageExoHandler(MessageExo msg) {
-        String participant = String.join("<br>", msg.getParticipant().getDisplay(false));
+        String participantRaw = String.join("<br>", msg.getParticipant().getDisplay(false));
+        String participant = model.participants.stream()
+                .filter(p -> p.getName().equals(participantRaw))
+                .findFirst()
+                .map(SequenceNode::getId)
+                .orElse(participantRaw);
 
         record Direction(String from, String to, boolean incoming, boolean outgoing) {}
 
@@ -197,9 +204,19 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageHandler(Message msg) {
-        String from = String.join("<br>", msg.getParticipant1().getDisplay(false));
+        String fromRaw = String.join("<br>", msg.getParticipant1().getDisplay(false));
+        String from =  model.participants.stream()
+                .filter(p -> p.getName().equals(fromRaw))
+                .findFirst()
+                .map(SequenceNode::getId)
+                .orElse(fromRaw);
 
-        String to = String.join("<br>", msg.getParticipant2().getDisplay(false));
+        String toRaw = String.join("<br>", msg.getParticipant2().getDisplay(false));
+        String to =  model.participants.stream()
+                .filter(p -> p.getName().equals(toRaw))
+                .findFirst()
+                .map(SequenceNode::getId)
+                .orElse(fromRaw);
 
         String num = msg.getMessageNumber();
 

@@ -22,9 +22,9 @@ public class SequenceModel {
 
     public SequenceModel() {}
 
-    public SequenceNode getNode(String name) {
+    public SequenceNode getNode(String id) {
         return participants.stream()
-                .filter(p -> p.getName().equals(name))
+                .filter(p -> p.getId().equals(id))
                 .findFirst()
                 // Get warning ignore, since node definitely exists at this point
                 .get();
@@ -32,8 +32,8 @@ public class SequenceModel {
 
     public String getNextParticipant(String current) {
         for (int i = 0; i < participants.size() - 1; i++) {
-            if (participants.get(i).getName().equals(current)) {
-                return participants.get(i + 1).getName();
+            if (participants.get(i).getId().equals(current)) {
+                return participants.get(i + 1).getId();
             }
         }
 

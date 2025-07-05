@@ -77,8 +77,8 @@ public class SequenceMessageFactory {
         double y = messagesYPos.get(msgIndex);
 
         if (msg.getType().equals("edge:delay") || msg.getType().equals("edge:divider")) {
-            sourceId = model.participants.getFirst().getName();
-            targetId = model.participants.getLast().getName();
+            sourceId = model.participants.getFirst().getId();
+            targetId = model.participants.getLast().getId();
         }
 
         boolean incoming = "incoming".equals(msg.decideWay());
@@ -90,12 +90,12 @@ public class SequenceMessageFactory {
         // Adjust source/target if message is external (incoming/outgoing)
         if (incoming) {
             sourceId = "[";
-            x1 = "[".equals(msg.getFrom()) ? 0 : cursor + halfWidth.get(model.participants.getLast().getName());
+            x1 = "[".equals(msg.getFrom()) ? 0 : cursor + halfWidth.get(model.participants.getLast().getId());
         }
 
         if (outgoing) {
             targetId = "]";
-            x2 = "]".equals(msg.getTo()) ? cursor + halfWidth.get(model.participants.getLast().getName()) : 0;
+            x2 = "]".equals(msg.getTo()) ? cursor + halfWidth.get(model.participants.getLast().getId()) : 0;
         }
 
         elements.add(msgBuild.buildEdge(msg, sourceId, targetId, x1, x2, y, incoming, outgoing));

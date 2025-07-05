@@ -33,7 +33,7 @@ public class SequenceLifeEventFactory {
 
         for (SequenceNode node : model.participants) {
             for (SequenceLifeEvent le : node.getLifeEvents()) {
-                double center = centre.get(node.getName()) - 3;
+                double center = centre.get(node.getId()) - 3;
                 double shift = 4 * le.getLevel();
                 double y1 = lifeEventYPos.get(le.getStartMessage());
                 double y2 = lifeEventYPos.get(le.getEndMessage());
@@ -50,7 +50,7 @@ public class SequenceLifeEventFactory {
     private void createDestroyCross(SequenceNode node, int destroyIndex) {
         if (destroyIndex == -1) return;
 
-        elements.add(leBuild.buildDestroyCross(node, centre.get(node.getName()),
+        elements.add(leBuild.buildDestroyCross(node, centre.get(node.getId()),
                                                 messagesYPos.get(destroyIndex), destroyIndex));
     }
 }
