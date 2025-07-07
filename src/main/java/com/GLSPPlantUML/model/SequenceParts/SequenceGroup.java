@@ -10,6 +10,7 @@ public class SequenceGroup {
     private String comment = "";
     private final int level;
     private final List<Integer> separatorList; // Message index for all separators if available
+    private final List<String> separatorLabel;
 
     public SequenceGroup(int startIndex, String label, String comment, int level) {
         this.startIndex = startIndex;
@@ -17,6 +18,7 @@ public class SequenceGroup {
         this.comment = comment;
         this.level = level;
         separatorList = new ArrayList<>();
+        separatorLabel = new ArrayList<>();
     }
 
     public int getStartIndex() {
@@ -32,10 +34,18 @@ public class SequenceGroup {
     }
 
     public String getLabel() {
+        if (label.equals("group") && !comment.isEmpty()) {
+            return comment;
+        }
+
         return label;
     }
 
     public String getComment() {
+        if (label.equals("group") && !comment.isEmpty()) {
+            return "";
+        }
+
         return comment;
     }
 
@@ -49,5 +59,13 @@ public class SequenceGroup {
 
     public List<Integer> getSeparatorList() {
         return separatorList;
+    }
+
+    public void addSeparatorLabel(String separatorLabel) {
+        this.separatorLabel.add(separatorLabel);
+    }
+
+    public List<String> getSeparatorLabel() {
+        return separatorLabel;
     }
 }

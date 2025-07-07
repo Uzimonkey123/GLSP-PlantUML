@@ -152,6 +152,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
             if (type == GroupingType.ELSE) {
                 seqGroup.addSeparator(model.messages.size());
+
+                if (groupLeaf.getComment() == null) {
+                    seqGroup.addSeparatorLabel("");
+                } else {
+                    seqGroup.addSeparatorLabel(groupLeaf.getComment());
+                }
             }
         }
     }

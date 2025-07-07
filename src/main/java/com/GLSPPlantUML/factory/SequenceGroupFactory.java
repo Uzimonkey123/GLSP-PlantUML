@@ -35,9 +35,11 @@ public class SequenceGroupFactory {
 
     public void createGroups() {
         Collection<SequenceGroup> reversedGroups = model.reversedGroups();
+
         for (SequenceGroup seqGroup : reversedGroups) {
             minX = Double.MAX_VALUE;
             maxX = Double.MIN_VALUE;
+            separatorYPos.clear();
 
             SequenceMessage msg = model.messages.get(seqGroup.getStartIndex());
 
@@ -72,6 +74,16 @@ public class SequenceGroupFactory {
 
             elements.add(groupBuild.buildGroupLabel(seqGroup, labelPos, y1));
             elements.add(groupBuild.buildGroupComment(seqGroup, commentPos, y1));
+
+            for (int i = 0; i < separatorYPos.size(); i++) {
+                if (!seqGroup.getSeparatorLabel().get(i).isEmpty()) {
+                    String label = seqGroup.getSeparatorLabel().get(i);
+                    int labelLength = calculateLabelWidth(label);
+                    double separatorLabelPos = x1 + ((double) labelLength / 2);
+
+                    elements.add(groupBuild.buildSeparatorLabel(label, separatorLabelPos, separatorYPos.get(i)));
+                }
+            }
         }
     }
 

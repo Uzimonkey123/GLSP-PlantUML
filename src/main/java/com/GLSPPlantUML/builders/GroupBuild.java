@@ -42,4 +42,14 @@ public class GroupBuild {
                 .addArgument("selectable", true)
                 .build();
     }
+
+    public GModelElement buildSeparatorLabel(String label, double x1, double y1) {
+        return new GLabelBuilder("label:html")
+                .id("group-separator-" + y1)
+                .text(label)
+                .size(10, 10)
+                .position(x1, y1 + 6.5)
+                .addArgument("selectable", true)
+                .build();
+    }
 }
