@@ -62,7 +62,7 @@ public class NodeBuild {
         }
 
         return new GNodeBuilder(node.getType())
-                .id(node.getName())
+                .id(node.getId())
                 .layout("vbox")
                 .position(cursor, nodeStart)
                 .addArgument("background", node.getBackground())

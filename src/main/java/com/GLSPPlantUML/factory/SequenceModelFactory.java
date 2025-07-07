@@ -80,6 +80,7 @@ public class SequenceModelFactory implements GModelFactory {
     private void calculateYPositions(SequenceModel model, double firstMsgY) {
         double hspace = 0;
         double msgGap = 35;
+        messagesYPos.clear();
 
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceMessage msg = model.messages.get(i);

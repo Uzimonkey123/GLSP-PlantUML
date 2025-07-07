@@ -24,7 +24,11 @@ import {
     EditMode,
     SetEditModeAction,
     configureModelElement,
-    GLabel, editLabelFeature, selectFeature, moveFeature
+    GLabel,
+    editLabelFeature,
+    selectFeature,
+    moveFeature,
+    labelEditModule
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
@@ -102,7 +106,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "edge:divider", GEdge, SequenceMessageDivider);
         configureModelElement(context, "edge:ref", GEdge, ReferenceEdgeView);
         configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature] });
-        configureModelElement(context, "label:participant", GLabel, ParticipantLabelView);
+        configureModelElement(context, "label:participant", GLabel, ParticipantLabelView, { enable: [editLabelFeature, selectFeature, moveFeature] });
         configureModelElement(context, "label:header", GLabel, SequenceHeaderFooter);
         configureModelElement(context, "label:footer", GLabel, SequenceHeaderFooter);
         configureModelElement(context, "label:title", GLabel, SequenceTitle);
@@ -121,6 +125,7 @@ export function initializePlantUmlDiagramContainer(container: Container, ...cont
         gridModule,
         debugModule,
         resizeModule,
+        labelEditModule,
         clientDefaultModule,
         ...VSCODE_DEFAULT_MODULES,
         PlantUmlDiagramModule,
