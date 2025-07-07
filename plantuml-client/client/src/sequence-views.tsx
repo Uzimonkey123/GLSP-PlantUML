@@ -95,18 +95,19 @@ export class HtmlLabelView extends GLabelView {
 
 		// The amount of lines to render
 		const max = Math.max(numLines.length, textLines.length);
+		const initialY = max > 1 ? "10" : "0";
 
 		// Loop through lines and push them up with the given tspan
 		for (let i = 0; i < max; i++) {
 			const numSpans = numLines[i] ?? [];
 			const textSpans = textLines[i] ?? [];
 			const isOnlyLine = max === 1;
-			const dy = i === 0 ? (isOnlyLine ? "0" : "0.5em") : "1.2em"; // Vertical offset
+			const dy = i === 0 ? initialY : "1.2em"; // Vertical offset
 
 			lines.push(
-				<tspan x="0" dy={dy}>
+				<tspan x="0" {...(i === 0 ? { y: dy } : { dy })}>
 					{numSpans}
-					{numSpans.length > 0 && textSpans.length > 0 ? <tspan> </tspan> : null}
+					{numSpans.length > 0 && textSpans.length > 0 ? <tspan></tspan> : null}
 					{textSpans}
 				</tspan>
 			);
@@ -683,6 +684,71 @@ export class ReferenceEdgeView extends GEdgeView {
 				fill="white"
 			>
 				ref
+			</text>,
+
+			<rect
+				x={x1}
+				y={y1}
+				width={x2-x1}
+				height={y2-y1}
+				fill="none"
+				stroke="black"
+				strokeWidth={1}
+			/>
+		);
+
+		return additionals;
+	}
+}
+
+export class GroupsView extends GEdgeView {
+	protected override renderAdditionals(edge: GEdge, segments: Point[], _context: RenderingContext): VNode[] {
+		const additionals = super.renderAdditionals(edge, segments, _context);
+
+		const x1 = edge.args?.x1 as number;
+		const x2 = edge.args?.x2 as number;
+		const y1 = edge.args?.y1 as number;
+		const y2 = edge.args?.y2 as number;
+		const width = edge.args?.labelWidth as number;
+
+		const separatorsRaw = edge.args?.separators;
+		const separators: number[] = Array.isArray(separatorsRaw)
+			? separatorsRaw.map(Number).filter((n): n is number => !isNaN(n))
+			: [];
+
+		// Render the separator lines ELSE/ALSO as dashed
+		for (const y of separators) {
+			additionals.push(
+				<line
+					x1={x1}
+					x2={x2}
+					y1={y}
+					y2={y}
+					stroke="black"
+					strokeWidth={1.5}
+					stroke-dasharray="4 2"
+				/>
+			);
+		}
+
+		additionals.unshift(
+			<polygon
+				points={`${x1},${y1} ${x1},${y1 + 11}
+				 		${x1 + width},${y1 + 11} 
+				 		${x1 + width + 5},${y1 + 5} 
+				 		${x1 + width + 5},${y1}`}
+				fill="grey"
+				stroke="black"
+				strokeWidth={1}
+			/>,
+
+			<text
+				x={x1 + 12}
+				y={y1 + 9}
+				fontSize="10"
+				fontWeight="bold"
+				fill="white"
+			>
 			</text>,
 
 			<rect

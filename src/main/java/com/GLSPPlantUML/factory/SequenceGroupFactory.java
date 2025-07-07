@@ -7,6 +7,7 @@ import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ public class SequenceGroupFactory {
 
     double minX = Double.MAX_VALUE;
     double maxX = Double.MIN_VALUE;
+    double globalMaxX = Double.MIN_VALUE; // Variable to keep track of the previous longest group x2
 
     public SequenceGroupFactory(SequenceModel model, List<Double> messagesYPos, Map<String, Double> centre, List<GModelElement> elements) {
         this.model = model;
@@ -32,7 +34,8 @@ public class SequenceGroupFactory {
     }
 
     public void createGroups() {
-        for (SequenceGroup seqGroup : model.groups) {
+        Collection<SequenceGroup> reversedGroups = model.reversedGroups();
+        for (SequenceGroup seqGroup : reversedGroups) {
             minX = Double.MAX_VALUE;
             maxX = Double.MIN_VALUE;
 
@@ -50,12 +53,25 @@ public class SequenceGroupFactory {
 
             calculateMinMax(seqGroup);
             double x1 = minX - nestingPadding;
-            double x2 = maxX + nestingPadding;
+            double x2 = maxX;
+            // If maxX is smaller than the combination of labels, extend it
+            if (maxX < commentLength + titleLength) {
+                x2 = maxX + Math.max(commentLength, titleLength);
+            }
+
+            // Saving global max for the next level of group
+            globalMaxX = Math.max(globalMaxX, x2);
+            x2 = globalMaxX + nestingPadding;
 
             calculateSeparatorY(seqGroup);
 
-            // TODO: Add group title and comments
-            elements.add(groupBuild.buildGroupOutline(seqGroup, x1, x2, y1, y2, separatorYPos));
+            elements.add(groupBuild.buildGroupOutline(seqGroup, x1, x2, y1, y2, separatorYPos, titleLength));
+
+            double labelPos = x1 + ((double) titleLength / 2);
+            double commentPos = x1 + titleLength + 15 + ((double) commentLength / 2);
+
+            elements.add(groupBuild.buildGroupLabel(seqGroup, labelPos, y1));
+            elements.add(groupBuild.buildGroupComment(seqGroup, commentPos, y1));
         }
     }
 

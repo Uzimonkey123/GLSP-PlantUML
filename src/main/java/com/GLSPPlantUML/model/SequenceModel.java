@@ -39,4 +39,11 @@ public class SequenceModel {
 
         return current;
     }
+
+    public Collection<SequenceGroup> reversedGroups() {
+        List<SequenceGroup> reversedList = this.groups;
+        Collections.reverse(reversedList);
+
+        return reversedList;
+    }
 }

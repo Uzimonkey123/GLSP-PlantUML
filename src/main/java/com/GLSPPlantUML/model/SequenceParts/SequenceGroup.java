@@ -7,7 +7,7 @@ public class SequenceGroup {
     private final int startIndex;
     private int endIndex = -1;
     private final String label;
-    private final String comment;
+    private String comment = "";
     private final int level;
     private final List<Integer> separatorList; // Message index for all separators if available
 
