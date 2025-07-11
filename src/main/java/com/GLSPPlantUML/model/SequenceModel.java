@@ -1,9 +1,6 @@
 package com.GLSPPlantUML.model;
 
-import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
-import com.GLSPPlantUML.model.SequenceParts.SequenceGroup;
-import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
-import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
+import com.GLSPPlantUML.model.SequenceParts.*;
 
 import java.util.*;
 
@@ -13,6 +10,7 @@ public class SequenceModel {
     public List<SequenceAnchor> anchors = new ArrayList<>();
     public Map<Integer, Integer> messageSpaces = new HashMap<>();
     public List<SequenceGroup> groups = new ArrayList<>();
+    public List<SequenceEnglober> englobers = new ArrayList<>();
 
     public String footer;
     public String header;
@@ -42,6 +40,13 @@ public class SequenceModel {
 
     public Collection<SequenceGroup> reversedGroups() {
         List<SequenceGroup> reversedList = this.groups;
+        Collections.reverse(reversedList);
+
+        return reversedList;
+    }
+
+    public Collection<SequenceEnglober> reversedEnglobers() {
+        List<SequenceEnglober> reversedList = new ArrayList<>(this.englobers);
         Collections.reverse(reversedList);
 
         return reversedList;

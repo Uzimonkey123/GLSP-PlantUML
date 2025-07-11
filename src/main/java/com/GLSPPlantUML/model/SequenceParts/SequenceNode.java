@@ -20,6 +20,7 @@ public class SequenceNode {
     private char stereotypeChar = '-';
     private String charColor = "#ADD1B2";
     private boolean isStereotype = false;
+    private final List<String> engloberIds = new ArrayList<>();
 
     public SequenceNode(String id, String name, String type, int order, HColor background, boolean createdNode) {
         this.id = id;
@@ -123,5 +124,13 @@ public class SequenceNode {
 
     public void setStereotype(boolean isStereotype) {
         this.isStereotype = isStereotype;
+    }
+
+    public void addEngloberId(String id) {
+        this.engloberIds.add(id);
+    }
+
+    public List<String> getEngloberIds() {
+        return this.engloberIds;
     }
 }

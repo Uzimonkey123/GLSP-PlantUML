@@ -119,16 +119,38 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         if(!hasParticipant(name)) {
             node = new SequenceNode(id, name, type, order, background, false);
+            // Call to check if participant is englobed or not
+            EngloberHandler(node, sequenceDiagram.getEnglober(participant));
+
             addParticipants(model.participants, node);
         }
         
-        if (participant.getStereotype() != null) {
-            assert node != null;
+        if (node != null && participant.getStereotype() != null) {
             node.setStereotype(true);
             node.setStereotypeChar(participant.getStereotype().getCharacter());
             if (participant.getStereotype().getHtmlColor() != null) {
                 node.setCharColor(participant.getStereotype().getHtmlColor().asString());
             }
+        }
+    }
+
+    private void EngloberHandler(SequenceNode node, ParticipantEnglober englober) {
+        if (englober == null) return;
+
+        for (ParticipantEnglober part : englober.getGenealogy()) {
+            String title = String.join("<br>", part.getTitle());
+            String id = "englober-" + title;
+            String parentId = part.getParent() == null ? null : "englober-" + part.getParent().getTitle().toString().hashCode();
+            String color = part.getBoxColor() != null ? part.getBoxColor().asString() : "#CCCCCC";
+            int level = part.getGenealogy().size() - 1; // Level indicating depth of the box to set offset
+
+            boolean alreadyAdded = model.englobers.stream().anyMatch(e -> e.getId().equals(id));
+            if (!alreadyAdded) {
+                model.englobers.add(new SequenceEnglober(id, title, parentId, color, level));
+            }
+
+            // Assign the englober ID to the node for further search in factory
+            node.addEngloberId(id);
         }
     }
 
