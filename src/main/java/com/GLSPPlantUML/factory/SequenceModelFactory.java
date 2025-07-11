@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.factory;
 
 import com.GLSPPlantUML.builders.NodeBuild;
+import com.GLSPPlantUML.factory.SequenceParts.*;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;

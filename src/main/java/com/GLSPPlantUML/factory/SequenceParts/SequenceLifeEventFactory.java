@@ -1,4 +1,4 @@
-package com.GLSPPlantUML.factory;
+package com.GLSPPlantUML.factory.SequenceParts;
 
 import com.GLSPPlantUML.builders.LifeEventBuild;
 import com.GLSPPlantUML.model.SequenceModel;
