@@ -53,6 +53,11 @@ public class SequenceModelFactory implements GModelFactory {
         this.halfWidth = nodeFactory.getHalfWidth();
         this.cursor = nodeFactory.getCursor();
 
+        // Build boxes around the created nodes
+        SequenceEngloberFactory engloberFactory = new SequenceEngloberFactory(model, centre, halfWidth,
+                                                                                    elements, totalHeight);
+        engloberFactory.createEnglobers();
+
         // Build all groups and separators
         SequenceGroupFactory groupFactory = new SequenceGroupFactory(model, messagesYPos, centre, elements);
         groupFactory.createGroups();
