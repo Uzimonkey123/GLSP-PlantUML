@@ -44,7 +44,8 @@ import {
     SequenceTitle,
     AnchorEdgeView,
     ParticipantLabelView,
-    ReferenceEdgeView, GroupsView
+    ReferenceEdgeView,
+    GroupsView
 } from './sequence-views';
 
 import {
@@ -57,7 +58,8 @@ import {
     CollectionNodeView,
     QueueNodeView,
     LifeEventBar,
-    DestroyCross
+    DestroyCross,
+    EngloberView
 } from "./sequence-node-views";
 
 import { PlantUmlStartup } from './plantuml-startup';
@@ -115,6 +117,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "lifeEvent", GNode, LifeEventBar);
         configureModelElement(context, "destroy", GNode, DestroyCross)
         configureModelElement(context, "group", GEdge, GroupsView);
+        configureModelElement(context, "participant-englober", GNode, EngloberView);
     }
 );
 

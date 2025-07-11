@@ -779,3 +779,30 @@ export class DestroyCross extends ShapeView {
         );
     }
 }
+
+export class EngloberView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext,
+        args?: IViewArgs
+    ): VNode {
+
+        return (
+            <g>
+                <rect
+                    x={0}
+                    y={0}
+                    width={node.size.width}
+                    height={node.size.height}
+                    fill={(node as any).args?.color as string}
+                    stroke="black"
+                    strokeWidth={1}
+                />
+
+                <g transform={`translate(${node.size.width / 2}, 10)`}>
+                    {context.renderChildren(node)}
+                </g>
+            </g>
+        );
+    }
+}
