@@ -4,6 +4,7 @@ import com.GLSPPlantUML.builders.EngloberBuild;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceEnglober;
 import com.GLSPPlantUML.utils.EngloberRange;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.Arrays;
@@ -57,7 +58,7 @@ public class SequenceEngloberFactory {
             double x2 = centre.get(box.getEndParticipantId()) + halfWidth.get(box.getEndParticipantId());
 
             double boxWidth = x2 - x1;
-            double labelWidth = calculateLabelWidth(box.getLabel());
+            double labelWidth = WidthCalculator.calculateWidth(box.getLabel(), padding);
 
             if (labelWidth > boxWidth) {
                 x1 -= labelWidth;
@@ -75,16 +76,5 @@ public class SequenceEngloberFactory {
         int lineHeight = 14;
 
         return lineCount * lineHeight + padding;
-    }
-
-    private double calculateLabelWidth(String label) {
-        return calculateMaxLength(label) * 6 + padding;
-    }
-
-    private int calculateMaxLength(String lines) {
-        return Arrays.stream(lines.split("<br>"))
-                .mapToInt(String::length)
-                .max()
-                .orElse(0);
     }
 }

@@ -4,6 +4,7 @@ import com.GLSPPlantUML.builders.GroupBuild;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceGroup;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.ArrayList;
@@ -44,8 +45,8 @@ public class SequenceGroupFactory {
             SequenceMessage msg = model.messages.get(seqGroup.getStartIndex());
 
             int labelHeight = calculateLabelHeight(msg);
-            int commentLength = seqGroup.getComment() == null ? 0 : calculateLabelWidth(seqGroup.getComment());
-            int titleLength = calculateLabelWidth(seqGroup.getLabel());
+            double commentLength = seqGroup.getComment() == null ? 0 : WidthCalculator.calculateWidth(seqGroup.getComment(), 10);
+            double titleLength = WidthCalculator.calculateWidth(seqGroup.getLabel(), 10);
 
             double y1 = messagesYPos.get(seqGroup.getStartIndex()) - (labelHeight + 10);
             double y2 = messagesYPos.get(seqGroup.getEndIndex() - 1) + 7;
@@ -78,8 +79,8 @@ public class SequenceGroupFactory {
             for (int i = 0; i < separatorYPos.size(); i++) {
                 if (!seqGroup.getSeparatorLabel().get(i).isEmpty()) {
                     String label = seqGroup.getSeparatorLabel().get(i);
-                    int labelLength = calculateLabelWidth(label);
-                    double separatorLabelPos = x1 + ((double) labelLength / 2);
+                    double labelLength = WidthCalculator.calculateWidth(label, 10);
+                    double separatorLabelPos = x1 + (labelLength / 2);
 
                     elements.add(groupBuild.buildSeparatorLabel(label, separatorLabelPos, separatorYPos.get(i)));
                 }
@@ -101,10 +102,6 @@ public class SequenceGroupFactory {
 
         int lineCount = lines.length;
         return lineCount * 14;
-    }
-
-    private int calculateLabelWidth(String label) {
-        return label.length() * 8 + 5;
     }
 
     private void calculateMinMax(SequenceGroup seqGroup) {

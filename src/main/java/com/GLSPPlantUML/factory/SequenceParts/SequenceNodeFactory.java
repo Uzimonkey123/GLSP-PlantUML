@@ -4,6 +4,7 @@ import com.GLSPPlantUML.builders.NodeBuild;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.utils.NodeGap;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.*;
@@ -42,7 +43,7 @@ public class SequenceNodeFactory {
                 createdOffset = messagesYPos.get(node.getCreatedIndex()) - nodeY - 24;
             }
 
-            double nodeWidth = calculateNodeWidth();
+            double nodeWidth = WidthCalculator.calculateWidth(currentNode.getName(), 20);
             String label = getLabel();
             int headerHeight = calculateHeaderHeight(label);
             double nodeStart = nodeY + createdOffset - headerHeight;
@@ -85,17 +86,6 @@ public class SequenceNodeFactory {
 
     public double getCursor() {
         return cursor;
-    }
-
-    private int calculateMaxLength(String lines) {
-        return Arrays.stream(lines.split("<br>"))
-                .mapToInt(String::length)
-                .max()
-                .orElse(0);
-    }
-
-    private double calculateNodeWidth() {
-        return calculateMaxLength(currentNode.getName()) * 8 + 20;
     }
 
     private int calculateHeaderHeight(String label) {
