@@ -103,6 +103,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     if (event instanceof Reference reference) {
                         ReferenceHandler(reference);
                     }
+
+                    if (event instanceof Note note) {
+                        SeparateNoteHandler(note);
+                    }
+
+                    if (event instanceof Notes notes) {
+                        //TODO: Paralell notes
+                    }
                 }
             }
         }
@@ -185,11 +193,8 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void ReferenceHandler(Reference reference) {
-        String firstParticipant = String.join("<br>",
-                reference.getParticipant().getFirst().getDisplay(false));
-
-        String lastParticipant = String.join("<br>",
-                reference.getParticipant().getLast().getDisplay(false));
+        String firstParticipant = parseParticipantId(reference.getParticipant().getFirst());
+        String lastParticipant = parseParticipantId(reference.getParticipant().getLast());
 
         String label = String.join("<br>", reference.getStrings());
 
@@ -199,12 +204,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageExoHandler(MessageExo msg) {
-        String participantRaw = String.join("<br>", msg.getParticipant().getDisplay(false));
-        String participant = model.participants.stream()
-                .filter(p -> p.getName().equals(participantRaw))
-                .findFirst()
-                .map(SequenceNode::getId)
-                .orElse(participantRaw);
+        String participant = parseParticipantId(msg.getParticipant());
 
         record Direction(String from, String to, boolean incoming, boolean outgoing) {}
 
@@ -226,25 +226,18 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         String msgId = "msg-" + model.messages.size();
 
-        model.messages.add(new SequenceMessage(
+        SequenceMessage message = new SequenceMessage(
                 msgId, exoMsg.from(), exoMsg.to(), label, arrowConfig, "edge", num,
-                isShort, exoMsg.incoming(), exoMsg.outgoing()));
+                isShort, exoMsg.incoming(), exoMsg.outgoing());
+
+        model.messages.add(message);
+
+        MessageNoteHandler(msg, message);
     }
 
     private void MessageHandler(Message msg) {
-        String fromRaw = String.join("<br>", msg.getParticipant1().getDisplay(false));
-        String from =  model.participants.stream()
-                .filter(p -> p.getName().equals(fromRaw))
-                .findFirst()
-                .map(SequenceNode::getId)
-                .orElse(fromRaw);
-
-        String toRaw = String.join("<br>", msg.getParticipant2().getDisplay(false));
-        String to =  model.participants.stream()
-                .filter(p -> p.getName().equals(toRaw))
-                .findFirst()
-                .map(SequenceNode::getId)
-                .orElse(fromRaw);
+        String from = parseParticipantId(msg.getParticipant1());
+        String to = parseParticipantId(msg.getParticipant2());
 
         String num = msg.getMessageNumber();
 
@@ -259,12 +252,48 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         String msgId = "msg-" + model.messages.size();
 
         // Record message
-        model.messages.add(new SequenceMessage(msgId, msg.isCreate(), from, to, label, arrowConfig,
-                "edge", num, false, isSelf));
+        SequenceMessage message = new SequenceMessage(msgId, msg.isCreate(), from, to, label, arrowConfig,
+                "edge", num, false, isSelf);
+        model.messages.add(message);
+
+        MessageNoteHandler(msg, message);
 
         if (msg.getAnchor() != null) {
             setupAnchor(msg, from, to);
         }
+    }
+
+    private void MessageNoteHandler(AbstractMessage msg, SequenceMessage message) {
+        for(Note note : msg.getNoteOnMessages()) {
+            String id = message.getMsgId() + message.getNotes().size();
+            String label = String.join("<br>", note.getDisplay());
+            String position = note.getPosition().toString();
+            String shape = note.getNoteStyle().toString();
+            String color = note.getColors().getColor(ColorType.BACK) == null
+                            ? "#FFFFE0"
+                            : note.getColors().getColor(ColorType.BACK).asString();
+
+            SequenceNote newNote = new SequenceNote(id, label, position, color, shape);
+            message.addNotes(newNote);
+        }
+    }
+
+    private void SeparateNoteHandler(Note note) {
+        String id = "note-" + model.messages.size();
+        String from = parseParticipantId(note.getParticipant());
+        String to = parseParticipantId(note.getParticipant2());
+
+        String position = note.getPosition().toString();
+        String label = String.join("<br>", note.getDisplay());
+        String shape = note.getNoteStyle().toString();
+        String color = note.getColors().getColor(ColorType.BACK) == null
+                ? "#FFFFE0"
+                : note.getColors().getColor(ColorType.BACK).asString();
+
+        SequenceMessage msg = new SequenceMessage(id, from, to, "edge:note");
+        model.messages.add(msg);
+        msg.addNotes(new SequenceNote("msg-note-" + model.messages.size(), label, position,
+                color, shape));
     }
 
     private void setupAnchor(Message msg, String from, String to) {
@@ -328,6 +357,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             }
         }
 
+        if (currentNode == null) {
+            throw new RuntimeException("Error setting node for given life event.");
+        }
+
         // Initialize stack for this participant
         activationStacks.putIfAbsent(participant, new Stack<>());
         activationColorStacks.putIfAbsent(participant, new Stack<>());
@@ -354,7 +387,6 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 // Set the depth of the life event for offset in factory
                 lifeEvent.setLevel(messageStack.size());
 
-                assert currentNode != null;
                 currentNode.addLifeEvent(lifeEvent);
             }
 
@@ -368,17 +400,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     // Set the depth of the life event for offset in factory
                     lifeEvent.setLevel(messageStack.size());
 
-                    assert currentNode != null;
                     currentNode.addLifeEvent(lifeEvent);
                 }
 
                 // Set the destroy index for the node
-                assert currentNode != null;
                 currentNode.setDestroyIndex(index);
             }
 
             case CREATE -> {
-                assert currentNode != null;
                 currentNode.setCreatedNode(true);
                 currentNode.setCreatedIndex(model.messages.size());
             }
@@ -393,6 +422,17 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
 
         return false;
+    }
+
+    private String parseParticipantId(Participant participant) {
+        if (participant == null) return "null";
+
+        String rawName = String.join("<br>", participant.getDisplay(false));
+        return model.participants.stream()
+                .filter(p -> p.getName().equals(rawName))
+                .findFirst()
+                .map(SequenceNode::getId)
+                .orElse(rawName);
     }
 
     private void addParticipants(List<SequenceNode> participants, SequenceNode node) {

@@ -762,6 +762,82 @@ export class GroupsView extends GEdgeView {
 			/>
 		);
 
+		// TODO: GROUP BACKGROUND COLORS
+
+		return additionals;
+	}
+}
+
+export class NoteEdgeView extends GEdgeView {
+	protected override renderAdditionals(edge: GEdge, segments: Point[], _context: RenderingContext): VNode[] {
+		const additionals = super.renderAdditionals(edge, segments, _context);
+
+		const x1 = edge.args?.x1 as number;
+		const x2 = edge.args?.x2 as number;
+		const y1 = edge.args?.y1 as number;
+		const y2 = edge.args?.y2 as number;
+
+		const color = edge.args?.color as string;
+		const shape = edge.args?.shape as string;
+
+		if (shape == 'NORMAL') {
+			additionals.unshift(
+				<polygon
+					points={`${x1},${y1} ${x2 - 7},${y1}
+							${x2},${y1 + 7} ${x2},${y2}
+							${x1},${y2}`}
+					fill={color}
+					stroke="black"
+					strokeWidth={1}
+				/>,
+
+				<line
+					x1={x2 - 7}
+					y1={y1}
+					x2={x2 - 7}
+					y2={y1 + 7}
+					stroke="black"
+					strokeWidth={1}
+				/>,
+
+				<line
+					x1={x2 - 7}
+					y1={y1 + 7}
+					x2={x2}
+					y2={y1 + 7}
+					stroke="black"
+					strokeWidth={1}
+				/>
+			);
+		}
+
+		if (shape == 'BOX') {
+			additionals.unshift(
+				<rect
+					x={x1}
+					y={y1}
+					width={x2 - x1}
+					height={y2 - y1}
+					stroke="black"
+					fill={color}
+					strokeWidth={1}
+				/>
+			)
+		}
+
+		if (shape == 'HEXAGONAL') {
+			additionals.unshift(
+				<polygon
+					points={`${x1},${(y1 + y2) / 2} ${x1 + 7},${y1}
+							${x2 - 7},${y1} ${x2},${(y1 + y2) / 2}
+							${x2 - 7},${y2} ${x1 + 7},${y2}`}
+					fill={color}
+					stroke="black"
+					strokeWidth={1}
+				/>
+			)
+		}
+
 		return additionals;
 	}
 }

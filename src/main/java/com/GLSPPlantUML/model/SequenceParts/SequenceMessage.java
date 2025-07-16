@@ -6,13 +6,16 @@ import net.sourceforge.plantuml.skin.ArrowDecoration;
 import net.sourceforge.plantuml.skin.ArrowHead;
 import net.sourceforge.plantuml.skin.ArrowPart;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SequenceMessage {
     private final String msgId;
     private final String from;
     private final String to;
-    private String message;
-    private final ArrowConfiguration arrowConfiguration;
-    private final String messageType;
+    private String message = "";
+    private ArrowConfiguration arrowConfiguration = null;
+    private String messageType = "";
     private String numbering = "";
     private boolean isShort = false;
     private boolean isSelf = false;
@@ -22,6 +25,7 @@ public class SequenceMessage {
     private boolean anchorStart = false;
     private boolean anchorEnd = false;
     private String anchorId = "";
+    private List<SequenceNote> notes;
 
     public SequenceMessage(String msgId, boolean creating, String from, String to, String message, ArrowConfiguration arrowConfiguration,
                            String messageType, String numbering, boolean isShort, boolean isSelf) {
@@ -35,6 +39,8 @@ public class SequenceMessage {
         this.creating = creating;
         this.numbering = numbering;
         this.isShort = isShort;
+
+        this.notes = new ArrayList<>();
     }
 
     public SequenceMessage(String msgId, String from, String to, String message, ArrowConfiguration arrowConfiguration,
@@ -59,6 +65,17 @@ public class SequenceMessage {
         this.isShort = isShort;
         this.incoming = incoming;
         this.outgoing = outgoing;
+
+        this.notes = new ArrayList<>();
+    }
+
+    public SequenceMessage(String msgId, String from, String to, String messageType) {
+        this.msgId = msgId;
+        this.from = from;
+        this.to = to;
+        this.messageType = messageType;
+
+        this.notes = new ArrayList<>();
     }
 
     public String getMsgId() {
@@ -184,5 +201,13 @@ public class SequenceMessage {
 
     public void setAnchorId(String anchorId) {
         this.anchorId = anchorId;
+    }
+
+    public List<SequenceNote> getNotes() {
+        return this.notes;
+    }
+
+    public void addNotes(SequenceNote note) {
+        this.notes.add(note);
     }
 }
