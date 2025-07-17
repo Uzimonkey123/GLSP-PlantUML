@@ -1,5 +1,5 @@
 import {VNode} from "snabbdom";
-import {svg} from "@eclipse-glsp/client";
+import {GNode, svg} from "@eclipse-glsp/client";
 
 export function TspanConverter(html: string): VNode[][] {
     type Style = { //TODO: Add more styles according to plantuml
@@ -110,4 +110,51 @@ export function createIcon(width: number, background: String, stereotypeChar: St
             </text>
         </g>
     );
+}
+
+export interface NodeViewArgs {
+    w: number;
+    h: number;
+    background?: string;
+    showFoot: boolean;
+    headerH: number;
+    footerH: number;
+    labelLines: number;
+    labelHeight: number;
+    lifeLineStart: number;
+    lifeLineEnd: number;
+    cx: number;
+}
+
+export function getNodeArgs(node: Readonly<GNode>): NodeViewArgs {
+    const w = node.size.width;
+    const h = node.size.height;
+    const args = (node as any).args ?? {};
+    const background = args.background;
+    const showFoot = !!args.showFoot;
+
+    const headerH = args.headerHeight || 0;
+    const footerH = args.headerHeight || 0;
+
+    const labelLines = (args.name || "").split("<br>").length;
+    const lineHeight = 14;
+    const labelHeight = labelLines * lineHeight;
+
+    // Lifeline line coordinates to be between the two labels
+    const lifeLineStart = headerH;
+    const lifeLineEnd = h - footerH;
+
+    return {
+        w,
+        h,
+        background,
+        showFoot,
+        headerH,
+        footerH,
+        labelLines,
+        labelHeight,
+        lifeLineStart,
+        lifeLineEnd,
+        cx: w / 2
+    };
 }

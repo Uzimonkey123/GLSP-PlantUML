@@ -1,6 +1,7 @@
 import {injectable} from "inversify";
 import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
+import {getNodeArgs} from "./utils";
 
 /** @jsx svg */
 
@@ -8,22 +9,14 @@ import {VNode} from "snabbdom";
 export class RectangularNodeView extends ShapeView {
     override render(
         node: Readonly<GNode>,
-        context: RenderingContext,
-        args?: IViewArgs
+        context: RenderingContext
     ): VNode {
-        const w = node.size.width;
-        const totalH = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
-
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-
-        // Lifeline between header and footer
-        const lifeLineStart = headerH;
-        const lifeLineEnd = totalH - footerH;
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd
+        } = getNodeArgs(node);
 
         return <g>
             {/* Top rectangle */}
@@ -63,19 +56,13 @@ export class ActorNodeView extends ShapeView {
         node: Readonly<GNode>,
         context: RenderingContext
     ): VNode {
-        const w = node.size.width;
-        const h = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd, cx
+        } = getNodeArgs(node);
 
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-        const lineHeight = 14;
-        const labelHeight = labelLines * lineHeight;
-
-        const cx = w / 2; // Center of circle
         const headRadius = 6;
 
         const bodyStartY = headRadius * 2;
@@ -94,10 +81,6 @@ export class ActorNodeView extends ShapeView {
                 <line x1={cx} y1={bodyEndY} x2={cx + 15} y2={bodyEndY + 15} stroke="black" />
             </g>
         );
-
-        // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH;
-        const lifeLineEnd = h - footerH;
 
         // Position for the label
         const topLabelY = headerH - labelHeight;
@@ -144,19 +127,12 @@ export class BoundaryNodeView extends ShapeView {
         node: Readonly<GNode>,
         context: RenderingContext
     ): VNode {
-        const w = node.size.width;
-        const h = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
-
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-        const lineHeight = 14;
-        const labelHeight = labelLines * lineHeight;
-
-        const cx = w / 2; // Center of circle
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd, cx
+        } = getNodeArgs(node);
 
         const drawBoundary = (offsetY: number) => {
             const verticalLine = 12;
@@ -194,10 +170,6 @@ export class BoundaryNodeView extends ShapeView {
                 </g>
             );
         };
-
-        // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH;
-        const lifeLineEnd = h - footerH;
 
         // Position for the label
         const labelY = headerH - labelHeight;
@@ -244,19 +216,12 @@ export class ControlNodeView extends ShapeView {
         node: Readonly<GNode>,
         context: RenderingContext
     ): VNode {
-        const w = node.size.width;
-        const h = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
-
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-        const lineHeight = 14;
-        const labelHeight = labelLines * lineHeight;
-
-        const cx = w / 2; // Center of circle
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd, cx
+        } = getNodeArgs(node);
 
         const drawControl = (offsetY: number) => {
             const circleRadius = 6;
@@ -292,10 +257,6 @@ export class ControlNodeView extends ShapeView {
                 </g>
             );
         };
-
-        // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH;
-        const lifeLineEnd = h - footerH;
 
         // Position for the label
         const labelY = headerH - labelHeight;
@@ -342,19 +303,12 @@ export class EntityNodeView extends ShapeView {
         node: Readonly<GNode>,
         context: RenderingContext
     ): VNode {
-        const w = node.size.width;
-        const h = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
-
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-        const lineHeight = 14;
-        const labelHeight = labelLines * lineHeight;
-
-        const cx = w / 2;
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd, cx
+        } = getNodeArgs(node);
 
         const drawEntitySymbol = (offsetY: number) => {
             const circleRadius = 6;
@@ -382,10 +336,6 @@ export class EntityNodeView extends ShapeView {
                 </g>
             );
         };
-
-        // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH;
-        const lifeLineEnd = h - footerH;
 
         // Position for the label
         const labelY = headerH - labelHeight;
@@ -432,19 +382,12 @@ export class DatabaseNodeView extends ShapeView {
         node: Readonly<GNode>,
         context: RenderingContext
     ): VNode {
-        const w = node.size.width;
-        const h = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
-
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-        const lineHeight = 14;
-        const labelHeight = labelLines * lineHeight;
-
-        const cx = w / 2;
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd, cx
+        } = getNodeArgs(node);
 
         const drawDatabase = (offsetY: number) => {
             const width = 30;
@@ -512,10 +455,6 @@ export class DatabaseNodeView extends ShapeView {
             );
         };
 
-        // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH;
-        const lifeLineEnd = h - footerH;
-
         // Position for the label
         const labelY = headerH - labelHeight;
 
@@ -558,21 +497,12 @@ export class DatabaseNodeView extends ShapeView {
 @injectable()
 export class CollectionNodeView extends ShapeView {
     override render(node: Readonly<GNode>, context: RenderingContext): VNode {
-        const w = node.size.width;
-        const totalH = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
-
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-        const lineHeight = 14;
-        const labelHeight = labelLines * lineHeight;
-
-        // Lifeline between header and footer
-        const lifeLineStart = headerH;
-        const lifeLineEnd = totalH - footerH;
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd
+        } = getNodeArgs(node);
 
         return <g>
             {/* Back rectangle */}
@@ -631,17 +561,12 @@ export class CollectionNodeView extends ShapeView {
 @injectable()
 export class QueueNodeView extends ShapeView {
     override render(node: Readonly<GNode>, context: RenderingContext): VNode {
-        const w = node.size.width;
-        const h = node.size.height;
-        const background = (node as any).args?.background;
-        const showFoot = (node as any).args?.showFoot;
 
-        const headerH = (node as any).args?.headerHeight;
-        const footerH = (node as any).args?.headerHeight;
-
-        const labelLines = ((node as any).args?.name || "").split("<br>").length;
-        const lineHeight = 14;
-        const labelHeight = labelLines * lineHeight;
+        const {
+            w, h, background, showFoot,
+            headerH, footerH, labelLines,
+            labelHeight, lifeLineStart, lifeLineEnd, cx
+        } = getNodeArgs(node);
 
         const drawQueue = (offsetY: number) => {
             const ry = headerH / 2;
@@ -708,10 +633,6 @@ export class QueueNodeView extends ShapeView {
                 </g>
             );
         }
-
-        // Lifeline line coordinates to be between the two labels
-        const lifeLineStart = headerH;
-        const lifeLineEnd = h - footerH;
 
         return (
             <g>
