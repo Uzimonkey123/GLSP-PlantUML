@@ -1,16 +1,17 @@
-import { injectable } from 'inversify';
+import {injectable} from 'inversify';
 import {
 	GEdge,
-	Point,
-	RenderingContext,
-	IViewArgs,
-	PolylineEdgeViewWithGapsOnIntersections,
-	svg,
-	SEdgeImpl,
+	GEdgeView,
+	GLabel,
 	GLabelView,
-	GLabel, GEdgeView
+	IViewArgs,
+	Point,
+	PolylineEdgeViewWithGapsOnIntersections,
+	RenderingContext,
+	SEdgeImpl,
+	svg
 } from '@eclipse-glsp/client';
-import { VNode } from "snabbdom";
+import {VNode} from "snabbdom";
 import '../css/diagram.css';
 import {createIcon, TspanConverter} from "./utils";
 
@@ -192,39 +193,11 @@ export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersection
 	protected override renderAdditionals(
 		edge: SEdgeImpl,
 		segments: Point[],
-		context: RenderingContext,
-		args?: IViewArgs
+		context: RenderingContext
 	): VNode[]
 	{
 
-		const additionals = super.renderAdditionals(edge, segments, context);
-
-		if (segments.length < 3) return additionals;
-
-		const interior = segments.slice(1, segments.length - 1);
-		if (interior.length < 2) return additionals;
-
-		const start = interior[0];
-		const end = interior[interior.length - 1];
-
-		const midX = (start.x + end.x) / 2;
-		const midY = (start.y + end.y) / 2;
-		const labels = context.renderChildren(edge, args);
-		if (labels.length) {
-			additionals.push(
-				<g transform={`translate(${midX},${midY})`}>
-					{labels.map((l, i) =>
-						<text key={i}
-							  {...(l.data?.props as any)}
-							  text-anchor="middle"
-							  fill="black">
-							{l.children}
-						</text>
-					)}
-				</g>
-			);
-		}
-		return additionals;
+		return super.renderAdditionals(edge, segments, context);
 	}
 }
 
@@ -330,8 +303,7 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		} else {
 			this.drawSelfArrow(additionals);
 		}
-
-		this.placeLabel(context, additionals, edge, args);
+		
 		return additionals;
 	}
 
@@ -535,31 +507,6 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 				strokeWidth={1}
 			/>
 		)
-	}
-
-	private placeLabel(context: RenderingContext, additionals: VNode[], edge: GEdge, args?: IViewArgs) {
-		const midX = (this.start.x + this.end.x) / 2;
-		const midY = (this.start.y + this.end.y) / 2;
-		const labels = context.renderChildren(edge, args);
-		if (labels.length) {
-			additionals.push(
-				<g transform={`translate(${midX},${midY})`}>
-					{labels.map((l, i) => {
-						const raw = (l.text as string | undefined) ?? '';
-						return (
-							<text key={i}
-								  {...(l.data?.props as any)}
-								  text-anchor="middle"
-								  dominant-baseline="central"
-								  fill="black">
-
-								{TspanConverter(raw)}
-							</text>
-						);
-					})}
-				</g>
-			);
-		}
 	}
 }
 
