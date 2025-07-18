@@ -11,6 +11,7 @@ public class SequenceModel {
     public Map<Integer, Integer> messageSpaces = new HashMap<>();
     public List<SequenceGroup> groups = new ArrayList<>();
     public List<SequenceEnglober> englobers = new ArrayList<>();
+    public List<SequenceNote> notes = new ArrayList<>();
 
     public String footer;
     public String header;
@@ -39,7 +40,7 @@ public class SequenceModel {
     }
 
     public Collection<SequenceGroup> reversedGroups() {
-        List<SequenceGroup> reversedList = this.groups;
+        List<SequenceGroup> reversedList = new ArrayList<>(this.groups);
         Collections.reverse(reversedList);
 
         return reversedList;

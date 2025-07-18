@@ -4,7 +4,7 @@ public class SequenceAnchor {
     private final String participant1;
     private final String participant2;
     private final String anchorId;
-    private final String label;
+    private String label;
     private double topY = 0;
 
     public SequenceAnchor(String participant1, String participant2, String anchorId, String label) {
@@ -28,6 +28,10 @@ public class SequenceAnchor {
 
     public String getLabel() {
         return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public double getTopY() {

@@ -6,7 +6,7 @@ import java.util.List;
 public class SequenceGroup {
     private final int startIndex;
     private int endIndex = -1;
-    private final String label;
+    private String label;
     private String comment = "";
     private final int level;
     private final List<Integer> separatorList; // Message index for all separators if available
@@ -41,12 +41,20 @@ public class SequenceGroup {
         return label;
     }
 
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
     public String getComment() {
         if (label.equals("group") && !comment.isEmpty()) {
             return "";
         }
 
         return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     public int getLevel() {

@@ -36,6 +36,7 @@ public class SequenceGroupFactory {
 
     public void createGroups() {
         Collection<SequenceGroup> reversedGroups = model.reversedGroups();
+        globalMaxX = Double.MIN_VALUE;
 
         for (SequenceGroup seqGroup : reversedGroups) {
             minX = Double.MAX_VALUE;
