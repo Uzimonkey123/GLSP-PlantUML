@@ -7,10 +7,11 @@ import {
 } from '@eclipse-glsp/vscode-integration';
 import PumlEditorProvider from './editor-provider';
 import { RequestExportSvgAction } from 'sprotty';
+import {WebSocketGlspVscodeServer} from "@eclipse-glsp/vscode-integration/browser";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   // Connecting to the Java server that is already running
-  const server = new SocketGlspVscodeServer({
+  const server = new WebSocketGlspVscodeServer({
     clientId: "glsp.puml",
     clientName: "PlantUML",
     connectionOptions: {
