@@ -11,18 +11,20 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperation> {
+    private GLabel label;
+    private SequenceModel model;
 
     @Override
     public Optional<Command> createCommand(final ApplyLabelEditOperation operation) {
 
-        GLabel label = findLabel(operation).orElseThrow(
+        label = findLabel(operation).orElseThrow(
                 () -> new IllegalArgumentException("Element with provided ID cannot be found or is not a GLabel"));
 
         System.err.println("[ApplyLabelEdit] New label text: " + operation.getText());
         System.err.println("[ApplyLabelEdit] Label ID: " + label.getId());
 
         if (modelState instanceof SequenceModelState sequenceState) {
-            SequenceModel model = sequenceState.getModel();
+            model = sequenceState.getModel();
 
             boolean updated = model.participants.stream()
                     .filter(p -> p.getName().equals(label.getText()))
@@ -33,14 +35,12 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
                     })
                     .orElse(false);
 
-            // Match message ID
-            if (!updated && label.getId().startsWith("label-")) {
-                String expectedMessageId = "msg-" + extractIndex(label.getId());
-                model.messages.stream()
-                        .filter(m -> m.getMsgId().equals(expectedMessageId))
-                        .findFirst()
-                        .ifPresent(m -> m.setMessage(operation.getText()));
+            if (!updated) {
+                checkAnchors(operation);
+                checkGroups(operation);
+                checkMessages(operation);
             }
+
         }
 
         return Objects.equals(label.getText(), operation.getText())
@@ -57,6 +57,55 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
             return Integer.parseInt(labelId.substring(labelId.lastIndexOf('-') + 1));
         } catch (Exception e) {
             return -1;
+        }
+    }
+
+    private void checkAnchors(ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("anch")) {
+            model.anchors.stream()
+                    .filter(a -> {
+                        String anchorLabelID = "anch-" + a.getAnchorId();
+                        return anchorLabelID.equals(label.getId());
+                    })
+                    .findFirst()
+                    .ifPresent(a -> a.setLabel(operation.getText()));
+        }
+    }
+
+    private void checkGroups(ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("group-label")) {
+            int expectedGroupLevel = extractIndex(label.getId());
+            model.groups.stream()
+                    .filter(g -> g.getLevel() == expectedGroupLevel)
+                    .findFirst()
+                    .ifPresent(g -> g.setLabel(operation.getText()));
+        }
+
+        if (label.getId().startsWith("group-comment")) {
+            int expectedGroupLevel = extractIndex(label.getId());
+            model.groups.stream()
+                    .filter(g -> g.getLevel() == expectedGroupLevel)
+                    .findFirst()
+                    .ifPresent(g -> g.setComment(operation.getText()));
+        }
+    }
+
+    private void checkMessages(ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("note-")) {
+            String expectedNoteId = "note-" + extractIndex(label.getId());
+            model.notes.stream()
+                    .filter(n -> n.getId().equals(expectedNoteId))
+                    .findFirst()
+                    .ifPresent(n -> n.setLabel(operation.getText()));
+        }
+
+        // Match message ID
+        if (label.getId().startsWith("label-")) {
+            String expectedMessageId = "msg-" + extractIndex(label.getId());
+            model.messages.stream()
+                    .filter(m -> m.getMsgId().equals(expectedMessageId))
+                    .findFirst()
+                    .ifPresent(m -> m.setMessage(operation.getText()));
         }
     }
 }

@@ -41,6 +41,7 @@ public class AnchorBuild {
                 .addRoutingPoint(point(xCoord, anchor.getTopY()))
                 .addRoutingPoint(point(xCoord, bottomY))
                 .add(new GLabelBuilder("label:html")
+                        .id("anch-" + anchor.getAnchorId())
                         .text(anchor.getLabel())
                         .edgePlacement(new GEdgePlacementBuilder()
                                 .side(GConstants.EdgeSide.RIGHT) // To the right from the label

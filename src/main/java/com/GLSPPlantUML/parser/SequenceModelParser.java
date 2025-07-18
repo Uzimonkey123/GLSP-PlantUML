@@ -265,7 +265,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
     private void MessageNoteHandler(AbstractMessage msg, SequenceMessage message) {
         for(Note note : msg.getNoteOnMessages()) {
-            String id = message.getMsgId() + message.getNotes().size();
+            String id = "note-" + model.notes.size();
             String label = String.join("<br>", note.getDisplay());
             String position = note.getPosition().toString();
             String shape = note.getNoteStyle().toString();
@@ -275,11 +275,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
             SequenceNote newNote = new SequenceNote(id, label, position, color, shape);
             message.addNotes(newNote);
+            model.notes.add(newNote);
         }
     }
 
     private void SeparateNoteHandler(Note note) {
-        String id = "note-" + model.messages.size();
+        String id = "msg-note-" + model.messages.size();
         String from = parseParticipantId(note.getParticipant());
         String to = parseParticipantId(note.getParticipant2());
 
@@ -292,8 +293,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         SequenceMessage msg = new SequenceMessage(id, from, to, "edge:note");
         model.messages.add(msg);
-        msg.addNotes(new SequenceNote("msg-note-" + model.messages.size(), label, position,
-                color, shape));
+
+        SequenceNote newNote = new SequenceNote("note-" + model.notes.size(), label, position, color, shape);
+        msg.addNotes(newNote);
+        model.notes.add(newNote);
     }
 
     private void setupAnchor(Message msg, String from, String to) {
