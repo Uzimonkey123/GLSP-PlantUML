@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
 import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.error.PSystemError;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.sequencediagram.*;
@@ -50,6 +51,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         for (BlockUml block : blocks) {
             Diagram d = block.getDiagram();
+            if (d instanceof PSystemError) {
+                throw new IOException("Error, invalid Sequence diagram.");
+            }
+
             if (d instanceof SequenceDiagram sd) {
                 this.sequenceDiagram = sd;
 
@@ -68,46 +73,18 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
                 // Extract participants and messages with API
                 for (Event event : sd.events()) {
-                    if (event instanceof GroupingStart gs) {
-                        GroupingStartHandler(gs);
-                    }
+                    if (event instanceof GroupingStart gs) GroupingStartHandler(gs);
+                    if (event instanceof GroupingLeaf leaf) GroupingLeafHandler(leaf);
 
-                    if (event instanceof GroupingLeaf leaf) {
-                        GroupingLeafHandler(leaf);
-                    }
+                    if (event instanceof MessageExo msg) MessageExoHandler(msg);
+                    if (event instanceof Message msg) MessageHandler(msg);
+                    if (event instanceof Delay delay) DelayHandler(delay);
+                    if (event instanceof Divider div) DividerHandler(div);
 
-                    if (event instanceof MessageExo msg) {
-                        MessageExoHandler(msg);
-                    }
-
-                    if (event instanceof Message msg) {
-                        MessageHandler(msg);
-                    }
-
-                    if (event instanceof Delay delay) {
-                        DelayHandler(delay);
-                    }
-
-                    if (event instanceof Divider div) {
-                        DividerHandler(div);
-                    }
-
-                    if (event instanceof LifeEvent le) {
-                        LifeEventHandler(le);
-                    }
-
-                    if (event instanceof HSpace hSpace) {
-                        hSpaceHandler(hSpace);
-                    }
-
-                    if (event instanceof Reference reference) {
-                        ReferenceHandler(reference);
-                    }
-
-                    if (event instanceof Note note) {
-                        SeparateNoteHandler(note);
-                    }
-
+                    if (event instanceof LifeEvent le) LifeEventHandler(le);
+                    if (event instanceof HSpace hSpace) hSpaceHandler(hSpace);
+                    if (event instanceof Reference reference) ReferenceHandler(reference);
+                    if (event instanceof Note note) SeparateNoteHandler(note);
                     if (event instanceof Notes notes) {
                         //TODO: Paralell notes
                     }
