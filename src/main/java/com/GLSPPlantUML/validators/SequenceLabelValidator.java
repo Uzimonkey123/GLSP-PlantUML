@@ -1,5 +1,7 @@
 package com.GLSPPlantUML.validators;
 
+import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.state.SequenceModelState;
 import com.google.inject.Inject;
 import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.server.features.directediting.LabelEditValidator;
@@ -15,6 +17,18 @@ public class SequenceLabelValidator implements LabelEditValidator {
     public ValidationStatus validate(final String label, final GModelElement element) {
         if (label == null || label.trim().isEmpty()) {
             return ValidationStatus.error("Label must not be empty");
+        }
+
+        if (modelState instanceof SequenceModelState sequenceModelState) {
+            SequenceModel model = sequenceModelState.getModel();
+
+            // Check for the same node name if exists, if yes, return error to client and do not allow change
+            boolean hasName = model.participants.stream()
+                    .anyMatch(p -> p.getName().equals(label));
+
+            if (hasName) {
+                return ValidationStatus.error("Node name already exists");
+            }
         }
 
         // All good
