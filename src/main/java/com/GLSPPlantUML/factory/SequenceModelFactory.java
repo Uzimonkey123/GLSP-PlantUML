@@ -91,6 +91,14 @@ public class SequenceModelFactory implements GModelFactory {
         for (int i = 0; i < model.messages.size(); i++) {
             SequenceMessage msg = model.messages.get(i);
             int lines = msg.getMessage().split("<br>").length;
+            int noteLines = 0;
+            if (msg.getNotes() != null) {
+                for (SequenceNote note : msg.getNotes()) {
+                    noteLines = Math.max(noteLines, note.getLabel().split("<br>").length);
+                }
+            }
+
+            lines = Math.max(lines, noteLines);
             int extra = Math.max(0, (lines - 1) * 14);
 
             if (model.messageSpaces.containsKey(i)) {
