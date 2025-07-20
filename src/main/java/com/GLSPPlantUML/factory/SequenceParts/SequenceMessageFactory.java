@@ -4,11 +4,9 @@ import com.GLSPPlantUML.builders.AnchorBuild;
 import com.GLSPPlantUML.builders.MessageBuild;
 import com.GLSPPlantUML.builders.NodeBuild;
 import com.GLSPPlantUML.model.SequenceModel;
-import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
-import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
-import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
-import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
+import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.utils.NodeGap;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.*;
@@ -30,7 +28,9 @@ public class SequenceMessageFactory {
     private SequenceMessage msg;
     private final MessageBuild msgBuild;
     private final NodeBuild nodeBuild;
+    private final SequenceNoteFactory noteFactory;
 
+    private final int labelHeight = 14;
 
 
     public SequenceMessageFactory(SequenceModel model, double cursor, Map<String, Double> centre,
@@ -47,6 +47,7 @@ public class SequenceMessageFactory {
 
         this.nodeBuild = new NodeBuild();
         this.msgBuild = new MessageBuild(halfWidth);
+        this.noteFactory = new SequenceNoteFactory(model, messagesYPos, centre, halfWidth, elements);
     }
 
     public void createEdges() {
@@ -61,6 +62,11 @@ public class SequenceMessageFactory {
             // Handle special type early
             if (msg.getType().equals("edge:ref")) {
                 createReference(i);
+                continue;
+            }
+
+            if (msg.getType().equals("edge:note")) {
+                noteFactory.createNote(msg, i);
                 continue;
             }
 
@@ -99,7 +105,8 @@ public class SequenceMessageFactory {
         }
 
         elements.add(msgBuild.buildEdge(msg, sourceId, targetId, x1, x2, y, incoming, outgoing));
-        createMsgLabel(msgIndex, sourceId, x1, x2);
+        noteFactory.createNote(msg, msgIndex);
+        createMsgLabel(msgIndex, sourceId, targetId, x1, x2);
     }
 
     private void createReference(int msgIndex) {
@@ -114,7 +121,7 @@ public class SequenceMessageFactory {
         int labelWidth = maxLineLength * 8 + 5;
 
         int lineCount = lines.length;
-        int labelHeight = lineCount * 14;
+        int labelHeight = lineCount * this.labelHeight;
 
         // Get y1 according to the current index - amount of lines and some padding
         double y1 = messagesYPos.get(msgIndex) - (labelHeight + 10);
@@ -125,22 +132,40 @@ public class SequenceMessageFactory {
             x2 = x1 + labelWidth; // Move the ref just towards the right, no further extension to the left
         }
 
-       elements.add(msgBuild.buildReference(msg, from, to, x1, x2, y1, y2));
-        createMsgLabel(msgIndex, from, x1, x2);
+        elements.add(msgBuild.buildReference(msg, from, to, x1, x2, y1, y2));
+        createMsgLabel(msgIndex, from, to, x1, x2);
     }
 
-    private void createMsgLabel(int msgIndex, String routingOne, double x1, double x2) {
+    private void createMsgLabel(int msgIndex, String routingOne, String routingTwo, double x1, double x2) {
         double labelShift;
         double y = messagesYPos.get(msgIndex);
 
         if (msg.isSelf()) {
             labelShift = (centre.get(routingOne) + centre.get(model.getNextParticipant(routingOne))) / 2;
+
+            // Check if it is the last participant for self message
+            if (routingOne.equals(model.participants.getLast().getId())) {
+                labelShift = centre.get(routingOne) + gapCalculator.getGaps(routingOne, routingOne);
+            }
+
         } else {
-            labelShift = (x1 + x2) / 2;
+            String direction = msg.decideWay();
+
+            labelShift = switch (direction) {
+                case "outgoing" ->
+                        centre.get(routingOne) + WidthCalculator.calculateWidth(msg.getMessage(), 10) / 2;
+
+                case "incoming" ->
+                        // labelShift is center position, so shift label left by half width
+                        // so that right edge aligns exactly with centerX
+                        centre.get(routingTwo) - WidthCalculator.calculateWidth(msg.getMessage(), 10) / 2;
+
+                default -> (x1 + x2) / 2;
+            };
         }
 
         int lineCount = msg.getMessage().split("<br>").length;
-        double labelYOffset = lineCount > 1 ? lineCount * 14 : 6;
+        double labelYOffset = lineCount > 1 ? lineCount * labelHeight : 6;
 
         elements.add(msgBuild.buildMsgLabel(msg, msgIndex, y, labelShift, labelYOffset));
     }
