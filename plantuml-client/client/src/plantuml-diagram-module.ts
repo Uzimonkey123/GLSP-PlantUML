@@ -107,7 +107,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "edge:delay", GEdge, SequenceMessageDelay);
         configureModelElement(context, "edge:divider", GEdge, SequenceMessageDivider);
         configureModelElement(context, "edge:ref", GEdge, ReferenceEdgeView);
-        configureModelElement(context, "edge:notes", GEdge, NoteEdgeView);
+        configureModelElement(context, "edge:notes", GEdge, NoteEdgeView, { disable: [selectFeature]});
         configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature] });
         configureModelElement(context, "label:participant", GLabel, ParticipantLabelView, { enable: [editLabelFeature, selectFeature, moveFeature] });
         configureModelElement(context, "label:header", GLabel, SequenceHeaderFooter);
@@ -117,7 +117,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "anchor-arrow", GEdge, AnchorEdgeView);
         configureModelElement(context, "lifeEvent", GNode, LifeEventBar);
         configureModelElement(context, "destroy", GNode, DestroyCross)
-        configureModelElement(context, "group", GEdge, GroupsView);
+        configureModelElement(context, "group", GEdge, GroupsView, { disable: [selectFeature]});
         configureModelElement(context, "participant-englober", GNode, EngloberView);
     }
 );

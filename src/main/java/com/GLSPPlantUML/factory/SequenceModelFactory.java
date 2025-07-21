@@ -41,7 +41,7 @@ public class SequenceModelFactory implements GModelFactory {
         calculateYPositions(model, firstMsgY); // Get all Y coordinate information for messages/life events/ ver. spaces
         double totalHeight = messagesYPos.stream().mapToDouble(Double::doubleValue).max().orElse(firstMsgY);
 
-        this.gapCalculator = new NodeGap(model.messages);
+        this.gapCalculator = new NodeGap(model);
         this.nodeBuild = new NodeBuild();
 
         // Build all the nodes and create list to get their centers
@@ -59,14 +59,14 @@ public class SequenceModelFactory implements GModelFactory {
                                                                                     elements, totalHeight);
         engloberFactory.createEnglobers();
 
-        // Build all groups and separators
-        SequenceGroupFactory groupFactory = new SequenceGroupFactory(model, messagesYPos, centre, elements);
-        groupFactory.createGroups();
-
         // Build the necessary life events and destroy icons
         SequenceLifeEventFactory leFactory = new SequenceLifeEventFactory(model, lifeEventYPos, centre,
                                                                             elements, messagesYPos);
         leFactory.createSequenceLifeEvents();
+
+        // Build all groups and separators
+        SequenceGroupFactory groupFactory = new SequenceGroupFactory(model, messagesYPos, centre, elements);
+        groupFactory.createGroups();
 
         SequenceMessageFactory msgFactory = new SequenceMessageFactory(model, cursor, centre, halfWidth,
                                                                         elements, messagesYPos, gapCalculator);
@@ -86,49 +86,73 @@ public class SequenceModelFactory implements GModelFactory {
     private void calculateYPositions(SequenceModel model, double firstMsgY) {
         double hspace = 0;
         double msgGap = 35;
+        int row = 0;
         messagesYPos.clear();
 
-        for (int i = 0; i < model.messages.size(); i++) {
+        for (int i = 0; i < model.messages.size(); ) {
             SequenceMessage msg = model.messages.get(i);
-            int lines = msg.getMessage().split("<br>").length;
-            int noteLines = 0;
-            if (msg.getNotes() != null) {
-                for (SequenceNote note : msg.getNotes()) {
-                    noteLines = Math.max(noteLines, note.getLabel().split("<br>").length);
-                }
+            int extra = getExtra(i);
+
+            // Look ahead for parallel messages
+            int j = i + 1;
+            int parallelExtra = extra;
+            while (j < model.messages.size() && model.messages.get(j).isParallel()) {
+                parallelExtra = Math.max(parallelExtra, getExtra(j));
+                j++;
             }
 
-            lines = Math.max(lines, noteLines);
-            int extra = Math.max(0, (lines - 1) * 14);
+            model.messageSpaces.put(i, parallelExtra);
 
-            if (model.messageSpaces.containsKey(i)) {
-                hspace += model.messageSpaces.get(i);
-            } else {
-                model.messageSpaces.put(i, extra);
-            }
-
-            hspace += extra;
-
-            double y = firstMsgY + i * msgGap + hspace;
+            // Accumulate height for this row
+            hspace += parallelExtra;
+            double y = firstMsgY + row * msgGap + hspace;
             messagesYPos.add(y);
+            selfActivation(msg, y, i);
 
-            // If message is self call activation, the start of life event is lower
-            // for deactivation or destroy of self message it does not set offset
-            int finalI = i;
-            boolean isStartOfLifeEvent = msg.isSelf() &&
-                    model.participants.stream()
-                    .anyMatch(node -> node.getLifeEvents().stream()
-                            .anyMatch(event -> event.getStartMessage() == finalI));
+            // Place parallels at same Y
+            for (int k = i + 1; k < j; k++) {
+                messagesYPos.add(y);
+                selfActivation(model.messages.get(k), y, k);
+                model.messageSpaces.putIfAbsent(k, getExtra(k));
+            }
 
-            lifeEventYPos.add(isStartOfLifeEvent ? y + 15 : y);
+            row++;
+            i = j; // Skip parallel ones since processed
         }
 
         int trailing = model.messageSpaces.getOrDefault(model.messages.size(), 0);
-        if (trailing > 0) {
-            // In case HSpace is added after the last message
+        if (trailing > 0 && !messagesYPos.isEmpty()) {
             double lastY = messagesYPos.getLast() + msgGap + trailing;
             messagesYPos.add(lastY);
             lifeEventYPos.add(lastY);
         }
+
+        for (Double y : messagesYPos) {
+            System.err.println("Y: " + y);
+        }
+    }
+
+    private int getExtra(int index) {
+        SequenceMessage msg = model.messages.get(index);
+        int lines = msg.getMessage().split("<br>").length;
+        int moteLines = 0;
+        if (msg.getNotes() != null) {
+            for (SequenceNote note : msg.getNotes()) {
+                moteLines = Math.max(moteLines, note.getLabel().split("<br>").length);
+            }
+        }
+
+        int prevTotalLines = Math.max(lines, moteLines);
+        return Math.max(0, (prevTotalLines - 1) * 14);
+    }
+
+    private void selfActivation(SequenceMessage msg, double y, int i) {
+        // If message is self call activation, the start of life event is lower
+        // for deactivation or destroy of self message it does not set offset
+        boolean isStartOfLifeEvent = msg.isSelf() &&
+                model.participants.stream()
+                        .anyMatch(p -> p.getLifeEvents().stream()
+                                .anyMatch(e -> e.getStartMessage() == i));
+        lifeEventYPos.add(isStartOfLifeEvent ? y + 15 : y);
     }
 }
