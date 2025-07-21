@@ -26,6 +26,7 @@ public class SequenceMessage {
     private boolean anchorEnd = false;
     private String anchorId = "";
     private List<SequenceNote> notes;
+    private boolean parallel = false;
 
     public SequenceMessage(String msgId, boolean creating, String from, String to, String message, ArrowConfiguration arrowConfiguration,
                            String messageType, String numbering, boolean isShort, boolean isSelf) {
@@ -209,5 +210,13 @@ public class SequenceMessage {
 
     public void addNotes(SequenceNote note) {
         this.notes.add(note);
+    }
+
+    public boolean isParallel() {
+        return this.parallel;
+    }
+
+    public void setParallel(boolean parallel) {
+        this.parallel = parallel;
     }
 }

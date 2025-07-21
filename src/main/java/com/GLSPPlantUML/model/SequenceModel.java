@@ -39,6 +39,16 @@ public class SequenceModel {
         return current;
     }
 
+    public String getPreviousParticipant(String current) {
+        for (int i = 1; i < participants.size(); i++) {
+            if (participants.get(i).getId().equals(current)) {
+                return participants.get(i - 1).getId();
+            }
+        }
+
+        return current;
+    }
+
     public Collection<SequenceGroup> reversedGroups() {
         List<SequenceGroup> reversedList = new ArrayList<>(this.groups);
         Collections.reverse(reversedList);

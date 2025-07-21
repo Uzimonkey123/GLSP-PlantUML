@@ -84,9 +84,16 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     if (event instanceof LifeEvent le) LifeEventHandler(le);
                     if (event instanceof HSpace hSpace) hSpaceHandler(hSpace);
                     if (event instanceof Reference reference) ReferenceHandler(reference);
-                    if (event instanceof Note note) SeparateNoteHandler(note);
+                    if (event instanceof Note note) SeparateNoteHandler(note, false);
                     if (event instanceof Notes notes) {
-                        //TODO: Paralell notes
+                        List<Note> noteList = notes.asList();
+
+                        // First note is not parallel to keep the same logic as with messages
+                        for (int i = 0; i < noteList.size(); i++) {
+                            Note note = noteList.get(i);
+                            boolean parallel = i > 0;
+                            SeparateNoteHandler(note, parallel);
+                        }
                     }
                 }
             }
@@ -209,6 +216,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         model.messages.add(message);
 
+        if (msg.isParallel()) {
+            message.setParallel(true);
+        }
+
         MessageNoteHandler(msg, message);
     }
 
@@ -233,6 +244,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 "edge", num, false, isSelf);
         model.messages.add(message);
 
+        if (msg.isParallel()) {
+            message.setParallel(true);
+        }
+
         MessageNoteHandler(msg, message);
 
         if (msg.getAnchor() != null) {
@@ -256,7 +271,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
-    private void SeparateNoteHandler(Note note) {
+    private void SeparateNoteHandler(Note note, boolean parallel) {
         String id = "msg-note-" + model.messages.size();
         String from = parseParticipantId(note.getParticipant());
         String to = parseParticipantId(note.getParticipant2());
@@ -273,6 +288,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         SequenceNote newNote = new SequenceNote("note-" + model.notes.size(), label, position, color, shape);
         msg.addNotes(newNote);
+
+        if (parallel) {
+            msg.setParallel(true); // For Y offset in factory
+            newNote.setParalell(true); // For X offset between nodes in NodeGap
+        }
+
         model.notes.add(newNote);
     }
 
