@@ -41,8 +41,8 @@ public class SequenceNoteFactory {
 
         for (SequenceNote note : msg.getNotes()) {
             double width = WidthCalculator.calculateWidth(note.getLabel(), 10);
-            String from = "null".equals(msg.getFrom()) ? null : msg.getFrom();
-            String to = "null".equals(msg.getTo()) ? null : msg.getTo();
+            String from = msg.getFrom();
+            String to = msg.getTo();
 
             // Exo message note position override
             String position = resolveNotePosition(from, to, note.getPosition());

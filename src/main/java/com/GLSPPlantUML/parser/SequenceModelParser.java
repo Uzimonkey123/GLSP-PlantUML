@@ -426,7 +426,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private String parseParticipantId(Participant participant) {
-        if (participant == null) return "null";
+        if (participant == null) return null;
 
         String rawName = String.join("<br>", participant.getDisplay(false));
         return model.participants.stream()

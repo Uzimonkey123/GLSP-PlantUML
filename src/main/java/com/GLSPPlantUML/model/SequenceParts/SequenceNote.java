@@ -6,6 +6,7 @@ public class SequenceNote {
     private final String position;
     private final String background;
     private final String shape;
+    private boolean paralell = false;
 
     public SequenceNote(String id, String label, String position,  String background, String shape) {
         this.id = id;
@@ -37,6 +38,14 @@ public class SequenceNote {
 
     public String getShape() {
         return shape;
+    }
+
+    public boolean isParalell() {
+        return paralell;
+    }
+
+    public void setParalell(boolean paralell) {
+        this.paralell = paralell;
     }
 
     @Override
