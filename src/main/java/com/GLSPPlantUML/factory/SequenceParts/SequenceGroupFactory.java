@@ -65,7 +65,14 @@ public class SequenceGroupFactory {
 
             // Saving global max for the next level of group
             globalMaxX = Math.max(globalMaxX, x2);
-            x2 = globalMaxX + nestingPadding;
+            if (seqGroup.getLevel() > 0) {
+                globalMaxX = Math.max(globalMaxX, x2);
+                x2 = globalMaxX + nestingPadding;
+            } else {
+                // Reset globalMaxX for separate level 0 groups
+                globalMaxX = x2 + nestingPadding;
+                x2 += nestingPadding;
+            }
 
             calculateSeparatorY(seqGroup);
 
@@ -108,11 +115,18 @@ public class SequenceGroupFactory {
     private void calculateMinMax(SequenceGroup seqGroup) {
         for (int i = seqGroup.getStartIndex(); i < seqGroup.getEndIndex(); i++) {
             SequenceMessage message = model.messages.get(i);
-            double fromX = centre.get(message.getFrom());
-            double toX = centre.get(message.getTo());
+            double fromX = message.getFrom() != null ? centre.get(message.getFrom()) : -1;
+            double toX = message.getTo() != null ? centre.get(message.getTo()) : -1;
 
-            minX = Math.min(minX, Math.min(fromX, toX));
-            maxX = Math.max(maxX, Math.max(fromX, toX));
+            if (fromX != -1) {
+                minX = Math.min(minX, fromX);
+                maxX = Math.max(maxX, fromX);
+            }
+
+            if (toX != -1) {
+                minX = Math.min(minX, toX);
+                maxX = Math.max(maxX, toX);
+            }
         }
     }
 }
