@@ -40,7 +40,7 @@ public class SequenceGroup {
 
     public String getLabel() {
         if (label.equals("group") && !comment.isEmpty()) {
-            return comment;
+            label = comment;
         }
 
         return label;
@@ -52,6 +52,7 @@ public class SequenceGroup {
 
     public String getComment() {
         if (isGroup && !comment.isEmpty()) {
+            comment = "";
             return "";
         }
 
@@ -80,5 +81,9 @@ public class SequenceGroup {
 
     public List<String> getSeparatorLabel() {
         return separatorLabel;
+    }
+
+    public boolean isGroup() {
+        return isGroup;
     }
 }
