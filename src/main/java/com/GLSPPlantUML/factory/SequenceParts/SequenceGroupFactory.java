@@ -37,6 +37,8 @@ public class SequenceGroupFactory {
     public void createGroups() {
         Collection<SequenceGroup> reversedGroups = model.reversedGroups();
         globalMaxX = Double.MIN_VALUE;
+        minX = Double.MAX_VALUE;
+        maxX = Double.MIN_VALUE;
 
         for (SequenceGroup seqGroup : reversedGroups) {
             minX = Double.MAX_VALUE;
@@ -70,7 +72,6 @@ public class SequenceGroupFactory {
                 x2 = globalMaxX + nestingPadding;
             } else {
                 // Reset globalMaxX for separate level 0 groups
-                globalMaxX = x2 + nestingPadding;
                 x2 += nestingPadding;
             }
 

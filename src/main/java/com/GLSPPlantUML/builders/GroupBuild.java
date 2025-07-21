@@ -11,7 +11,7 @@ public class GroupBuild {
     public GModelElement buildGroupOutline(SequenceGroup seqGroup, double x1, double x2, double y1,
                                            double y2, List<Double> separatorYPos, double labelWidth) {
         return new GEdgeBuilder("group")
-                .id("group-" + y1 + "-" + seqGroup.getLevel())
+                .id("group-" + seqGroup.getStartIndex())
                 .sourceId("[")
                 .targetId("]")
                 .addArgument("x1", x1)
@@ -19,13 +19,13 @@ public class GroupBuild {
                 .addArgument("y1", y1)
                 .addArgument("y2", y2)
                 .addArgument("labelWidth", labelWidth)
-                .addArgument("separators", separatorYPos)
+                .addArgument("separators", separatorYPos.toArray(new Double[0]))
                 .build();
     }
 
     public GModelElement buildGroupLabel(SequenceGroup group, double x1, double y1) {
         return new GLabelBuilder("label:html")
-                .id("group-label-" + y1 + "-" + group.getLevel())
+                .id("group-label-" + group.getStartIndex())
                 .text(group.getLabel())
                 .size(10, 10)
                 .position(x1, y1 + 5.7)
@@ -35,7 +35,7 @@ public class GroupBuild {
 
     public GModelElement buildGroupComment(SequenceGroup group, double x1, double y1) {
         return new GLabelBuilder("label:html")
-                .id("group-comment-" + y1 + "-" + group.getLevel())
+                .id("group-comment-" + group.getStartIndex())
                 .text(group.getComment())
                 .size(10, 10)
                 .position(x1, y1 + 5.7)

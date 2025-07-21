@@ -76,7 +76,7 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
         if (label.getId().startsWith("group-label")) {
             int expectedGroupLevel = extractIndex(label.getId());
             model.groups.stream()
-                    .filter(g -> g.getLevel() == expectedGroupLevel)
+                    .filter(g -> g.getStartIndex() == expectedGroupLevel)
                     .findFirst()
                     .ifPresent(g -> g.setLabel(operation.getText()));
         }
@@ -84,7 +84,7 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
         if (label.getId().startsWith("group-comment")) {
             int expectedGroupLevel = extractIndex(label.getId());
             model.groups.stream()
-                    .filter(g -> g.getLevel() == expectedGroupLevel)
+                    .filter(g -> g.getStartIndex() == expectedGroupLevel)
                     .findFirst()
                     .ifPresent(g -> g.setComment(operation.getText()));
         }
