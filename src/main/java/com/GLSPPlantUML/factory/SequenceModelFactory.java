@@ -88,6 +88,7 @@ public class SequenceModelFactory implements GModelFactory {
         double msgGap = 35;
         int row = 0;
         messagesYPos.clear();
+        lifeEventYPos.clear();
         Map<Integer, Integer> spaces = new HashMap<>(model.messageSpaces);
 
         for (int i = 0; i < model.messages.size(); ) {
@@ -134,10 +135,6 @@ public class SequenceModelFactory implements GModelFactory {
             double lastY = messagesYPos.getLast() + msgGap + trailing;
             messagesYPos.add(lastY);
             lifeEventYPos.add(lastY);
-        }
-
-        for (Double y : messagesYPos) {
-            System.err.println("Y: " + y);
         }
     }
 
