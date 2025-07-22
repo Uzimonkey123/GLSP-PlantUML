@@ -1,4 +1,4 @@
-import { Container } from 'inversify';
+import {Container, injectable} from 'inversify';
 import {
     helperLineModule,
     gridModule,
@@ -28,7 +28,8 @@ import {
     editLabelFeature,
     selectFeature,
     moveFeature,
-    labelEditModule
+    labelEditModule,
+    EditLabelUI
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
@@ -45,7 +46,8 @@ import {
     AnchorEdgeView,
     ParticipantLabelView,
     ReferenceEdgeView,
-    GroupsView, NoteEdgeView
+    GroupsView,
+    NoteEdgeView
 } from './sequence-views';
 
 import {
@@ -69,6 +71,42 @@ import 'sprotty/css/sprotty.css';
 import 'sprotty/css/edit-label.css';
 import 'balloon-css/balloon.min.css';
 
+@injectable()
+export class BrEditLabelUI extends EditLabelUI {
+    protected override configureAndAdd(
+        element: HTMLInputElement | HTMLTextAreaElement,
+        container: HTMLElement
+    ): void {
+        // Make the previous handlers as they should be
+        super.configureAndAdd(element, container);
+
+        element.addEventListener('keydown', (ev: Event) => {
+            const e = ev as KeyboardEvent;
+            if (e.key === 'Enter' && e.shiftKey) { // Shift enter for next line
+                e.preventDefault();
+                this.insertAtCursor(element, '<br>');
+            }
+        });
+    }
+
+    protected override async applyLabelEdit(): Promise<void> {
+        this.editControl.value = this.editControl.value
+            .replace(/\t/g, '<br>')
+            .replace(/\r?\n/g, '<br>');
+
+        await super.applyLabelEdit();
+    }
+
+    private insertAtCursor(el: HTMLInputElement | HTMLTextAreaElement, text: string) {
+        const start = el.selectionStart ?? 0;
+        const end   = el.selectionEnd ?? 0;
+        const val   = el.value;
+        el.value = val.substring(0, start) + text + val.substring(end);
+        const pos = start + text.length;
+        el.setSelectionRange(pos, pos);
+    }
+}
+
 // Set every document to read only, since no need for editor
 class ReadOnlyEditorContextService extends EditorContextService {
     protected initialize(): void {
@@ -85,12 +123,14 @@ export const PlantUmlDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
         const context = { bind, unbind, isBound, rebind };
 
+
         bindOrRebind(context, EditorContextService).to(ReadOnlyEditorContextService).inSingletonScope();
         bindOrRebind(context, GLSPDiagramWidget).to(PlantUmlGLSPDiagramWidget).inSingletonScope();
         bindOrRebind(context, GLSPDiagramWidgetFactory).toFactory(context => () => context.container.get<PlantUmlGLSPDiagramWidget>(GLSPDiagramWidget));
         bindAsService(context, TYPES.ICommandPaletteActionProvider, RevealNamedElementActionProvider);
         bindAsService(context, TYPES.IContextMenuItemProvider, DeleteElementContextMenuItemProvider);
         bindAsService(context, TYPES.IDiagramStartup, PlantUmlStartup);
+        bindOrRebind(context, TYPES.IUIExtension).to(BrEditLabelUI).inSingletonScope().whenTargetNamed(EditLabelUI.ID);
 
         configureDefaultModelElements(context);
         overrideModelElement(context, DefaultTypes.GRAPH, GGraph, GLSPProjectionView);
