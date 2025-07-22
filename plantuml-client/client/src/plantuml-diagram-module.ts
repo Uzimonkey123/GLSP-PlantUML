@@ -29,7 +29,7 @@ import {
     selectFeature,
     moveFeature,
     labelEditModule,
-    EditLabelUI
+    EditLabelUI, SModelRegistry
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
@@ -65,7 +65,7 @@ import {
 } from "./sequence-node-views";
 
 import { PlantUmlStartup } from './plantuml-startup';
-import { PlantUmlGLSPDiagramWidget } from './plantuml-diagram-widget'; 
+import { PlantUmlGLSPDiagramWidget } from './plantuml-diagram-widget';
 import '../css/diagram.css';
 import 'sprotty/css/sprotty.css';
 import 'sprotty/css/edit-label.css';
@@ -73,6 +73,16 @@ import 'balloon-css/balloon.min.css';
 
 @injectable()
 export class BrEditLabelUI extends EditLabelUI {
+    private isMultilineLabel(): boolean {
+        const id = this.label?.id ?? '';
+        return !id.startsWith('group-');  // Groups do not have multiline label/comment/separator
+    }
+
+    public override get editControl(): HTMLInputElement | HTMLTextAreaElement {
+        // Check if input or text area is needed for label/multiline
+        return this.isMultilineLabel() ? this.textAreaElement : this.inputElement;
+    }
+
     protected override configureAndAdd(
         element: HTMLInputElement | HTMLTextAreaElement,
         container: HTMLElement
@@ -80,30 +90,72 @@ export class BrEditLabelUI extends EditLabelUI {
         // Make the previous handlers as they should be
         super.configureAndAdd(element, container);
 
+        element.style.overflow = 'hidden'; // no scrollbar
+        element.style.resize = 'none';
+
         element.addEventListener('keydown', (ev: Event) => {
             const e = ev as KeyboardEvent;
             if (e.key === 'Enter' && e.shiftKey) { // Shift enter for next line
                 e.preventDefault();
-                this.insertAtCursor(element, '<br>');
+                e.stopPropagation(); // Do not apply at shift + enter
+                this.insertAtCursor(element, '\n');
+                this.autoSizeEditor();
             }
         });
+
+        // To change size automatically
+        element.addEventListener('input', () => this.autoSizeEditor());
+
+        // Create the first sized elements with DOM
+        requestAnimationFrame(() => this.autoSizeEditor());
+    }
+
+    protected override applyTextContents(): void {
+        if (!this.label) return;
+        // To display multilines instead of simple <br>
+        const display = (this.label.text ?? '').replace(/<br>/g, '\n');
+        this.editControl.value = display;
+
+        if (this.editControl instanceof HTMLTextAreaElement) {
+            // To see the beginning of the message, not scrolled etc...
+            this.editControl.selectionStart = this.editControl.selectionEnd = display.length;
+            this.editControl.scrollTop = 0;
+            this.editControl.scrollLeft = 0;
+
+        } else {
+            // For input text
+            this.editControl.setSelectionRange(0, display.length);
+        }
+    }
+
+    protected override applyFontStyling(): void {
+        super.applyFontStyling();
+        requestAnimationFrame(() => this.autoSizeEditor());
     }
 
     protected override async applyLabelEdit(): Promise<void> {
         this.editControl.value = this.editControl.value
-            .replace(/\t/g, '<br>')
             .replace(/\r?\n/g, '<br>');
-
         await super.applyLabelEdit();
     }
 
-    private insertAtCursor(el: HTMLInputElement | HTMLTextAreaElement, text: string) {
+    private insertAtCursor(el: HTMLInputElement | HTMLTextAreaElement, text: string): void {
         const start = el.selectionStart ?? 0;
         const end   = el.selectionEnd ?? 0;
-        const val   = el.value;
-        el.value = val.substring(0, start) + text + val.substring(end);
+        el.value = el.value.substring(0, start) + text + el.value.substring(end);
         const pos = start + text.length;
         el.setSelectionRange(pos, pos);
+    }
+
+    private autoSizeEditor(): void {
+        if (!(this.editControl instanceof HTMLTextAreaElement)) return;
+        const ta = this.editControl;
+
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+
+        ta.style.width = 'auto';
+        ta.style.width = ta.scrollWidth + 4 + 'px';
     }
 }
 
