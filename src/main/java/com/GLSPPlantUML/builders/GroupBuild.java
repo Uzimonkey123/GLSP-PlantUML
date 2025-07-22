@@ -18,6 +18,8 @@ public class GroupBuild {
                 .addArgument("x2", x2)
                 .addArgument("y1", y1)
                 .addArgument("y2", y2)
+                .addArgument("backColor", seqGroup.getBackColor())
+                .addArgument("elementColor", seqGroup.getElementColor())
                 .addArgument("labelWidth", labelWidth)
                 .addArgument("separators", separatorYPos.toArray(new Double[0]))
                 .build();

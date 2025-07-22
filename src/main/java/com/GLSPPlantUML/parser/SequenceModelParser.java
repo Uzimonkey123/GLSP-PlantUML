@@ -153,6 +153,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                                                 groupStart.getLevel());
         groupStack.put(groupStart, group);
         model.groups.add(group);
+
+        if (groupStart.getBackColorGeneral() != null) {
+            group.setBackColor(groupStart.getBackColorGeneral().asString());
+        }
+
+        if (groupStart.getBackColorElement() != null) {
+            group.setElementColor(groupStart.getBackColorElement().asString());
+        }
     }
 
     private void GroupingLeafHandler(GroupingLeaf groupLeaf) {
@@ -450,32 +458,32 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     void handleTitle() {
+        model.title = "";
+
         if (sequenceDiagram.getTitle() != null
                 && sequenceDiagram.getTitle().getDisplay() != null
                 && sequenceDiagram.getTitle().getDisplay().size() > 0) {
-            model.title = sequenceDiagram.getTitle().getDisplay().get(0).toString();
-        } else {
-            model.title = "";
+            model.title = String.join("<br>", sequenceDiagram.getTitle().getDisplay());
         }
     }
 
     void handleHeader() {
+        model.header = "";
+
         if (sequenceDiagram.getHeader() != null
                 && sequenceDiagram.getHeader().getDisplay() != null
                 && sequenceDiagram.getHeader().getDisplay().size() > 0) {
-            model.header = sequenceDiagram.getHeader().getDisplay().get(0).toString();
-        } else {
-            model.header = "";
+            model.header = String.join("<br>", sequenceDiagram.getHeader().getDisplay());
         }
     }
 
     void handleFooter() {
+        model.footer = "";
+
         if (sequenceDiagram.getFooter() != null
                 && sequenceDiagram.getFooter().getDisplay() != null
                 && sequenceDiagram.getFooter().getDisplay().size() > 0) {
-            model.footer = sequenceDiagram.getFooter().getDisplay().get(0).toString();
-        } else {
-            model.footer = "";
+            model.footer = String.join("<br>", sequenceDiagram.getFooter().getDisplay());
         }
     }
 

@@ -12,6 +12,8 @@ public class SequenceGroup {
     private final List<Integer> separatorList; // Message index for all separators if available
     private final List<String> separatorLabel;
     private boolean isGroup = false;
+    private String backColor = "none";
+    private String elementColor = "grey";
 
     public SequenceGroup(int startIndex, String label, String comment, int level) {
         this.startIndex = startIndex;
@@ -21,8 +23,17 @@ public class SequenceGroup {
         separatorList = new ArrayList<>();
         separatorLabel = new ArrayList<>();
 
-        if (label.equals("group")) {
-            isGroup = true;
+        switch(label) {
+            case "alt":
+            case "opt":
+            case "loop":
+            case "par":
+            case "break":
+            case "critical":
+                isGroup = false;
+                break;
+            default:
+                isGroup = true;
         }
     }
 
@@ -51,7 +62,7 @@ public class SequenceGroup {
     }
 
     public String getComment() {
-        if (isGroup && !comment.isEmpty()) {
+        if (isGroup && label.equals(comment)) {
             comment = "";
             return "";
         }
@@ -85,5 +96,21 @@ public class SequenceGroup {
 
     public boolean isGroup() {
         return isGroup;
+    }
+
+    public String getBackColor() {
+        return backColor;
+    }
+
+    public void setBackColor(String backColor) {
+        this.backColor = backColor;
+    }
+
+    public String getElementColor() {
+        return elementColor;
+    }
+
+    public void setElementColor(String elementColor) {
+        this.elementColor = elementColor;
     }
 }
