@@ -102,7 +102,6 @@ export class HtmlLabelView extends GLabelView {
 		for (let i = 0; i < max; i++) {
 			const numSpans = numLines[i] ?? [];
 			const textSpans = textLines[i] ?? [];
-			const isOnlyLine = max === 1;
 			const dy = i === 0 ? initialY : "1.2em"; // Vertical offset
 
 			lines.push(
@@ -657,11 +656,44 @@ export class GroupsView extends GEdgeView {
 		const y1 = edge.args?.y1 as number;
 		const y2 = edge.args?.y2 as number;
 		const width = edge.args?.labelWidth as number;
+		const backColor = edge.args?.backColor as string;
+		const elementColor = edge.args?.elementColor as string;
 
 		const separatorsRaw = edge.args?.separators;
 		const separators: number[] = Array.isArray(separatorsRaw)
 			? separatorsRaw.map(Number).filter((n): n is number => !isNaN(n))
 			: [];
+
+		additionals.unshift(
+			<rect
+				x={x1}
+				y={y1}
+				width={x2 - x1}
+				height={y2 - y1}
+				fill={backColor}
+				opacity={0.5}
+			/>,
+
+			<rect
+				x={x1}
+				y={y1}
+				width={x2 - x1}
+				height={y2 - y1}
+				fill="none"
+				stroke="black"
+				strokeWidth={1}
+			/>,
+
+			<polygon
+				points={`${x1},${y1} ${x1},${y1 + 11}
+							${x1 + width},${y1 + 11} 
+							${x1 + width + 5},${y1 + 5} 
+							${x1 + width + 5},${y1}`}
+				fill={elementColor}
+				stroke="black"
+				strokeWidth={1}
+			/>
+		);
 
 		// Render the separator lines ELSE/ALSO as dashed
 		for (const y of separators) {
@@ -669,45 +701,14 @@ export class GroupsView extends GEdgeView {
 				<line
 					x1={x1}
 					x2={x2}
-					y1={y}
-					y2={y}
+					y1={y - 3}
+					y2={y - 3}
 					stroke="black"
 					strokeWidth={1.5}
 					stroke-dasharray="4 2"
 				/>
 			);
 		}
-
-		additionals.unshift(
-			<polygon
-				points={`${x1},${y1} ${x1},${y1 + 11}
-				 		${x1 + width},${y1 + 11} 
-				 		${x1 + width + 5},${y1 + 5} 
-				 		${x1 + width + 5},${y1}`}
-				fill="grey"
-				stroke="black"
-				strokeWidth={1}
-			/>,
-
-			<text
-				x={x1 + 12}
-				y={y1 + 9}
-				fontSize="10"
-				fontWeight="bold"
-				fill="white"
-			>
-			</text>,
-
-			<rect
-				x={x1}
-				y={y1}
-				width={x2-x1}
-				height={y2-y1}
-				fill="none"
-				stroke="black"
-				strokeWidth={1}
-			/>
-		);
 
 		// TODO: GROUP BACKGROUND COLORS
 
