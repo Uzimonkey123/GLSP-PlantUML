@@ -88,6 +88,19 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
                     .findFirst()
                     .ifPresent(g -> g.setComment(operation.getText()));
         }
+
+        if (label.getId().startsWith("group-separator-")) {
+            String[] parts = label.getId().split("-");
+            if (parts.length >= 4) {
+                int groupStart = Integer.parseInt(parts[2]);
+                int separatorIndex = Integer.parseInt(parts[3]);
+
+                model.groups.stream()
+                        .filter(g -> g.getStartIndex() == groupStart)
+                        .findFirst()
+                        .ifPresent(g -> g.setSeparatorLabel(separatorIndex, operation.getText()));
+            }
+        }
     }
 
     private void checkMessages(ApplyLabelEditOperation operation) {

@@ -140,8 +140,9 @@ public class SequenceGroupFactory {
                 String label = seqGroup.getSeparatorLabel().get(i);
                 double labelLength = WidthCalculator.calculateWidth(label, padding);
                 double separatorLabelPos = x1 + (labelLength / 2);
+                String id = seqGroup.separatorId(i);
 
-                tempElements.add(groupBuild.buildSeparatorLabel(label, separatorLabelPos, separatorYPos.get(i)));
+                tempElements.add(groupBuild.buildSeparatorLabel(id, label, separatorLabelPos, separatorYPos.get(i)));
             }
         }
     }

@@ -113,4 +113,12 @@ public class SequenceGroup {
     public void setElementColor(String elementColor) {
         this.elementColor = elementColor;
     }
+
+    public String separatorId(int i) {
+        return "group-separator-" + startIndex + "-" + i;
+    }
+
+    public void setSeparatorLabel(int i, String text) {
+        separatorLabel.set(i, text);
+    }
 }
