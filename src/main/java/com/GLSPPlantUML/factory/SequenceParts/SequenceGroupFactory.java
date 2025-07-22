@@ -7,16 +7,14 @@ import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SequenceGroupFactory {
     private final SequenceModel model;
     private final List<Double> messagesYPos;
     private final Map<String, Double> centre;
     private final List<GModelElement> elements;
+    private final List<GModelElement> tempElements;
 
     List<Double> separatorYPos = new ArrayList<>();
     GroupBuild groupBuild;
@@ -24,6 +22,8 @@ public class SequenceGroupFactory {
     double minX = Double.MAX_VALUE;
     double maxX = Double.MIN_VALUE;
     double globalMaxX = Double.MIN_VALUE; // Variable to keep track of the previous longest group x2
+    private final int padding = 10;
+    private final int titleCommentGap = 15;
 
     public SequenceGroupFactory(SequenceModel model, List<Double> messagesYPos, Map<String, Double> centre, List<GModelElement> elements) {
         this.model = model;
@@ -32,15 +32,40 @@ public class SequenceGroupFactory {
         this.elements = elements;
 
         this.groupBuild = new GroupBuild();
+        this.tempElements = new ArrayList<>();
+    }
+
+    List<SequenceGroup> postOrder(List<SequenceGroup> groups) {
+        Deque<SequenceGroup> stack = new ArrayDeque<>();
+        List<SequenceGroup> out = new ArrayList<>();
+
+        for (SequenceGroup g : groups) {
+            // Popping all groups ending before this one starts
+            while (!stack.isEmpty() &&
+                    g.getStartIndex() >= stack.peek().getEndIndex()) {
+                out.add(stack.pop());
+            }
+            // Set as new "parent"
+            stack.push(g);
+        }
+
+        // Pop the remaining
+        while (!stack.isEmpty()) out.add(stack.pop());
+        return out;
     }
 
     public void createGroups() {
-        Collection<SequenceGroup> reversedGroups = model.reversedGroups();
         globalMaxX = Double.MIN_VALUE;
-        minX = Double.MAX_VALUE;
-        maxX = Double.MIN_VALUE;
+        tempElements.clear();
 
-        for (SequenceGroup seqGroup : reversedGroups) {
+        boolean prevNested = false;
+        boolean nestedOuter = false;
+        int maxGroupLevel = 0;
+
+        // Sort groups to have nested ones first, followed by outer before next group starts
+        List<SequenceGroup> sortedGroups = postOrder(model.groups);
+
+        for (SequenceGroup seqGroup : sortedGroups) {
             minX = Double.MAX_VALUE;
             maxX = Double.MIN_VALUE;
             separatorYPos.clear();
@@ -48,61 +73,76 @@ public class SequenceGroupFactory {
             SequenceMessage msg = model.messages.get(seqGroup.getStartIndex());
 
             int labelHeight = calculateLabelHeight(msg);
-            double commentLength = seqGroup.getComment() == null ? 0 : WidthCalculator.calculateWidth(seqGroup.getComment(), 10);
-            double titleLength = WidthCalculator.calculateWidth(seqGroup.getLabel(), 10);
+            double titleLength = WidthCalculator.calculateWidth(seqGroup.getLabel(), padding);
+            double commentLength = seqGroup.getComment() == null ? 0 : WidthCalculator.calculateWidth(seqGroup.getComment(), padding);
 
-            double y1 = messagesYPos.get(seqGroup.getStartIndex()) - (labelHeight + 10);
+            double y1 = messagesYPos.get(seqGroup.getStartIndex()) - (labelHeight + padding);
             double y2 = messagesYPos.get(seqGroup.getEndIndex() - 1) + 7;
 
-            int maxGroupLevel = model.groups.stream().mapToInt(SequenceGroup::getLevel).max().orElse(0);
-            int nestingPadding = (maxGroupLevel - seqGroup.getLevel() + 1) * 10;
+            int currentLevel = seqGroup.getLevel();
+            if (maxGroupLevel == 0 && currentLevel != 0) {
+                maxGroupLevel = currentLevel;
+                globalMaxX = Double.MIN_VALUE;
+            }
+            int nestingPadding = (maxGroupLevel - seqGroup.getLevel() + 1) * padding;
 
             calculateMinMax(seqGroup);
             double x1 = minX - nestingPadding;
             double x2 = maxX;
             // If maxX is smaller than the combination of labels, extend it
-            if (maxX < commentLength + titleLength) {
+            if (maxX - 2 * padding - titleCommentGap < commentLength + titleLength) {
                 x2 = maxX + Math.max(commentLength, titleLength);
             }
 
-            // Saving global max for the next level of group
-            globalMaxX = Math.max(globalMaxX, x2);
-            if (seqGroup.getLevel() > 0) {
-                globalMaxX = Math.max(globalMaxX, x2);
-                x2 = globalMaxX + nestingPadding;
-            } else {
-                // Reset globalMaxX for separate level 0 groups
-                x2 += nestingPadding;
+            // Check if we are inside nested groups
+            boolean isNested = seqGroup.getLevel() > 0;
+
+            if (prevNested && !isNested) {
+                // If previous is nested, but current no, it is the first outer
+                nestedOuter = true;
             }
+            x2 = calculateX2(isNested, nestedOuter, nestingPadding, x2);
 
             calculateSeparatorY(seqGroup);
 
-            elements.add(groupBuild.buildGroupOutline(seqGroup, x1, x2, y1, y2, separatorYPos, titleLength));
+            tempElements.addFirst(groupBuild.buildGroupOutline(seqGroup, x1, x2, y1, y2, separatorYPos, titleLength));
 
-            double labelPos = x1 + ((double) titleLength / 2);
-            double commentPos = x1 + titleLength + 15 + ((double) commentLength / 2);
+            double labelPos = x1 + (titleLength / 2);
+            double commentPos = x1 + titleLength + titleCommentGap + (commentLength / 2);
 
-            elements.add(groupBuild.buildGroupLabel(seqGroup, labelPos, y1));
-            elements.add(groupBuild.buildGroupComment(seqGroup, commentPos, y1));
+            tempElements.add(groupBuild.buildGroupLabel(seqGroup, labelPos, y1));
+            tempElements.add(groupBuild.buildGroupComment(seqGroup, commentPos, y1));
 
-            for (int i = 0; i < separatorYPos.size(); i++) {
-                if (!seqGroup.getSeparatorLabel().get(i).isEmpty()) {
-                    String label = seqGroup.getSeparatorLabel().get(i);
-                    double labelLength = WidthCalculator.calculateWidth(label, 10);
-                    double separatorLabelPos = x1 + (labelLength / 2);
+            createSeparatorLabels(seqGroup, x1);
 
-                    elements.add(groupBuild.buildSeparatorLabel(label, separatorLabelPos, separatorYPos.get(i)));
-                }
+            prevNested = isNested;
+            nestedOuter = false;
+            if (currentLevel == 0) {
+                maxGroupLevel = currentLevel;
             }
         }
+
+        elements.addAll(tempElements);
     }
 
     private void calculateSeparatorY(SequenceGroup seqGroup) {
         for (Integer separatorIndex : seqGroup.getSeparatorList()) {
             SequenceMessage separatorMsg = model.messages.get(separatorIndex);
             int labelHeight = calculateLabelHeight(separatorMsg);
-            double y = messagesYPos.get(separatorIndex) - (labelHeight + 10);
+            double y = messagesYPos.get(separatorIndex) - (labelHeight + padding);
             separatorYPos.add(y);
+        }
+    }
+
+    private void createSeparatorLabels(SequenceGroup seqGroup, double x1) {
+        for (int i = 0; i < separatorYPos.size(); i++) {
+            if (!seqGroup.getSeparatorLabel().get(i).isEmpty()) {
+                String label = seqGroup.getSeparatorLabel().get(i);
+                double labelLength = WidthCalculator.calculateWidth(label, padding);
+                double separatorLabelPos = x1 + (labelLength / 2);
+
+                tempElements.add(groupBuild.buildSeparatorLabel(label, separatorLabelPos, separatorYPos.get(i)));
+            }
         }
     }
 
@@ -129,5 +169,18 @@ public class SequenceGroupFactory {
                 maxX = Math.max(maxX, toX);
             }
         }
+    }
+
+    private double calculateX2(boolean isNested, boolean nestedOuter, int nestingPadding, double x2) {
+        if (isNested) { // For nested we need to always save the x2 so the more outer group can use it
+            globalMaxX = Math.max(globalMaxX, x2);
+            return globalMaxX + nestingPadding;
+        }
+
+        // If it is the outer group of a nested one, use different padding
+        double calculated = nestedOuter ? Math.max(globalMaxX, x2) + nestingPadding : x2 + padding;
+        globalMaxX = calculated;
+
+        return calculated;
     }
 }
