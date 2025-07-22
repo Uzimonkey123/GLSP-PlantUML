@@ -29,7 +29,7 @@ import {
     selectFeature,
     moveFeature,
     labelEditModule,
-    EditLabelUI, SModelRegistry
+    EditLabelUI
 } from '@eclipse-glsp/client';
 import {
     VSCODE_DEFAULT_MODULES, 
@@ -41,8 +41,6 @@ import {
     SequenceMessageDelay,
     HtmlLabelView,
     SequenceMessageDivider,
-    SequenceHeaderFooter,
-    SequenceTitle,
     AnchorEdgeView,
     ParticipantLabelView,
     ReferenceEdgeView,
@@ -200,11 +198,8 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "edge:divider", GEdge, SequenceMessageDivider);
         configureModelElement(context, "edge:ref", GEdge, ReferenceEdgeView);
         configureModelElement(context, "edge:notes", GEdge, NoteEdgeView, { disable: [selectFeature]});
-        configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature] });
-        configureModelElement(context, "label:participant", GLabel, ParticipantLabelView, { enable: [editLabelFeature, selectFeature, moveFeature] });
-        configureModelElement(context, "label:header", GLabel, SequenceHeaderFooter);
-        configureModelElement(context, "label:footer", GLabel, SequenceHeaderFooter);
-        configureModelElement(context, "label:title", GLabel, SequenceTitle);
+        configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:participant", GLabel, ParticipantLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
 
         configureModelElement(context, "anchor-arrow", GEdge, AnchorEdgeView);
         configureModelElement(context, "lifeEvent", GNode, LifeEventBar);
