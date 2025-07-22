@@ -88,20 +88,29 @@ public class SequenceModelFactory implements GModelFactory {
         double msgGap = 35;
         int row = 0;
         messagesYPos.clear();
+        Map<Integer, Integer> spaces = new HashMap<>(model.messageSpaces);
 
         for (int i = 0; i < model.messages.size(); ) {
             SequenceMessage msg = model.messages.get(i);
-            int extra = getExtra(i);
 
             // Look ahead for parallel messages
             int j = i + 1;
-            int parallelExtra = extra;
             while (j < model.messages.size() && model.messages.get(j).isParallel()) {
-                parallelExtra = Math.max(parallelExtra, getExtra(j));
                 j++;
             }
 
-            model.messageSpaces.put(i, parallelExtra);
+            int parallelExtra = 0;
+            for (int k = i; k < j; k++) {
+                if (spaces.containsKey(k)) {
+                    hspace += spaces.get(k);
+                }
+
+                int autoExtra = getExtra(k);
+                parallelExtra = Math.max(parallelExtra, autoExtra);
+                spaces.putIfAbsent(k, autoExtra);
+            }
+
+            spaces.put(i, parallelExtra);
 
             // Accumulate height for this row
             hspace += parallelExtra;
@@ -113,14 +122,14 @@ public class SequenceModelFactory implements GModelFactory {
             for (int k = i + 1; k < j; k++) {
                 messagesYPos.add(y);
                 selfActivation(model.messages.get(k), y, k);
-                model.messageSpaces.putIfAbsent(k, getExtra(k));
+                spaces.putIfAbsent(k, getExtra(k));
             }
 
             row++;
             i = j; // Skip parallel ones since processed
         }
 
-        int trailing = model.messageSpaces.getOrDefault(model.messages.size(), 0);
+        int trailing = spaces.getOrDefault(model.messages.size(), 0);
         if (trailing > 0 && !messagesYPos.isEmpty()) {
             double lastY = messagesYPos.getLast() + msgGap + trailing;
             messagesYPos.add(lastY);
