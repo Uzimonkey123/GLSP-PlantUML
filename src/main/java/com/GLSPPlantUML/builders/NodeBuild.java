@@ -28,22 +28,33 @@ public class NodeBuild {
     }
 
     public void buildPageDetails(List<GModelElement> elements, SequenceModel model,
-                                 double totalHeight, double cursor) {
-        elements.add(new GLabelBuilder("label:header")
+                                 double totalHeight, Map<String, Double> centre,
+                                 double highestNode, boolean isHighNodePresent, double biggestHeight) {
+
+        double firstCentre = centre.get(model.participants.getFirst().getId());
+        double lastCentre = centre.get(model.participants.getLast().getId());
+
+        double titleY = isHighNodePresent ? highestNode - 70 : highestNode - 20;
+        titleY -= yOffset(model.title);
+
+        double footerY = isHighNodePresent ? biggestHeight + 70 : biggestHeight + 20;
+        //footerY += yOffset(model.footer);
+
+        elements.add(new GLabelBuilder("label:html")
                 .id("header")
-                .position(cursor / 2, -40)
+                .position(lastCentre, titleY - 20 - yOffset(model.header))
                 .text(model.header)
                 .build());
 
-        elements.add(new GLabelBuilder("label:title")
+        elements.add(new GLabelBuilder("label:html")
                 .id("title")
-                .position(cursor / 2, -20)
+                .position((firstCentre + lastCentre) / 2, titleY)
                 .text(model.title)
                 .build());
 
-        elements.add(new GLabelBuilder("label:footer")
+        elements.add(new GLabelBuilder("label:html")
                 .id("footer")
-                .position(cursor / 2, totalHeight + 80)
+                .position((firstCentre + lastCentre) / 2, footerY)
                 .text(model.footer)
                 .build());
     }
@@ -89,5 +100,12 @@ public class NodeBuild {
                 .position(xCoord - halfWidth.get(from), y)
                 .size(0, 0)
                 .build());
+    }
+
+    private double yOffset(String lines) {
+        int labelHeight = 14;
+
+        int lineCount = lines.split("<br>").length;
+        return lineCount > 1 ? lineCount * labelHeight : 6;
     }
 }

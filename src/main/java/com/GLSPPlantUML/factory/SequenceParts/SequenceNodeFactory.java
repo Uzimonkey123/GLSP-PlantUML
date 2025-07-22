@@ -35,6 +35,10 @@ public class SequenceNodeFactory {
     }
 
     public void createNodes() {
+        double highestNode = Double.MAX_VALUE;
+        double biggestHeight = Double.MIN_VALUE;
+        boolean isHighNodePresent = false;
+
         for (SequenceNode node : model.participants) {
             this.currentNode = node;
             double createdOffset = 0.0;
@@ -43,11 +47,23 @@ public class SequenceNodeFactory {
                 createdOffset = messagesYPos.get(node.getCreatedIndex()) - nodeY - 24;
             }
 
+            if (node.getType().equals("ACTOR") || node.getType().equals("DATABASE")) {
+                isHighNodePresent = true;
+            }
+
             double nodeWidth = WidthCalculator.calculateWidth(currentNode.getName(), 20);
             String label = getLabel();
             int headerHeight = calculateHeaderHeight(label);
             double nodeStart = nodeY + createdOffset - headerHeight;
+            highestNode = Math.min(highestNode, nodeStart);
             double height = totalHeight - createdOffset + 2 * headerHeight;
+
+            double footerHeight = nodeStart + height;
+            biggestHeight = Math.max(biggestHeight, footerHeight);
+
+            System.err.println("Height: " + height);
+            System.err.println("Nodestart: " + nodeStart);
+            System.err.println("HeaderHeight: " + headerHeight);
 
             GModelElement newNode = nodeBuild.buildNode(currentNode, cursor, nodeWidth, headerHeight,
                                                         height,  label, nodeStart, model.showFoot);
@@ -62,6 +78,9 @@ public class SequenceNodeFactory {
                 cursor += nodeWidth + gap + getNodeHalfWidth(nodeWidth);
             }
         }
+        System.err.println("Foot: " + biggestHeight);
+        System.err.println("HighestNode: " + highestNode);
+        System.err.println("IsHighNodePresent: " + isHighNodePresent);
 
         cursor += halfWidth.get(model.participants.getLast().getId()) + 40;
 
@@ -69,7 +88,7 @@ public class SequenceNodeFactory {
         createInvisibleNodes();
 
         // Add page details like header, title, footer
-        createPageDetails();
+        createPageDetails(highestNode, isHighNodePresent, biggestHeight);
     }
 
     public List<GModelElement> getElements() {
@@ -135,8 +154,8 @@ public class SequenceNodeFactory {
                 : currentNode.getName();
     }
 
-    private void createPageDetails() {
-        nodeBuild.buildPageDetails(elements, model, totalHeight, cursor);
+    private void createPageDetails(double highestNode, boolean isHighNodePresent, double biggestHeight) {
+        nodeBuild.buildPageDetails(elements, model, totalHeight, centre, highestNode, isHighNodePresent, biggestHeight);
     }
 
     private void createInvisibleNodes() {

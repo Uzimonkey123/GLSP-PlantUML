@@ -36,6 +36,7 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
                     .orElse(false);
 
             if (!updated) {
+                checkPageDetails(operation);
                 checkAnchors(operation);
                 checkGroups(operation);
                 checkMessages(operation);
@@ -57,6 +58,20 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
             return Integer.parseInt(labelId.substring(labelId.lastIndexOf('-') + 1));
         } catch (Exception e) {
             return -1;
+        }
+    }
+
+    private void checkPageDetails(ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("header")) {
+            model.header = operation.getText();
+        }
+
+        if (label.getId().startsWith("footer")) {
+            model.footer = operation.getText();
+        }
+
+        if (label.getId().startsWith("title")) {
+            model.title = operation.getText();
         }
     }
 
