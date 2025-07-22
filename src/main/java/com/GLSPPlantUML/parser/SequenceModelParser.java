@@ -96,6 +96,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         }
                     }
                 }
+                closeLifeEvents();
             }
         }
         return model;
@@ -421,6 +422,34 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 currentNode.setCreatedIndex(model.messages.size());
             }
         }
+    }
+
+    private void closeLifeEvents() {
+        int lastMsg = model.messages.isEmpty() ? 0 : model.messages.size() - 1;
+
+        activationStacks.forEach((participant, starts) -> {
+            Stack<HColor> colors = activationColorStacks.get(participant);
+
+            SequenceNode currentNode = null;
+
+            // Search for node in the participant list
+            for (SequenceNode node : model.participants) {
+                if (node.getName().equals(participant)) {
+                    currentNode = node;
+                    break;
+                }
+            }
+            if (currentNode == null) return;
+
+            while (!starts.isEmpty()) {
+                int startIndex = starts.pop();
+                HColor color  = colors.pop();
+
+                SequenceLifeEvent le = new SequenceLifeEvent(startIndex, lastMsg, color);
+                le.setLevel(starts.size());
+                currentNode.addLifeEvent(le);
+            }
+        });
     }
 
     private boolean hasParticipant(String name) {
