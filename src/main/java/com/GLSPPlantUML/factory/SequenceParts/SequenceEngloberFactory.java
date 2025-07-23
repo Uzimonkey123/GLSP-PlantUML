@@ -3,16 +3,42 @@ package com.GLSPPlantUML.factory.SequenceParts;
 import com.GLSPPlantUML.builders.EngloberBuild;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceEnglober;
-import com.GLSPPlantUML.utils.EngloberRange;
+import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SequenceEngloberFactory {
+    private static class EngloberRange {
+        private final List<SequenceNode> participants;
+        private final List<SequenceEnglober> englobers;
+
+        public EngloberRange(List<SequenceNode> participants, List<SequenceEnglober> englobers) {
+            this.participants = participants;
+            this.englobers = englobers;
+        }
+
+        public void calculateEngloberRange() {
+            Map<String, String> startMap = new HashMap<>();
+            Map<String, String> endMap = new HashMap<>();
+
+            for (SequenceNode p : this.participants) {
+                for (String engloberId : p.getEngloberIds()) {
+                    if (!startMap.containsKey(engloberId)) {
+                        startMap.put(engloberId, p.getId());
+                    }
+                    endMap.put(engloberId, p.getId());
+                }
+            }
+
+            for (SequenceEnglober englober : this.englobers) {
+                englober.setStartParticipantId(startMap.get(englober.getId()));
+                englober.setEndParticipantId(endMap.get(englober.getId()));
+            }
+        }
+    }
+
     private final SequenceModel model;
     private final Map<String, Double> centre;
     private final Map<String, Double> halfWidth;

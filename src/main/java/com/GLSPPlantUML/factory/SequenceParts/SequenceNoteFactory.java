@@ -5,14 +5,26 @@ import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNote;
-import com.GLSPPlantUML.utils.NotePosition;
 import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.List;
 import java.util.Map;
 
+
 public class SequenceNoteFactory {
+    private record NotePosition(double x1, double x2, String source, String target) {
+
+        public NotePosition {
+            // Swap if later participant is defined first
+            if (x2 < x1) {
+                double temp = x1;
+                x1 = x2;
+                x2 = temp;
+            }
+        }
+    }
+
     private final SequenceModel model;
     private final List<Double> messagesYPos;
     private final Map<String, Double> centre;
