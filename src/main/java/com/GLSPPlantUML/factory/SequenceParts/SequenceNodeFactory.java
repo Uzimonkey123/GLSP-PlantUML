@@ -24,6 +24,8 @@ public class SequenceNodeFactory {
     private final Map<String, Double> halfWidth = new HashMap<>();
 
     private SequenceNode currentNode;
+    private final int padding = 20;
+    private final int nodeOffset = 24;
 
     public SequenceNodeFactory(SequenceModel model, NodeBuild nodeBuild, double totalHeight,
                                List<Double> messagesYPos, NodeGap gapCalculator) {
@@ -41,17 +43,17 @@ public class SequenceNodeFactory {
 
         for (SequenceNode node : model.participants) {
             this.currentNode = node;
-            double createdOffset = 0.0;
+            double createdOffset = 0;
 
             if (node.isCreatedNode()) {
-                createdOffset = messagesYPos.get(node.getCreatedIndex()) - nodeY - 24;
+                createdOffset = messagesYPos.get(node.getCreatedIndex()) - nodeY - nodeOffset;
             }
 
             if (node.getType().equals("ACTOR") || node.getType().equals("DATABASE")) {
                 isHighNodePresent = true;
             }
 
-            double nodeWidth = WidthCalculator.calculateWidth(currentNode.getName(), 20);
+            double nodeWidth = WidthCalculator.calculateWidth(currentNode.getName(), padding);
             String label = getLabel();
             int headerHeight = calculateHeaderHeight(label);
             double nodeStart = nodeY + createdOffset - headerHeight;
@@ -60,10 +62,6 @@ public class SequenceNodeFactory {
 
             double footerHeight = nodeStart + height;
             biggestHeight = Math.max(biggestHeight, footerHeight);
-
-            System.err.println("Height: " + height);
-            System.err.println("Nodestart: " + nodeStart);
-            System.err.println("HeaderHeight: " + headerHeight);
 
             GModelElement newNode = nodeBuild.buildNode(currentNode, cursor, nodeWidth, headerHeight,
                                                         height,  label, nodeStart, model.showFoot);
@@ -78,11 +76,8 @@ public class SequenceNodeFactory {
                 cursor += nodeWidth + gap + getNodeHalfWidth(nodeWidth);
             }
         }
-        System.err.println("Foot: " + biggestHeight);
-        System.err.println("HighestNode: " + highestNode);
-        System.err.println("IsHighNodePresent: " + isHighNodePresent);
 
-        cursor += halfWidth.get(model.participants.getLast().getId()) + 40;
+        cursor += halfWidth.get(model.participants.getLast().getId()) + 2 * padding;
 
         // Add invisible nodes for incoming or outgoing messages
         createInvisibleNodes();
@@ -111,7 +106,7 @@ public class SequenceNodeFactory {
         int lineCount = label.split("<br>").length;
         int lineHeight = 14;
 
-        return lineCount * lineHeight + 10;
+        return lineCount * lineHeight + padding / 2;
     }
 
     private double getNodeCenter(double nodeWidth) {
@@ -135,7 +130,6 @@ public class SequenceNodeFactory {
                 line = line.substring(1).trim();
             }
 
-            // Add the line to the string
             result.append(line);
 
             // If not last line, add br to indicate new line

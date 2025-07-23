@@ -23,6 +23,8 @@ public class SequenceNoteFactory {
 
     private final int labelHeight = 14;
     private final int noteXOffset = 5;
+    private final int padding = 10;
+    private final int singleYOffset = 6;
 
     public SequenceNoteFactory(SequenceModel model, List<Double> messagesYPos,
                                Map<String, Double> centre, Map<String, Double> halfWidth,
@@ -40,7 +42,7 @@ public class SequenceNoteFactory {
         if (msg.getNotes() == null || msg.getNotes().isEmpty()) return;
 
         for (SequenceNote note : msg.getNotes()) {
-            double width = WidthCalculator.calculateWidth(note.getLabel(), 10);
+            double width = WidthCalculator.calculateWidth(note.getLabel(), padding);
             String from = msg.getFrom();
             String to = msg.getTo();
 
@@ -68,7 +70,7 @@ public class SequenceNoteFactory {
             }
 
             int lineCount = note.getLabel().split("<br>").length;
-            double labelYOffset = lineCount > 1 ? lineCount * labelHeight : 6;
+            double labelYOffset = lineCount > 1 ? lineCount * labelHeight : singleYOffset;
             double noteYOffset = lineCount > 1 ? lineCount * labelHeight : labelHeight;
             double labelYPos = messagesYPos.get(msgIndex) - labelYOffset;
 

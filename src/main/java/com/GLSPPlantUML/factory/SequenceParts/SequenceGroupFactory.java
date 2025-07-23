@@ -24,6 +24,7 @@ public class SequenceGroupFactory {
     double globalMaxX = Double.MIN_VALUE; // Variable to keep track of the previous longest group x2
     private final int padding = 10;
     private final int titleCommentGap = 15;
+    private final int lineHeight = 14;
 
     public SequenceGroupFactory(SequenceModel model, List<Double> messagesYPos, Map<String, Double> centre, List<GModelElement> elements) {
         this.model = model;
@@ -77,7 +78,7 @@ public class SequenceGroupFactory {
             double commentLength = seqGroup.getComment() == null ? 0 : WidthCalculator.calculateWidth(seqGroup.getComment(), padding);
 
             double y1 = messagesYPos.get(seqGroup.getStartIndex()) - (labelHeight + padding);
-            double y2 = messagesYPos.get(seqGroup.getEndIndex() - 1) + 7;
+            double y2 = messagesYPos.get(seqGroup.getEndIndex() - 1) + (lineHeight / 2);
 
             int currentLevel = seqGroup.getLevel();
             if (maxGroupLevel == 0 && currentLevel != 0) {
@@ -151,7 +152,7 @@ public class SequenceGroupFactory {
         String[] lines = msg.getMessage().split("<br>");
 
         int lineCount = lines.length;
-        return lineCount * 14;
+        return lineCount * lineHeight;
     }
 
     private void calculateMinMax(SequenceGroup seqGroup) {

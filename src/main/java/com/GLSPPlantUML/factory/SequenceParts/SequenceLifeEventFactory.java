@@ -18,6 +18,7 @@ public class SequenceLifeEventFactory {
     private final List<Double> messagesYPos;
 
     private LifeEventBuild leBuild;
+    private final int levelOffset = 3;
 
     public SequenceLifeEventFactory(SequenceModel model, List<Double> lifeEventYPos,
                                     Map<String, Double> centre, List<GModelElement> elements, List<Double> messagesYPos) {
@@ -33,7 +34,7 @@ public class SequenceLifeEventFactory {
 
         for (SequenceNode node : model.participants) {
             for (SequenceLifeEvent le : node.getLifeEvents()) {
-                double center = centre.get(node.getId()) - 3;
+                double center = centre.get(node.getId()) - levelOffset;
                 double shift = 4 * le.getLevel();
                 double y1 = lifeEventYPos.get(le.getStartMessage());
                 double y2 = lifeEventYPos.get(le.getEndMessage());

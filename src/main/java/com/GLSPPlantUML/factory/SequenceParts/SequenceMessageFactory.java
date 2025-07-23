@@ -31,6 +31,8 @@ public class SequenceMessageFactory {
     private final SequenceNoteFactory noteFactory;
 
     private final int labelHeight = 14;
+    private final int centrePadding = 25;
+    private final int padding = 10;
 
 
     public SequenceMessageFactory(SequenceModel model, double cursor, Map<String, Double> centre,
@@ -59,7 +61,7 @@ public class SequenceMessageFactory {
         for (int i = 0; i < model.messages.size(); i++) {
             this.msg = model.messages.get(i);
 
-            // Handle special type early
+            // Handle special types early
             if (msg.getType().equals("edge:ref")) {
                 createReference(i);
                 continue;
@@ -113,18 +115,18 @@ public class SequenceMessageFactory {
         String from = msg.getFrom();
         String to = msg.getTo();
 
-        double x1 = centre.get(from) - 25;
-        double x2 = centre.get(to) + 25;
+        double x1 = centre.get(from) - centrePadding;
+        double x2 = centre.get(to) + centrePadding;
 
         String[] lines = msg.getMessage().split("<br>");
         int maxLineLength = Arrays.stream(lines).mapToInt(String::length).max().orElse(0);
-        int labelWidth = maxLineLength * 8 + 5;
+        int labelWidth = maxLineLength * 8 + padding;
 
         int lineCount = lines.length;
         int labelHeight = lineCount * this.labelHeight;
 
         // Get y1 according to the current index - amount of lines and some padding
-        double y1 = messagesYPos.get(msgIndex) - (labelHeight + 10);
+        double y1 = messagesYPos.get(msgIndex) - (labelHeight + padding);
         double y2 = messagesYPos.get(msgIndex);
 
         double baseWidth = x2 - x1;
@@ -153,12 +155,12 @@ public class SequenceMessageFactory {
 
             labelShift = switch (direction) {
                 case "outgoing" ->
-                        centre.get(routingOne) + WidthCalculator.calculateWidth(msg.getMessage(), 10) / 2;
+                        centre.get(routingOne) + WidthCalculator.calculateWidth(msg.getMessage(), padding) / 2;
 
                 case "incoming" ->
                         // labelShift is center position, so shift label left by half width
                         // so that right edge aligns exactly with centerX
-                        centre.get(routingTwo) - WidthCalculator.calculateWidth(msg.getMessage(), 10) / 2;
+                        centre.get(routingTwo) - WidthCalculator.calculateWidth(msg.getMessage(), padding) / 2;
 
                 default -> (x1 + x2) / 2;
             };
