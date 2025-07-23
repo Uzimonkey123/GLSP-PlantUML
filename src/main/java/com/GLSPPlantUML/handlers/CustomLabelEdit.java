@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.handlers;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.glsp.graph.GLabel;
@@ -26,14 +27,14 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
         if (modelState instanceof SequenceModelState sequenceState) {
             model = sequenceState.getModel();
 
-            boolean updated = model.participants.stream()
-                    .filter(p -> p.getName().equals(label.getText()))
-                    .findFirst()
-                    .map(p -> {
-                        p.setName(operation.getText());
-                        return true;
-                    })
-                    .orElse(false);
+            boolean updated = false;
+            for (SequenceNode participant : model.participants) {
+                String nodeLabelID = participant.getId() + "-label";
+                if (label.getId().equals(nodeLabelID)) {
+                    updated = true;
+                    participant.setName(operation.getText());
+                }
+            }
 
             if (!updated) {
                 checkPageDetails(operation);
@@ -77,31 +78,32 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
 
     private void checkAnchors(ApplyLabelEditOperation operation) {
         if (label.getId().startsWith("anch")) {
-            model.anchors.stream()
-                    .filter(a -> {
-                        String anchorLabelID = "anch-" + a.getAnchorId();
-                        return anchorLabelID.equals(label.getId());
-                    })
-                    .findFirst()
-                    .ifPresent(a -> a.setLabel(operation.getText()));
+            for (SequenceAnchor anchor : model.anchors) {
+                String anchorLabelID = "anch-" + anchor.getAnchorId();
+                if (label.getId().equals(anchorLabelID)) {
+                    anchor.setLabel(operation.getText());
+                }
+            }
         }
     }
 
     private void checkGroups(ApplyLabelEditOperation operation) {
         if (label.getId().startsWith("group-label")) {
             int expectedGroupLevel = extractIndex(label.getId());
-            model.groups.stream()
-                    .filter(g -> g.getStartIndex() == expectedGroupLevel && g.isGroup())
-                    .findFirst()
-                    .ifPresent(g -> g.setLabel(operation.getText()));
+            for (SequenceGroup group : model.groups) {
+                if (group.getStartIndex() == expectedGroupLevel && group.isGroup()) {
+                    group.setLabel(operation.getText());
+                }
+            }
         }
 
         if (label.getId().startsWith("group-comment")) {
             int expectedGroupLevel = extractIndex(label.getId());
-            model.groups.stream()
-                    .filter(g -> g.getStartIndex() == expectedGroupLevel)
-                    .findFirst()
-                    .ifPresent(g -> g.setComment(operation.getText()));
+            for (SequenceGroup group : model.groups) {
+                if (group.getStartIndex() == expectedGroupLevel) {
+                    group.setComment(operation.getText());
+                }
+            }
         }
 
         if (label.getId().startsWith("group-separator-")) {
@@ -110,10 +112,11 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
                 int groupStart = Integer.parseInt(parts[2]);
                 int separatorIndex = Integer.parseInt(parts[3]);
 
-                model.groups.stream()
-                        .filter(g -> g.getStartIndex() == groupStart)
-                        .findFirst()
-                        .ifPresent(g -> g.setSeparatorLabel(separatorIndex, operation.getText()));
+                for (SequenceGroup group : model.groups) {
+                    if (group.getStartIndex() == groupStart) {
+                        group.setSeparatorLabel(separatorIndex, operation.getText());
+                    }
+                }
             }
         }
     }
@@ -121,19 +124,21 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
     private void checkMessages(ApplyLabelEditOperation operation) {
         if (label.getId().startsWith("note-")) {
             String expectedNoteId = "note-" + extractIndex(label.getId());
-            model.notes.stream()
-                    .filter(n -> n.getId().equals(expectedNoteId))
-                    .findFirst()
-                    .ifPresent(n -> n.setLabel(operation.getText()));
+            for (SequenceNote note : model.notes) {
+                if (note.getId().equals(expectedNoteId)) {
+                    note.setLabel(operation.getText());
+                }
+            }
         }
 
         // Match message ID
         if (label.getId().startsWith("label-")) {
             String expectedMessageId = "msg-" + extractIndex(label.getId());
-            model.messages.stream()
-                    .filter(m -> m.getMsgId().equals(expectedMessageId))
-                    .findFirst()
-                    .ifPresent(m -> m.setMessage(operation.getText()));
+            for (SequenceMessage message : model.messages) {
+                if (message.getMsgId().equals(expectedMessageId)) {
+                    message.setMessage(operation.getText());
+                }
+            }
         }
     }
 }

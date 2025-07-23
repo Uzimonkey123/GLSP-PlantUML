@@ -63,6 +63,7 @@ public class NodeBuild {
                                    double height, String label, double nodeStart, boolean showFoot) {
 
         GLabelBuilder labelBuilder = new GLabelBuilder("label:participant")
+                .id(node.getId() + "-label")
                 .text(label)
                 .addArgument("width", nodeWidth);
 
