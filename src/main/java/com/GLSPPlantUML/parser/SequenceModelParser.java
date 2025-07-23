@@ -336,7 +336,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         String label = "";
         if(delay.getText() != null
             && delay.getText().size() > 0) {
-            label = delay.getText().get(0).toString();
+            label = String.join("<br>", delay.getText());
         }
 
         String msgId = "msg-" + model.messages.size();
@@ -346,7 +346,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void DividerHandler(Divider div) {
-        String label = div.getText().get(0).toString();
+        String label = String.join("<br>", div.getText());
 
         String msgId = "msg-" + model.messages.size();
 

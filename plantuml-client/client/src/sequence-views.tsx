@@ -146,26 +146,27 @@ export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersecti
 		// Label text
 
 		const labelPadding = 4;
-		const fontSize = 11;
-		const labelLength = (edge.args?.labelWidth as number)
-		const labelWidth = labelLength * 4.5
+		const labelLength = (edge.args?.labelWidth as number);
+		const label = (edge.args?.label as string);
+		const labelWidth = labelLength * 7
+		const labelHeight = label.split("<br>").length * 14;
 
 		additionals.push(
 			<g>
 				{/* Bottom line */}
 				<line
-					x1={start.x}
+					x1={start.x - 10}
 					y1={centerY - 6}
-					x2={end.x}
+					x2={end.x + 10}
 					y2={centerY - 6}
 					stroke="black"
 				/>
 
 				{/* Top line*/}
 				<line
-					x1={start.x}
+					x1={start.x - 10}
 					y1={centerY - 9}
-					x2={end.x}
+					x2={end.x + 10}
 					y2={centerY - 9}
 					stroke="black"
 				/>
@@ -173,9 +174,9 @@ export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersecti
 				{/* Label */}
 				<rect
 					x={centerX - labelWidth / 2 - labelPadding}
-					y={centerY - 15}
+					y={centerY - labelHeight}
 					width={labelWidth + 2 * labelPadding}
-					height={fontSize + 4}
+					height={labelHeight + labelPadding}
 					fill="#5d4949"
 					stroke="black"
 					stroke-width={2}

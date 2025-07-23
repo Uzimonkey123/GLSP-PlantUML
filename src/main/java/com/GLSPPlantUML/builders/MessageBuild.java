@@ -34,6 +34,7 @@ public class MessageBuild {
                               double x1, double x2) {
         if (msg.getType().equals("edge:divider")) {
             eb.addArgument("labelWidth", msg.getMessage().length());
+            eb.addArgument("label", msg.getMessage());
         }
 
         // Additional arguments to get every side and aspect of the arrow
