@@ -59,7 +59,8 @@ import {
     QueueNodeView,
     LifeEventBar,
     DestroyCross,
-    EngloberView
+    EngloberView,
+    MainframeView
 } from "./sequence-node-views";
 
 import { PlantUmlStartup } from './plantuml-startup';
@@ -206,6 +207,7 @@ export const PlantUmlDiagramModule = new FeatureModule(
         configureModelElement(context, "destroy", GNode, DestroyCross)
         configureModelElement(context, "group", GEdge, GroupsView, { disable: [selectFeature]});
         configureModelElement(context, "participant-englober", GNode, EngloberView);
+        configureModelElement(context, "mainframe", GNode, MainframeView);
     }
 );
 

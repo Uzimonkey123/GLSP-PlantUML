@@ -107,6 +107,23 @@ public class NodeBuild {
                 .build());
     }
 
+    public GModelElement buildMainframe(SequenceModel model, double x, double y, double width, double height,
+                                        double labelWidth, double labelHeight) {
+        GLabelBuilder label = new GLabelBuilder("label:html")
+                .id("mainframe-label")
+                .text(model.mainframe);
+
+        return new GNodeBuilder("mainframe")
+                .id("mainframe")
+                .layout("vbox")
+                .position(x, y)
+                .size(width, height)
+                .add(label.build())
+                .addArgument("labelWidth", labelWidth)
+                .addArgument("labelHeight", labelHeight)
+                .build();
+    }
+
     private double yOffset(String lines) {
         int labelHeight = 14;
 

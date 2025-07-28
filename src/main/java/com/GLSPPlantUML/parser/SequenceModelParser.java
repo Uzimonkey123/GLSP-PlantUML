@@ -9,6 +9,7 @@ import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.error.PSystemError;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
 import net.sourceforge.plantuml.sequencediagram.*;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
 
@@ -64,6 +65,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 handleHeader();
                 handleFooter();
                 handleTitle();
+                MainframeHandler();
 
                 // Record all participants, even if unused
                 Collection<Participant> participants = sd.participants();
@@ -514,6 +516,15 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 && sequenceDiagram.getFooter().getDisplay() != null
                 && sequenceDiagram.getFooter().getDisplay().size() > 0) {
             model.footer = String.join("<br>", sequenceDiagram.getFooter().getDisplay());
+        }
+    }
+
+    void MainframeHandler() {
+        model.mainframe = "";
+
+        if (sequenceDiagram.getMainFrame() != null) {
+            model.isMainframe = true;
+            model.mainframe = String.join("<br>", sequenceDiagram.getMainFrame());
         }
     }
 

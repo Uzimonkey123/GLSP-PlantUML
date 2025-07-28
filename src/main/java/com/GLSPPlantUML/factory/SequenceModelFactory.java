@@ -7,13 +7,11 @@ import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;
 import com.GLSPPlantUML.utils.NodeGap;
 import jakarta.inject.Inject;
-import org.eclipse.glsp.graph.GGraph;
-import org.eclipse.glsp.graph.GModelElement;
+import org.eclipse.glsp.graph.*;
 import org.eclipse.glsp.graph.builder.impl.*;
 import org.eclipse.glsp.server.features.core.model.GModelFactory;
 
 import java.util.*;
-
 public class SequenceModelFactory implements GModelFactory {
     private Map<String, Double> centre; // Map to store the middle of all nodes for lifeline
     private Map<String, Double> halfWidth; // Half size of nodes for created node arrows
@@ -71,6 +69,12 @@ public class SequenceModelFactory implements GModelFactory {
         SequenceMessageFactory msgFactory = new SequenceMessageFactory(model, cursor, centre, halfWidth,
                                                                         elements, messagesYPos, gapCalculator);
         msgFactory.createEdges();
+
+        if (model.isMainframe) {
+            SequenceMainframeFactory mainframeFactory = new SequenceMainframeFactory(model, centre, halfWidth,
+                                                                                        elements);
+            mainframeFactory.createMainframe();
+        }
 
         // Build the graph
         GGraph newGModel = new GGraphBuilder()

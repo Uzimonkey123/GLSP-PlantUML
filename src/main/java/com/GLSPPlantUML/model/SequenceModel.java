@@ -16,8 +16,10 @@ public class SequenceModel {
     public String footer;
     public String header;
     public String title;
+    public String mainframe;
     public boolean showFoot;
     public boolean invisibleNodes = false;
+    public boolean isMainframe = false;
 
 
     public SequenceModel() {}

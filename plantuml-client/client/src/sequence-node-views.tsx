@@ -727,3 +727,46 @@ export class EngloberView extends ShapeView {
         );
     }
 }
+
+export class MainframeView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext,
+        args?: IViewArgs
+    ): VNode {
+
+        const labelWidth    = (node as any).args?.labelWidth;
+        const labelHeight  = (node as any).args?.labelHeight;
+
+        const lineCount = labelHeight / 14;
+        const translateY = lineCount > 1 ? (labelHeight - lineCount * 14) / 2 : 7;
+
+        return (
+            <g>
+                <polygon
+                    points={`${0},${0} ${0},${labelHeight}
+                             ${labelWidth},${labelHeight}
+                             ${labelWidth + 5},${labelHeight / 2}
+                             ${labelWidth + 5},${0}`}
+                    fill="grey"
+                    stroke="black"
+                    strokeWidth={1}
+                />
+
+                <rect
+                    x={0}
+                    y={0}
+                    width={node.size.width + 5}
+                    height={node.size.height - labelHeight}
+                    fill="none"
+                    stroke="black"
+                    strokeWidth={1}
+                />
+
+                <g transform={`translate(${labelWidth / 2}, ${translateY})`}>
+                    {context.renderChildren(node)}
+                </g>
+            </g>
+        );
+    }
+}
