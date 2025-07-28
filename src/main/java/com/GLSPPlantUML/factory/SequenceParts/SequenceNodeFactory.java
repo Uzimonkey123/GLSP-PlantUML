@@ -80,7 +80,7 @@ public class SequenceNodeFactory {
         cursor += halfWidth.get(model.participants.getLast().getId()) + 2 * padding;
 
         // Add invisible nodes for incoming or outgoing messages
-        createInvisibleNodes();
+        if (model.invisibleNodes) createInvisibleNodes();
 
         // Add page details like header, title, footer
         createPageDetails(highestNode, isHighNodePresent, biggestHeight);

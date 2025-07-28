@@ -3,6 +3,7 @@ package com.GLSPPlantUML.builders;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
@@ -42,18 +43,21 @@ public class NodeBuild {
 
         elements.add(new GLabelBuilder("label:html")
                 .id("header")
+                .size(WidthCalculator.calculateWidth(model.header, 0), yOffset(model.header))
                 .position(lastCentre, titleY - 20 - yOffset(model.header))
                 .text(model.header)
                 .build());
 
         elements.add(new GLabelBuilder("label:html")
                 .id("title")
+                .size(WidthCalculator.calculateWidth(model.title, 0), yOffset(model.title))
                 .position((firstCentre + lastCentre) / 2, titleY)
                 .text(model.title)
                 .build());
 
         elements.add(new GLabelBuilder("label:html")
                 .id("footer")
+                .size(WidthCalculator.calculateWidth(model.footer, 0), yOffset(model.footer))
                 .position((firstCentre + lastCentre) / 2, footerY)
                 .text(model.footer)
                 .build());

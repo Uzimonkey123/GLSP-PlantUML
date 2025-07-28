@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.builders;
 
 import com.GLSPPlantUML.model.SequenceParts.SequenceNote;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
@@ -28,7 +29,7 @@ public class NoteBuild {
                 .id(note.getId())
                 .text(note.getLabel())
                 .position((x1 + x2) / 2, y)
-                .size(10, 10)
+                .size(WidthCalculator.calculateWidth(note.getLabel(), 0), 10)
                 .build();
     }
 }

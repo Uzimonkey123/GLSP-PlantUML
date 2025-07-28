@@ -230,6 +230,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
 
         MessageNoteHandler(msg, message);
+        model.invisibleNodes = true;
     }
 
     private void MessageHandler(Message msg) {

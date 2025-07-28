@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.builders;
 
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
@@ -68,7 +69,7 @@ public class MessageBuild {
         return new GLabelBuilder("label:html")
                 .id("label-"+ msgIndex)
                 .text(msg.getMessage())
-                .size(10, 10)
+                .size(WidthCalculator.calculateWidth(msg.getMessage(), 0), 10)
                 .addArgument("numbering", msg.getNumbering())
                 .position(shift, y - yOffset)
                 .addArgument("selectable", true)
