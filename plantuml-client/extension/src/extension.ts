@@ -11,7 +11,7 @@ import {WebSocketGlspVscodeServer} from "@eclipse-glsp/vscode-integration/browse
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   // Connecting to the Java server that is already running
-  const server = new WebSocketGlspVscodeServer({
+  const server = new SocketGlspVscodeServer({
     clientId: "glsp.puml",
     clientName: "PlantUML",
     connectionOptions: {
@@ -31,7 +31,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     'plantuml.glspDiagram',
     provider,
     {
-      webviewOptions: { retainContextWhenHidden: true },
+      webviewOptions: { retainContextWhenHidden: false },
       supportsMultipleEditorsPerDocument: false
     }
   );
@@ -56,5 +56,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('plantuml.exportSvg', () =>
       connector.dispatchAction(RequestExportSvgAction.create())
     )
+  );
+
+  context.subscriptions.push(
+      vscode.commands.registerCommand('plantuml.reopenGlspEditor', () => {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+          vscode.commands.executeCommand(
+              'vscode.openWith',
+              editor.document.uri,
+              'plantuml.glspDiagram'
+          );
+        }
+      })
   );
 }

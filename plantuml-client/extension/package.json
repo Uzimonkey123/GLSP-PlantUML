@@ -52,15 +52,6 @@
             "filenamePattern": "*.puml"
           }
         ]
-      },
-      {
-        "viewType": "glsp-puml-viewer.open",
-        "displayName": "PlantUML GLSP Preview",
-        "selector": [
-          {
-            "filenamePattern": "*.puml"
-          }
-        ]
       }
     ]
   },
