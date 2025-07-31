@@ -151,12 +151,7 @@ public class SequenceMessageFactory {
         double y = messagesYPos.get(msgIndex);
 
         if (msg.isSelf()) {
-            labelShift = (centre.get(routingOne) + centre.get(model.getNextParticipant(routingOne))) / 2;
-
-            // Check if it is the last participant for self message
-            if (routingOne.equals(model.participants.getLast().getId())) {
-                labelShift = centre.get(routingOne) + gapCalculator.getGaps(routingOne, routingOne);
-            }
+            labelShift = centre.get(routingOne) + WidthCalculator.calculateWidth(msg.getMessage(), 0) / 2;
 
         } else {
             String direction = msg.decideWay();
