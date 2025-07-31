@@ -7,7 +7,6 @@ import {
 } from '@eclipse-glsp/vscode-integration';
 import PumlEditorProvider from './editor-provider';
 import { RequestExportSvgAction } from 'sprotty';
-import {WebSocketGlspVscodeServer} from "@eclipse-glsp/vscode-integration/browser";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   // Connecting to the Java server that is already running
@@ -46,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // Command to open .puml in editor
   context.subscriptions.push(
-    vscode.commands.registerCommand('plantuml.glspDiagram', (uri: vscode.Uri) =>
+    vscode.commands.registerCommand('plantuml.openPreview', (uri: vscode.Uri) =>
       vscode.commands.executeCommand('vscode.openWith', uri, 'plantuml.glspDiagram')
     )
   );

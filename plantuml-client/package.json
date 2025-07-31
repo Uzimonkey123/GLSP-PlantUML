@@ -46,6 +46,15 @@
         "title": "PlantUML: Export diagram as SVG"
       }
     ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "plantuml.openPreview",
+          "when": "resourceExtname == .puml",
+          "group": "navigation"
+        }
+      ]
+    },
     "customEditors": [
       {
         "viewType": "plantuml.glspDiagram",
