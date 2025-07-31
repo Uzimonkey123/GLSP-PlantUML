@@ -33,8 +33,7 @@ export class RectangularNodeView extends ShapeView {
                 y1={lifeLineStart}
                 x2={w/2}
                 y2={lifeLineEnd}
-                stroke="black"
-                stroke-dasharray="4 2"
+                class-lifeline={true}
             />
 
             {/* Bottom rectangle */}
@@ -101,8 +100,7 @@ export class ActorNodeView extends ShapeView {
                     y1={lifeLineStart}
                     x2={cx}
                     y2={lifeLineEnd}
-                    stroke="black"
-                    stroke-dasharray="4 2"
+                    class-lifeline={true}
                 />
 
                 {showFoot && (
@@ -147,7 +145,7 @@ export class BoundaryNodeView extends ShapeView {
                         y1={offsetY - verticalLine / 2}
                         x2={cx - horizontalLine}
                         y2={offsetY + verticalLine / 2}
-                        stroke="black"
+                        class-simple-line={true}
                     />
 
                     {/* Horizontal line  */}
@@ -156,7 +154,7 @@ export class BoundaryNodeView extends ShapeView {
                         y1={offsetY}
                         x2={cx}
                         y2={offsetY}
-                        stroke="black"
+                        class-simple-line={true}
                     />
 
                     {/* Circle */}
@@ -164,8 +162,8 @@ export class BoundaryNodeView extends ShapeView {
                         cx={cx}
                         cy={offsetY}
                         r={circleRadius}
-                        stroke="black"
                         fill={background}
+                        class-sinmple-line={true}
                     />
                 </g>
             );
@@ -190,8 +188,7 @@ export class BoundaryNodeView extends ShapeView {
                     y1={lifeLineStart}
                     x2={cx}
                     y2={lifeLineEnd}
-                    stroke="black"
-                    stroke-dasharray="4 2"
+                    class-lifeline={true}
                 />
 
                 {showFoot && (
@@ -241,7 +238,7 @@ export class ControlNodeView extends ShapeView {
                         cx={cx}
                         cy={offsetY}
                         r={circleRadius}
-                        stroke="black"
+                        class-simple-line={true}
                         fill={background}
                     />
 
@@ -277,8 +274,7 @@ export class ControlNodeView extends ShapeView {
                     y1={lifeLineStart}
                     x2={cx}
                     y2={lifeLineEnd}
-                    stroke="black"
-                    stroke-dasharray="4 2"
+                    class-lifeline={true}
                 />
 
                 {showFoot && (
@@ -321,7 +317,7 @@ export class EntityNodeView extends ShapeView {
                         cx={cx}
                         cy={offsetY}
                         r={circleRadius}
-                        stroke="black"
+                        class-simple-line={true}
                         fill={background}
                     />
 
@@ -331,7 +327,7 @@ export class EntityNodeView extends ShapeView {
                         y1={offsetY + 7}
                         x2={cx + lineLength / 2}
                         y2={offsetY + 7}
-                        stroke="black"
+                        class-simple-line={true}
                     />
                 </g>
             );
@@ -356,8 +352,7 @@ export class EntityNodeView extends ShapeView {
                     y1={lifeLineStart}
                     x2={cx}
                     y2={lifeLineEnd}
-                    stroke="black"
-                    stroke-dasharray="4 2"
+                    class-lifeline={true}
                 />
 
                 {showFoot && (
@@ -407,7 +402,6 @@ export class DatabaseNodeView extends ShapeView {
                         height={height - 6}
                         fill={background}
                         stroke="none"
-                        strokeWidth="1"
                         rx={rx}
                         ry="0"
                     />
@@ -418,8 +412,7 @@ export class DatabaseNodeView extends ShapeView {
                         y1={offsetY}
                         x2={x}
                         y2={offsetY + height - 6}
-                        stroke="black"
-                        strokeWidth="1"
+                        class-simple-line={true}
                     />
 
                     {/* Right border of the rectangle */}
@@ -428,8 +421,7 @@ export class DatabaseNodeView extends ShapeView {
                         y1={offsetY}
                         x2={x + width}
                         y2={offsetY + height - 6}
-                        stroke="black"
-                        strokeWidth="1"
+                        class-simple-line={true}
                     />
 
                     {/* Top ellipse */}
@@ -474,8 +466,7 @@ export class DatabaseNodeView extends ShapeView {
                     y1={lifeLineStart}
                     x2={cx}
                     y2={lifeLineEnd}
-                    stroke="black"
-                    stroke-dasharray="4 2"
+                    class-lifeline={true}
                 />
 
                 {showFoot && (
@@ -604,7 +595,7 @@ export class QueueNodeView extends ShapeView {
                         y1={cy - ry}
                         x2={cylinderBodyWidth + 5}
                         y2={cy - ry}
-                        stroke="black"
+                        class-simple-line={true}
                     />
 
                     {/* Bottom line of the rectangle*/}
@@ -613,7 +604,7 @@ export class QueueNodeView extends ShapeView {
                         y1={cy + ry}
                         x2={cylinderBodyWidth + 5}
                         y2={cy + ry}
-                        stroke="black"
+                        class-simple-line={true}
                     />
 
                     {/* Right ellipse */}
@@ -623,7 +614,7 @@ export class QueueNodeView extends ShapeView {
                         rx={rx}
                         ry={ry}
                         fill={background}
-                        stroke="black"
+                        class-simple-line={true}
                     />
 
                     {/* Centered label */}
@@ -645,8 +636,7 @@ export class QueueNodeView extends ShapeView {
                     y1={lifeLineStart}
                     x2={w/2}
                     y2={lifeLineEnd}
-                    stroke="black"
-                    stroke-dasharray="4 2"
+                    class-lifeline={true}
                 />
 
                 {showFoot && (
@@ -674,8 +664,7 @@ export class LifeEventBar extends ShapeView {
                     width={node.size.width}
                     height={node.size.height}
                     fill={(node as any).args?.background}
-                    stroke="black"
-                    stroke-width={1}
+                    class-simple-line={true}
                 />
             </g>
         );
@@ -716,8 +705,7 @@ export class EngloberView extends ShapeView {
                     width={node.size.width}
                     height={node.size.height}
                     fill={(node as any).args?.color as string}
-                    stroke="black"
-                    strokeWidth={1}
+                    class-simple-line={true}
                 />
 
                 <g transform={`translate(${node.size.width / 2}, 10)`}>
@@ -735,8 +723,8 @@ export class MainframeView extends ShapeView {
         args?: IViewArgs
     ): VNode {
 
-        const labelWidth    = (node as any).args?.labelWidth;
-        const labelHeight  = (node as any).args?.labelHeight;
+        const labelWidth = (node as any).args?.labelWidth;
+        const labelHeight = (node as any).args?.labelHeight;
 
         const lineCount = labelHeight / 14;
         const translateY = lineCount > 1 ? (labelHeight - lineCount * 14) / 2 : 7;
@@ -749,8 +737,7 @@ export class MainframeView extends ShapeView {
                              ${labelWidth + 5},${labelHeight / 2}
                              ${labelWidth + 5},${0}`}
                     fill="grey"
-                    stroke="black"
-                    strokeWidth={1}
+                    class-simple-line={true}
                 />
 
                 <rect
@@ -759,8 +746,7 @@ export class MainframeView extends ShapeView {
                     width={node.size.width + 5}
                     height={node.size.height - labelHeight}
                     fill="none"
-                    stroke="black"
-                    strokeWidth={1}
+                    class-simple-line={true}
                 />
 
                 <g transform={`translate(${labelWidth / 2}, ${translateY})`}>

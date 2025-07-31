@@ -49,8 +49,7 @@ export class ParticipantLabelView extends GLabelView {
 						y1={y}
 						x2={width / 2}
 						y2={y}
-						stroke="black"
-						stroke-width={1}
+						class-simple-line={true}
 					/>
 				);
 
@@ -196,9 +195,15 @@ export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersection
 		context: RenderingContext
 	): VNode[]
 	{
-
 		return super.renderAdditionals(edge, segments, context);
 	}
+}
+
+interface renderLine {
+	startArrowPos: {x: number, y: number};
+	endArrowPos: {x: number, y: number};
+	angle: number;
+	strokeWidth: number;
 }
 
 @injectable()
@@ -220,7 +225,7 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 	private circleEndPart! : string;
 
 	private headPath(kind: string, part: 'top' | 'bottom' | 'full', circle: boolean): string | undefined {
-		let circleOffset = circle ? 5 : 8;
+		let circleOffset = circle ? 6 : 8;
 
 		switch (`${kind}:${part}`) {
 			case 'block:full':
@@ -307,6 +312,59 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		return additionals;
 	}
 
+
+	private drawMessageLine(start: {x: number, y:number}, end: {x: number, y: number}, additionals: VNode[]): renderLine {
+		const dx = end.x - start.x;
+		const dy = end.y - start.y;
+		const direction = Math.sign(dx) || 1;
+
+		const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
+		const dashed = this.style === 'dotted' ? '2 2' : undefined;
+
+		// Setting offset according to if needed to start or end earlier
+		let lineStartOffset = this.headStart == 'cross' ? -10 : 0;
+		let lineEndOffset = this.headEnd == 'cross' ? 10 : 2;
+
+		const lineStartX = start.x - direction * lineStartOffset;
+		const lineStartY = start.y;
+
+		const lineEndX = end.x - direction * lineEndOffset;
+		const lineEndY = end.y;
+
+		additionals.unshift(
+			<path
+				d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
+				stroke={this.arrColor}
+				strokeWidth={strokeWidth}
+				{...(dashed ? {'stroke-dasharray': dashed} : {})}
+				marker-end="none"
+				fill="none"
+				class-sprotty-edge={true}
+			/>
+		);
+
+		// Calculation of angle of the arrow + setting the shift according to it
+		const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+		const shift = 10;
+
+		// Saving new end and start arrow positions according to side they are facing
+		const endArrowPos = {
+			x: end.x + (dx === 0 ? 0 : (dx > 0 ? -shift : shift)),
+			y: end.y
+		}
+		const startArrowPos = {
+			x: start.x + (dx === 0 ? 0 : (dx > 0 ? shift : -shift)),
+			y: start.y
+		}
+
+		return {
+			startArrowPos,
+			endArrowPos,
+			angle,
+			strokeWidth
+		};
+	}
+
 	private drawOutInArrow(additionals: VNode[], edge: GEdge, incoming: boolean) {
 		// Additional arguments to get distance between two nodes who have short arrows
 		const fromX = edge.args?.fromX as number;
@@ -330,48 +388,19 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 			}
 		}
 
-		const dx = drawEndX - drawStartX;
-		const dy = drawEndY - drawStartY;
-		const norm = Math.hypot(dx, dy) || 1;
-
-		const strokeWidth = this.style === 'bold' ? 2.5 : 1.5;
-		const dashed = this.style === 'dotted' ? '2 2' : undefined;
-
-		// Setting offset according to if needed to start or end earlier
-		const lineStartOffset = this.headStart === 'cross' ? -10 : 0;
-		const lineEndOffset = this.headEnd === 'cross' ? 10 : 2;
-
-		const lineStartX = drawStartX - (dx / norm) * lineStartOffset;
-		const lineStartY = drawStartY - (dy / norm) * lineStartOffset;
-
-		const lineEndX = drawEndX - (dx / norm) * lineEndOffset;
-		const lineEndY = drawEndY - (dy / norm) * lineEndOffset;
-
-		additionals.unshift(
-			<path
-				d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
-				stroke={this.arrColor}
-				strokeWidth={strokeWidth}
-				{...(dashed ? { 'stroke-dasharray': dashed } : {})}
-				marker-end="none"
-				fill="none"
-				class-sprotty-edge={true}
-			/>
-		);
-
-		// Calculation of angle of the arrow + setting the shift according to it
-		const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-		const shift = 10;
-
-		// Saving new end and start arrow positions according to side they are facing
-		const endArrowPos = {
-			x: drawEndX + (dx === 0 ? 0 : dx > 0 ? -shift : shift),
-			y: drawEndY
-		};
-		const startArrowPos = {
-			x: drawStartX + (dx === 0 ? 0 : dx > 0 ? shift : -shift),
+		const drawStart = {
+			x: drawStartX,
 			y: drawStartY
-		};
+		}
+
+		const drawEnd = {
+			x: drawEndX,
+			y: drawEndY
+		}
+
+		const {
+			startArrowPos, endArrowPos, angle, strokeWidth
+		} = this.drawMessageLine(drawStart, drawEnd, additionals);
 
 		this.drawHead(this.headStart, startArrowPos, angle + 180, "start", this.circleStart, additionals, strokeWidth);
 		this.drawHead(this.headEnd, endArrowPos, angle, "end", this.circleEnd, additionals, strokeWidth);
@@ -429,49 +458,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 	}
 
 	private drawSimpleArrow(additionals: VNode[]) {
-
-		const dx = this.end.x - this.start.x;
-		const dy = this.end.y - this.start.y;
-		const norm = Math.hypot(dx, dy) || 1;
-
-		const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
-		const dashed = this.style === 'dotted' ? '2 2' : undefined;
-
-		// Setting offset according to if needed to start or end earlier
-		let lineStartOffset = this.headStart == 'cross' ? -10 : 0;
-		let lineEndOffset = this.headEnd == 'cross' ? 10 : 2;
-
-		const lineStartX = this.start.x - (dx / norm) * lineStartOffset;
-		const lineStartY = this.start.y - (dy / norm) * lineStartOffset;
-
-		const lineEndX = this.end.x - (dx / norm) * lineEndOffset;
-		const lineEndY = this.end.y - (dy / norm) * lineEndOffset;
-
-		additionals.unshift(
-			<path
-				d={`M ${lineStartX} ${lineStartY} L ${lineEndX} ${lineEndY}`}
-				stroke={this.arrColor}
-				strokeWidth={strokeWidth}
-				{...(dashed ? {'stroke-dasharray': dashed} : {})}
-				marker-end="none"
-				fill="none"
-				class-sprotty-edge={true}
-			/>
-		);
-
-		// Calculation of angle of the arrow + setting the shift according to it
-		const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-		const shift = 10;
-
-		// Saving new end and start arrow positions according to side they are facing
-		const endArrowPos = {
-			x: this.end.x + (dx === 0 ? 0 : (dx > 0 ? -shift : shift)),
-			y: this.end.y
-		}
-		const startArrowPos = {
-			x: this.start.x + (dx === 0 ? 0 : (dx > 0 ? shift : -shift)),
-			y: this.start.y
-		}
+		const {
+			startArrowPos, endArrowPos, angle, strokeWidth
+		} = this.drawMessageLine(this.start, this.end, additionals);
 
 		this.drawHead(this.headStart, startArrowPos, angle + 180, "start", this.circleStart, additionals, strokeWidth);
 		this.drawHead(this.headEnd, endArrowPos, angle, "end", this.circleEnd, additionals, strokeWidth);
@@ -490,17 +479,18 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 				<path d={d}
 					  transform={`translate(${at.x} ${at.y}) rotate(${ang})`}
 					  style={{ fill: kind === 'block' ? this.arrColor : 'none' }}
-					  stroke={this.arrColor} strokeWidth={strokeWidth}
+					  stroke={this.arrColor}
+					  strokeWidth={strokeWidth}
 				/>
 			);
 		}
 	}
 
-	private drawCircle(at: Point, additionals: VNode[]) {
+	private drawCircle(point: Point, additionals: VNode[]) {
 		additionals.push(
 			<circle
-				cx={at.x}
-				cy={at.y}
+				cx={point.x}
+				cy={point.y}
 				r={3}
 				fill={this.arrColor}
 				stroke={this.arrColor}
@@ -587,8 +577,7 @@ export class ReferenceEdgeView extends GEdgeView {
 				 		${x1 + 30},${y1 + 5} 
 				 		${x1 + 30},${y1}`}
 				fill="grey"
-				stroke="black"
-				strokeWidth={1}
+				class-simple-line={true}
 			/>,
 
 			<text
@@ -607,8 +596,7 @@ export class ReferenceEdgeView extends GEdgeView {
 				width={x2-x1}
 				height={y2-y1}
 				fill="none"
-				stroke="black"
-				strokeWidth={1}
+				class-simple-line={true}
 			/>
 		);
 
@@ -649,8 +637,7 @@ export class GroupsView extends GEdgeView {
 				width={x2 - x1}
 				height={y2 - y1}
 				fill="none"
-				stroke="black"
-				strokeWidth={1}
+				class-simple-line={true}
 			/>,
 
 			<polygon
@@ -659,8 +646,7 @@ export class GroupsView extends GEdgeView {
 							${x1 + width + 5},${y1 + 5} 
 							${x1 + width + 5},${y1}`}
 				fill={elementColor}
-				stroke="black"
-				strokeWidth={1}
+				class-simple-line={true}
 			/>
 		);
 
@@ -672,15 +658,11 @@ export class GroupsView extends GEdgeView {
 					x2={x2}
 					y1={y - 3}
 					y2={y - 3}
-					stroke="black"
-					strokeWidth={1.5}
+					class-simple-line={true}
 					stroke-dasharray="4 2"
 				/>
 			);
 		}
-
-		// TODO: GROUP BACKGROUND COLORS
-
 		return additionals;
 	}
 }
@@ -704,8 +686,7 @@ export class NoteEdgeView extends GEdgeView {
 							${x2},${y1 + 7} ${x2},${y2}
 							${x1},${y2}`}
 					fill={color}
-					stroke="black"
-					strokeWidth={1}
+					class-simple-line={true}
 				/>,
 
 				<line
@@ -713,8 +694,7 @@ export class NoteEdgeView extends GEdgeView {
 					y1={y1}
 					x2={x2 - 7}
 					y2={y1 + 7}
-					stroke="black"
-					strokeWidth={1}
+					class-simple-line={true}
 				/>,
 
 				<line
@@ -722,8 +702,7 @@ export class NoteEdgeView extends GEdgeView {
 					y1={y1 + 7}
 					x2={x2}
 					y2={y1 + 7}
-					stroke="black"
-					strokeWidth={1}
+					class-simple-line={true}
 				/>
 			);
 		}
@@ -735,9 +714,8 @@ export class NoteEdgeView extends GEdgeView {
 					y={y1}
 					width={x2 - x1}
 					height={y2 - y1}
-					stroke="black"
 					fill={color}
-					strokeWidth={1}
+					class-simple-line={true}
 				/>
 			)
 		}
@@ -749,8 +727,7 @@ export class NoteEdgeView extends GEdgeView {
 							${x2 - 7},${y1} ${x2},${(y1 + y2) / 2}
 							${x2 - 7},${y2} ${x1 + 7},${y2}`}
 					fill={color}
-					stroke="black"
-					strokeWidth={1}
+					class-simple-line={true}
 				/>
 			)
 		}
