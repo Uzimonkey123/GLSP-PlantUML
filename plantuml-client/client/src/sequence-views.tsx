@@ -220,7 +220,7 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 	private circleEndPart! : string;
 
 	private headPath(kind: string, part: 'top' | 'bottom' | 'full', circle: boolean): string | undefined {
-		let circleOffset = circle ? 5 : 10;
+		let circleOffset = circle ? 5 : 8;
 
 		switch (`${kind}:${part}`) {
 			case 'block:full':
@@ -339,7 +339,7 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 
 		// Setting offset according to if needed to start or end earlier
 		const lineStartOffset = this.headStart === 'cross' ? -10 : 0;
-		const lineEndOffset = this.headEnd === 'cross' ? 10 : 0;
+		const lineEndOffset = this.headEnd === 'cross' ? 10 : 2;
 
 		const lineStartX = drawStartX - (dx / norm) * lineStartOffset;
 		const lineStartY = drawStartY - (dy / norm) * lineStartOffset;
@@ -385,7 +385,7 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		const dashed = this.style === 'dotted' ? '2 2' : undefined;
 
 		let crossOffsetStart = this.headStart == 'cross' ? -10 : 0;
-		let crossOffsetEnd = this.headEnd == 'cross' ? -10 : 0;
+		let crossOffsetEnd = this.headEnd == 'cross' ? -10 : -4;
 		const lineStart = this.start.x - crossOffsetStart;
 		const lineEnd = this.start.x - crossOffsetEnd;
 
@@ -439,7 +439,7 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 
 		// Setting offset according to if needed to start or end earlier
 		let lineStartOffset = this.headStart == 'cross' ? -10 : 0;
-		let lineEndOffset = this.headEnd == 'cross' ? 10 : 0;
+		let lineEndOffset = this.headEnd == 'cross' ? 10 : 2;
 
 		const lineStartX = this.start.x - (dx / norm) * lineStartOffset;
 		const lineStartY = this.start.y - (dy / norm) * lineStartOffset;

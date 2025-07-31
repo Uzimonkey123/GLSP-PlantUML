@@ -92,8 +92,16 @@ public class SequenceMessageFactory {
         boolean incoming = "incoming".equals(msg.decideWay());
         boolean outgoing = "outgoing".equals(msg.decideWay());
 
-        double x1 = setX(sourceId, msgIndex);
-        double x2 = setX(targetId, msgIndex);
+        double x1, x2;
+        if (msg.isSelf()) {
+            x1 = setSelfX(sourceId, msgIndex, true);
+            x2 = setSelfX(sourceId, msgIndex, false);
+
+        } else {
+            boolean leftToRight = centre.get(targetId) > centre.get(sourceId);
+            x1 = setX(sourceId, msgIndex, true,  leftToRight);
+            x2 = setX(targetId,   msgIndex, false, leftToRight);
+        }
 
         // Adjust source/target if message is external (incoming/outgoing)
         if (incoming) {
@@ -197,18 +205,53 @@ public class SequenceMessageFactory {
         }
     }
 
-    private double setX(String participant, int messageIndex) {
-        if (participant.equals("[") || participant.equals("]")) {
+    private double setX(String participant, int msgIndex, boolean isStart, boolean leftToRight) {
+        double lifeEventBar = 6;
+        double lifeEventOffset = 4;
+
+        if ("[".equals(participant) || "]".equals(participant)) {
             return centre.getOrDefault(participant, 0.0);
         }
 
-        SequenceNode node = model.getNode(participant);
-        Optional<SequenceLifeEvent> lifeEventPos = node.getLifeEventAt(messageIndex);
+        double centreX = centre.get(participant);
+        Optional<SequenceLifeEvent> event = model.getNode(participant).getLifeEventAt(msgIndex);
 
-        return lifeEventPos
-                // Set the arrow more to the right if there is life event/nesting
-                // or just return normal participant middle X
-                .map(lifeEvent -> centre.get(participant) + (lifeEvent.getLevel() + 1) * 3)
-                .orElse(centre.get(participant));
+        // No life event present
+        if (event.isEmpty()) return centreX;
+
+        double shift = event.get().getLevel() * lifeEventOffset;
+        double leftEdge  = centreX + shift - lifeEventBar / 2;
+        double rightEdge = centreX + shift + lifeEventBar / 2;
+
+        if (isStart) {
+            return leftToRight ? rightEdge : leftEdge;
+        } else {
+            return leftToRight ? leftEdge  : rightEdge;
+        }
+    }
+
+    private double setSelfX(String participant, int msgIndex, boolean isStart) {
+        double lifeEventBar = 6;
+        double lifeEventOffset = 4;
+
+        double centreX = centre.get(participant);
+        Optional<SequenceLifeEvent> opt = model.getNode(participant).getLifeEventAt(msgIndex);
+
+        // No life event present
+        if (opt.isEmpty()) return centreX;
+
+        SequenceLifeEvent le = opt.get();
+        int level = le.getLevel();
+        double shift = level * lifeEventOffset;
+
+        // For life event activation and deactivation, end arrow start/end at the previous nested level right edge
+        if ((isStart && le.getStartMessage() == msgIndex) ||
+            (!isStart && le.getEndMessage() == msgIndex)) {
+            return level > 0
+                    ? centreX + (level - 1) * lifeEventOffset + lifeEventBar / 2
+                    : centreX;
+        }
+
+        return centreX + shift + lifeEventBar / 2;
     }
 }
