@@ -108,8 +108,17 @@ public class SequenceNoteFactory {
         if (from == null && to == null) { // Across all
             String firstId = model.participants.getFirst().getId();
             String lastId = model.participants.getLast().getId();
-            notePos = new NotePosition(centre.get(firstId) - noteXOffset,
-                                        centre.get(lastId) + noteXOffset,
+            double x1 = centre.get(firstId);
+            double x2 = centre.get(lastId);
+
+            if (width > x2 - x1) {
+                double middleX = (x1 + x2) / 2;
+                x1 = middleX - width / 2;
+                x2 = middleX + width / 2;
+            }
+
+            notePos = new NotePosition(x1 - noteXOffset,
+                                        x2 + noteXOffset,
                                         firstId, lastId);
 
         } else if (to == null) { // Over from
@@ -121,8 +130,17 @@ public class SequenceNoteFactory {
         } else { // Across defined ones
             double fromX = centre.get(from);
             double toX = centre.get(to);
-            notePos = new NotePosition(Math.min(fromX, toX) - noteXOffset,
-                                        Math.max(fromX, toX) + noteXOffset,
+            double x1 = Math.min(fromX, toX);
+            double x2 = Math.max(fromX, toX);
+
+            if (width > x2 - x1) {
+                double middleX = (x1 + x2) / 2;
+                x1 = middleX - width / 2;
+                x2 = middleX + width / 2;
+            }
+
+            notePos = new NotePosition(x1 - noteXOffset,
+                                        x2 + noteXOffset,
                                         from, to);
         }
 
