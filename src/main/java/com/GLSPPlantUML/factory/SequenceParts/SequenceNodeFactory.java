@@ -64,7 +64,7 @@ public class SequenceNodeFactory {
             biggestHeight = Math.max(biggestHeight, footerHeight);
 
             GModelElement newNode = nodeBuild.buildNode(currentNode, cursor, nodeWidth, headerHeight,
-                                                        height,  label, nodeStart, model.showFoot);
+                                                        height, label, nodeStart, model.showFoot);
 
             elements.add(newNode);
             centre.put(node.getId(), getNodeCenter(nodeWidth));
@@ -118,27 +118,18 @@ public class SequenceNodeFactory {
     }
 
     private StringBuilder removeSpecialChar() {
-        // Get the lines of the original name
-        String[] lines = currentNode.getName().split("<br>");
-        StringBuilder result = new StringBuilder();
+        String name = currentNode.getName();
+        char stereotypeCharc = currentNode.getStereotypeChar();
 
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
-
-            // If there is a special char in stereotype, remove it
-            if (i == 0 && currentNode.getStereotypeChar() != '-') {
-                line = line.substring(1).trim();
-            }
-
-            result.append(line);
-
-            // If not last line, add br to indicate new line
-            if (i < lines.length - 1) {
-                result.append("<br>");
-            }
+        if (currentNode.isStereotype() && name.startsWith(stereotypeCharc + " ")) {
+            name = name.substring(2);
         }
 
-        return result;
+        // Remove the first line split so there is no empty line
+        name = name.replaceFirst("^<br>", "");
+
+        String[] lines = name.split("<br>");
+        return new StringBuilder(String.join("<br>", lines));
     }
 
     private String getLabel() {

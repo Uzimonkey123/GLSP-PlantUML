@@ -82,10 +82,9 @@ export function TspanConverter(html: string): VNode[][] {
 }
 
 export function createIcon(width: number, background: String, stereotypeChar: String) {
-    const lineHeight = 14; // Base height across client and server
     const iconRadius = 8;
-    const iconCenterX = -width / 2 + iconRadius + 5; // 5px padding from left edge
-    const iconCenterY = lineHeight / 2;
+    const iconCenterX = -width / 2 + iconRadius + 2; // 2px padding from left edge
+    const iconCenterY = 0;
 
     return (
         <g>
