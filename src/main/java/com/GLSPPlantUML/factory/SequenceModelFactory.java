@@ -2,6 +2,7 @@ package com.GLSPPlantUML.factory;
 
 import com.GLSPPlantUML.builders.NodeBuild;
 import com.GLSPPlantUML.factory.SequenceParts.*;
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;
@@ -32,6 +33,13 @@ public class SequenceModelFactory implements GModelFactory {
 
     @Override
     public void createGModel() {
+        Optional<ErrorMessage> error = modelState.getError();
+        if (error.isPresent()) {
+            // If there is error present, parsing failed, set message and render diagram
+            errorHandler(error);
+            return;
+        }
+
         double nodeY = 30;
         double nodeHeight = 30;
         double firstMsgY = nodeY + nodeHeight + 10;
@@ -164,5 +172,18 @@ public class SequenceModelFactory implements GModelFactory {
                         .anyMatch(p -> p.getLifeEvents().stream()
                                 .anyMatch(e -> e.getStartMessage() == i));
         lifeEventYPos.add(isStartOfLifeEvent ? y + 15 : y);
+    }
+
+    private void errorHandler(Optional<ErrorMessage> error) {
+        ErrorMessage errorMessage = error.get();
+        elements.add(errorMessage.buildError());
+
+        GGraph newGModel = new GGraphBuilder()
+                .id("sequence-diagram")
+                .addAll(elements)
+                .build();
+
+        modelState.updateRoot(newGModel);
+        modelState.getRoot().setRevision(-1);
     }
 }

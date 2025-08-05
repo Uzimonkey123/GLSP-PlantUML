@@ -1,7 +1,9 @@
 package com.GLSPPlantUML.parser;
 
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.*;
+import com.GLSPPlantUML.state.SequenceModelState;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
@@ -9,7 +11,6 @@ import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.error.PSystemError;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.klimt.color.HColor;
-import net.sourceforge.plantuml.klimt.creole.Display;
 import net.sourceforge.plantuml.sequencediagram.*;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
 
@@ -21,6 +22,9 @@ import java.util.*;
 
 public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     private SequenceDiagram sequenceDiagram;
+
+    @Inject
+    private SequenceModelState modelState;
 
     @Inject
     private SequenceModel model;
@@ -53,7 +57,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         for (BlockUml block : blocks) {
             Diagram d = block.getDiagram();
             if (d instanceof PSystemError) {
-                throw new IOException("Error, invalid Sequence diagram.");
+                String error = String.join("<br>", ((PSystemError) d).getPureAsciiFormatted());
+                modelState.setError(new ErrorMessage(error));
+
+                return model;
             }
 
             if (d instanceof SequenceDiagram sd) {
@@ -319,10 +326,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             anchorIdStack.push(anchorId);
 
         } else if (msg.getAnchor().equals("end")) {
-            // If it comes to end and stack is empty, error
-            if (anchorIdStack.isEmpty()) {
-                throw new RuntimeException("Empty anchor stack in parser. Start anchor point missing!");
-            }
+            if (anchorIdStack.isEmpty()) return;
 
             // Get the anchor ID from stack and set up the last message as end holder
             String anchorId = anchorIdStack.pop();
