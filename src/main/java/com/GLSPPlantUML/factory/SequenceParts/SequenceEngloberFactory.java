@@ -13,6 +13,7 @@ public class SequenceEngloberFactory {
     private static class EngloberRange {
         private final List<SequenceNode> participants;
         private final List<SequenceEnglober> englobers;
+        private double highNode = 0;
 
         public EngloberRange(List<SequenceNode> participants, List<SequenceEnglober> englobers) {
             this.participants = participants;
@@ -24,6 +25,10 @@ public class SequenceEngloberFactory {
             Map<String, String> endMap = new HashMap<>();
 
             for (SequenceNode p : this.participants) {
+                if (p.getType().equals("ACTOR") || p.getType().equals("DATABASE")) {
+                    highNode = 35;
+                }
+
                 for (String engloberId : p.getEngloberIds()) {
                     if (!startMap.containsKey(engloberId)) {
                         startMap.put(engloberId, p.getId());
@@ -89,11 +94,11 @@ public class SequenceEngloberFactory {
             if (labelWidth > boxWidth) {
                 x1 -= labelWidth;
             }
-            
+
             double y1 = nodeY - maxHeaderHeight - (5 * padding) - labelOffset;
             double y2 = Math.max(maxY, (6 * padding) + totalHeight + 2 * maxHeaderHeight);
 
-            element.addFirst(engloberBuild.buildEngloberBox(box, x1, x2, y1, y2, labelOffset));
+            element.addFirst(engloberBuild.buildEngloberBox(box, x1, x2, y1, y2, labelOffset, engloberRange.highNode));
         }
     }
 

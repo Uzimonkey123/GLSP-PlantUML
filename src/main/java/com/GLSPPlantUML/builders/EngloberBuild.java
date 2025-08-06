@@ -7,7 +7,7 @@ import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
 
 public class EngloberBuild {
     public GModelElement buildEngloberBox(SequenceEnglober box, double x1, double x2, double y1,
-                                          double y2, double labelOffset) {
+                                          double y2, double labelOffset, double highNode) {
         double padding = 10;
 
         GLabelBuilder label = new GLabelBuilder("label:html")
@@ -17,8 +17,8 @@ public class EngloberBuild {
 
         return new GNodeBuilder("participant-englober")
                 .id(box.getId())
-                .position(x1 - padding, y1 + box.getLevel() * (3 * padding))
-                .size(x2 - x1 + 2 * padding, y2 - box.getLevel() * (3 * padding) + labelOffset)
+                .position(x1 - padding, y1 + box.getLevel() * (3 * padding) - highNode)
+                .size(x2 - x1 + 2 * padding, y2 - box.getLevel() * (3 * padding) + labelOffset + 2 * highNode)
                 .addArgument("color", box.getColor())
                 .addCssClass("non-interactive")
                 .add(label.build())
