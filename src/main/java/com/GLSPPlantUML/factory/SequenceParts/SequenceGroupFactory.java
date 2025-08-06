@@ -74,6 +74,13 @@ public class SequenceGroupFactory {
             SequenceMessage msg = model.messages.get(seqGroup.getStartIndex());
 
             int labelHeight = calculateLabelHeight(msg);
+            for (int i = seqGroup.getStartIndex() + 1; i < seqGroup.getEndIndex(); i++) {
+                SequenceMessage msgCheck = model.messages.get(i);
+                if (!msgCheck.isParallel()) break;
+
+                labelHeight = Math.max(labelHeight, calculateLabelHeight(msgCheck));
+            }
+
             double titleLength = WidthCalculator.calculateWidth(seqGroup.getLabel(), padding);
             double commentLength = seqGroup.getComment() == null ? 0 : WidthCalculator.calculateWidth(seqGroup.getComment(), padding);
 
@@ -130,7 +137,7 @@ public class SequenceGroupFactory {
         for (Integer separatorIndex : seqGroup.getSeparatorList()) {
             SequenceMessage separatorMsg = model.messages.get(separatorIndex);
             int labelHeight = calculateLabelHeight(separatorMsg);
-            double y = messagesYPos.get(separatorIndex) - (labelHeight + padding);
+            double y = messagesYPos.get(separatorIndex) - (labelHeight + padding) + 2;
             separatorYPos.add(y);
         }
     }
