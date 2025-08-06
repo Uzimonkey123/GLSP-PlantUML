@@ -38,6 +38,7 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
 
             if (!updated) {
                 checkPageDetails(operation);
+                checkEnglobers(operation);
                 checkAnchors(operation);
                 checkGroups(operation);
                 checkMessages(operation);
@@ -73,6 +74,17 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
 
         if (label.getId().startsWith("title")) {
             model.title = operation.getText();
+        }
+    }
+
+    private void checkEnglobers(ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("englober-label")) {
+            for (SequenceEnglober englober : model.englobers) {
+                String engloberLabelID = "englober-label-" + englober.getId();
+                if (label.getId().equals(engloberLabelID)) {
+                    englober.setLabel(operation.getText());
+                }
+            }
         }
     }
 

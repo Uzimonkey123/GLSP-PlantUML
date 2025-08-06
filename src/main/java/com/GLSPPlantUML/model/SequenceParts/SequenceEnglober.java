@@ -2,7 +2,7 @@ package com.GLSPPlantUML.model.SequenceParts;
 
 public class SequenceEnglober {
     private final String id;
-    private final String label;
+    private String label;
     private final String parentId;
     private final String color;
     private final int level;
@@ -23,6 +23,10 @@ public class SequenceEnglober {
 
     public String getLabel() {
         return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public String getParentId() {
