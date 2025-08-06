@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class WidthCalculator {
 
-    private static final String TAG_REGEX = "<[^>]*>";
+    private static final String TAG_REGEX = "<[^>]*>(?!>)";
 
     public WidthCalculator() {}
 
