@@ -1,72 +1,82 @@
 import 'reflect-metadata';
 import * as vscode from 'vscode';
 import {
-  GlspVscodeConnector,
-  SocketGlspVscodeServer,
-  configureDefaultCommands,
+    GlspVscodeConnector,
+    SocketGlspVscodeServer,
+    configureDefaultCommands,
 } from '@eclipse-glsp/vscode-integration';
 import PumlEditorProvider from './editor-provider';
 import { RequestExportSvgAction } from 'sprotty';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  // Connecting to the Java server that is already running
-  const server = new SocketGlspVscodeServer({
-    clientId: "glsp.puml",
-    clientName: "PlantUML",
-    connectionOptions: {
-      port: 5007,
-      path: "plantuml",
+    let server: SocketGlspVscodeServer | undefined;
+    let connector: GlspVscodeConnector | undefined;
+
+    // Running server initialization only once, so reconnect is possible
+    const initialized = () => {
+        if (server) return;
+
+        // Connecting to the Java server that is already running
+        server = new SocketGlspVscodeServer({
+            clientId: "glsp.puml",
+            clientName: "PlantUML",
+            connectionOptions: {
+                port: 5007,
+                path: "plantuml",
+            }
+        });
+
+        context.subscriptions.push(server);
+
+        connector = new GlspVscodeConnector({server, logging: true});
+
+        // Registering custom editor provider
+        const provider = new PumlEditorProvider(context, connector);
+        const registration = vscode.window.registerCustomEditorProvider(
+            'plantuml.glspDiagram',
+            provider,
+            {
+                webviewOptions: {retainContextWhenHidden: false},
+                supportsMultipleEditorsPerDocument: false
+            }
+        );
+        context.subscriptions.push(connector, registration);
+
+        // Setup for default commands from glsp
+        configureDefaultCommands({
+            extensionContext: context,
+            connector,
+            diagramPrefix: 'puml'
+        });
+
+        // Usage of default export command
+        context.subscriptions.push(
+            vscode.commands.registerCommand('plantuml.exportSvg', () =>
+                connector!.dispatchAction(RequestExportSvgAction.create())
+            )
+        );
     }
-  });
 
-  context.subscriptions.push(server);
-  server.start();
+    // Command to open .puml in editor
+    context.subscriptions.push(
+        vscode.commands.registerCommand('plantuml.openPreview', async (uri?: vscode.Uri) => {
+            const resource = uri ?? vscode.window.activeTextEditor?.document.uri;
 
-  const connector = new GlspVscodeConnector({ server, logging: true });
+            // Check for server
+            initialized();
 
-  // Registering custom editor provider
-  const provider = new PumlEditorProvider(context, connector);
-  const registration = vscode.window.registerCustomEditorProvider(
-    'plantuml.glspDiagram',
-    provider,
-    {
-      webviewOptions: { retainContextWhenHidden: false },
-      supportsMultipleEditorsPerDocument: false
-    }
-  );
-  context.subscriptions.push(connector, registration);
+            try {
+                await server!.start();
 
-  // Setup for default commands from glsp
-  configureDefaultCommands({
-    extensionContext: context,
-    connector,
-    diagramPrefix: 'puml'
-  });
+            } catch (err) {
+                return vscode.window.showErrorMessage('Error: Couldn\'t connect to server.');
+            }
 
-  // Command to open .puml in editor
-  context.subscriptions.push(
-    vscode.commands.registerCommand('plantuml.openPreview', (uri: vscode.Uri) =>
-      vscode.commands.executeCommand('vscode.openWith', uri, 'plantuml.glspDiagram')
-    )
-  );
-
-  // Usage of default export command
-  context.subscriptions.push(
-    vscode.commands.registerCommand('plantuml.exportSvg', () =>
-      connector.dispatchAction(RequestExportSvgAction.create())
-    )
-  );
-
-  context.subscriptions.push(
-      vscode.commands.registerCommand('plantuml.reopenGlspEditor', () => {
-        const editor = vscode.window.activeTextEditor;
-        if (editor) {
-          vscode.commands.executeCommand(
-              'vscode.openWith',
-              editor.document.uri,
-              'plantuml.glspDiagram'
-          );
-        }
-      })
-  );
+            await vscode.commands.executeCommand(
+                'vscode.openWith',
+                resource,
+                'plantuml.glspDiagram'
+            );
+        })
+    );
 }
