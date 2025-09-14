@@ -1,6 +1,6 @@
 package com.GLSPPlantUML.module;
 
-import com.GLSPPlantUML.PlantUMLDiagramConfiguration;
+import com.GLSPPlantUML.SequenceDiagramConfiguration;
 import com.GLSPPlantUML.handlers.CustomLabelEdit;
 import com.GLSPPlantUML.handlers.IgnoreComputeBoundsHandler;
 import com.GLSPPlantUML.validators.SequenceLabelValidator;
@@ -34,7 +34,7 @@ public class SequenceDiagramModule extends DiagramModule {
 
     @Override
     protected Class<? extends DiagramConfiguration> bindDiagramConfiguration() {
-        return PlantUMLDiagramConfiguration.class;
+        return SequenceDiagramConfiguration.class;
     }
 
     @Override

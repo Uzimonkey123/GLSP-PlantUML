@@ -7,7 +7,7 @@ import org.eclipse.glsp.server.types.ShapeTypeHint;
 
 import java.util.List;
 
-public class PlantUMLDiagramConfiguration extends BaseDiagramConfiguration {
+public class ClassDiagramConfiguration extends BaseDiagramConfiguration {
     @Override
     public List<ShapeTypeHint> getShapeTypeHints() {
         return List.of();
@@ -25,7 +25,7 @@ public class PlantUMLDiagramConfiguration extends BaseDiagramConfiguration {
 
     @Override
     public String getDiagramType() {
-        return "sequence-diagram";
+        return "class-diagram";
     }
 
     @Override
