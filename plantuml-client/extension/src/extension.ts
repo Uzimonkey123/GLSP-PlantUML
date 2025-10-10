@@ -7,10 +7,13 @@ import {
 } from '@eclipse-glsp/vscode-integration';
 import PumlEditorProvider from './editor-provider';
 import { RequestExportSvgAction } from 'sprotty';
+import { SyntaxValidator } from "./syntaxValidation";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     let server: SocketGlspVscodeServer | undefined;
     let connector: GlspVscodeConnector | undefined;
+
+    validateFile(context);
 
     // Running server initialization only once, so reconnect is possible
     const initialized = () => {
@@ -79,4 +82,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             );
         })
     );
+}
+
+function validateFile(context: vscode.ExtensionContext): void {
+    const diagnosticCollection = vscode.languages.createDiagnosticCollection('plantuml');
+    const validator = new SyntaxValidator(diagnosticCollection);
+
+    context.subscriptions.push(diagnosticCollection, validator);
+
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeTextDocument(event =>
+            validator.validate(event.document)
+        ),
+        vscode.workspace.onDidOpenTextDocument(document =>
+            validator.validate(document)
+        )
+    );
+
+    // Validate all open .puml documents
+    vscode.workspace.textDocuments.forEach(document => {
+        if (document.languageId === 'plantuml') {
+            validator.validate(document);
+        }
+    });
 }
