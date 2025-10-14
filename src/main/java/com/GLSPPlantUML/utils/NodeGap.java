@@ -25,9 +25,9 @@ public class NodeGap {
         SequenceMessage prevMessage = null;
 
         for (SequenceMessage msg : modelMessages) {
-            String from = msg.getFrom();
-            String to = msg.getTo();
-            if ((from == null && to == null) || from.equals(to)) continue; // In self messages, divider, delay.., ignore
+            String from = msg.getFromId();
+            String to = msg.getToId();
+            if ((from == null && to == null) || (from != null && from.equals(to))) continue; // In self messages, divider, delay.., ignore
 
             String mapKey = getMapKey(from, to);
             int msgLength = msg.getMessage().length();

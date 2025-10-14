@@ -80,13 +80,18 @@ public class SequenceMessageFactory {
     }
 
     private void createEdge(int msgIndex) {
-        String sourceId = msg.getFrom();
-        String targetId = msg.getTo();
+        SequenceNode sourceNode;
+        SequenceNode targetNode;
         double y = messagesYPos.get(msgIndex);
 
+        String sourceId = msg.getFromId();
+        String targetId = msg.getToId();
+
         if (msg.getType().equals("edge:delay") || msg.getType().equals("edge:divider")) {
-            sourceId = model.participants.getFirst().getId();
-            targetId = model.participants.getLast().getId();
+            sourceNode = model.participants.getFirst();
+            targetNode = model.participants.getLast();
+            sourceId = sourceNode.getId();
+            targetId = targetNode.getId();
         }
 
         boolean incoming = "incoming".equals(msg.decideWay());
@@ -105,13 +110,11 @@ public class SequenceMessageFactory {
 
         // Adjust source/target if message is external (incoming/outgoing)
         if (incoming) {
-            sourceId = "[";
-            x1 = "[".equals(msg.getFrom()) ? 0 : cursor + halfWidth.get(model.participants.getLast().getId());
+            x1 = "[".equals(sourceId) ? 0 : cursor + halfWidth.get(model.participants.getLast().getId());
         }
 
         if (outgoing) {
-            targetId = "]";
-            x2 = "]".equals(msg.getTo()) ? cursor + halfWidth.get(model.participants.getLast().getId()) : 0;
+            x2 = "]".equals(targetId) ? cursor + halfWidth.get(model.participants.getLast().getId()) : 0;
         }
 
         elements.add(msgBuild.buildEdge(msg, sourceId, targetId, x1, x2, y, incoming, outgoing));
@@ -120,8 +123,8 @@ public class SequenceMessageFactory {
     }
 
     private void createReference(int msgIndex) {
-        String from = msg.getFrom();
-        String to = msg.getTo();
+        String from = msg.getFromId();
+        String to = msg.getToId();
 
         double x1 = centre.get(from) - centrePadding;
         double x2 = centre.get(to) + centrePadding;
@@ -187,14 +190,14 @@ public class SequenceMessageFactory {
 
         if (msg.isAnchorEnd()) {
             SequenceAnchor concreteAnchor = anchors.pop();
-            double gap = gapCalculator.getGaps(concreteAnchor.getParticipant1(), concreteAnchor.getParticipant2());
+            double gap = gapCalculator.getGaps(concreteAnchor.getParticipant1Id(), concreteAnchor.getParticipant2Id());
 
             AnchorBuild anchor = new AnchorBuild(concreteAnchor, y, gap);
-            double xCoord = anchor.getXCoord(centre.get(concreteAnchor.getParticipant1()),
-                    centre.get(concreteAnchor.getParticipant2()));
+            double xCoord = anchor.getXCoord(centre.get(concreteAnchor.getParticipant1Id()),
+                    centre.get(concreteAnchor.getParticipant2Id()));
 
             // Build anchor points in the middle of the messages
-            nodeBuild.buildAnchorPoints(elements, concreteAnchor, xCoord, y, concreteAnchor.getParticipant1(), halfWidth);
+            nodeBuild.buildAnchorPoints(elements, concreteAnchor, xCoord, y, concreteAnchor.getParticipant1Id(), halfWidth);
 
             elements.add(anchor.build());
         }

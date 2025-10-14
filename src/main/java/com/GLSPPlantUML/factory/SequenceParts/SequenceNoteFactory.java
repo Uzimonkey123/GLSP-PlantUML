@@ -55,16 +55,19 @@ public class SequenceNoteFactory {
 
         for (SequenceNote note : msg.getNotes()) {
             double width = WidthCalculator.calculateWidth(note.getLabel(), padding);
-            String from = msg.getFrom();
-            String to = msg.getTo();
+            SequenceNode from = msg.getFrom();
+            SequenceNode to = msg.getTo();
+
+            String fromId = from != null ? from.getId() : null;
+            String toId = to != null ? to.getId() : null;
 
             // Exo message note position override
-            String position = resolveNotePosition(from, to, note.getPosition());
+            String position = resolveNotePosition(fromId, toId, note.getPosition());
 
             NotePosition notePos = switch(position) {
-                case "OVER", "OVER_SEVERAL" -> noteOver(from, to, width);
-                case "RIGHT" -> noteRight(from, to, width);
-                case "LEFT" -> noteLeft(from, to, width);
+                case "OVER", "OVER_SEVERAL" -> noteOver(fromId, toId, width);
+                case "RIGHT" -> noteRight(fromId, toId, width);
+                case "LEFT" -> noteLeft(fromId, toId, width);
                 default -> throw new IllegalStateException("Unexpected value: " + position);
             };
 
@@ -73,11 +76,10 @@ public class SequenceNoteFactory {
             String source = notePos.source();
             String target = notePos.target();
 
-            if (to != null && !(to.equals("]") || to.equals("["))) {
-                SequenceNode toNode = model.getNode(msg.getTo());
-                if (toNode.isCreatedNode()) {
-                    x1 += halfWidth.get(msg.getTo());
-                    x2 += halfWidth.get(msg.getTo());
+            if (to != null && !(toId.equals("]") || toId.equals("["))) {
+                if (to.isCreatedNode()) {
+                    x1 += halfWidth.get(toId);
+                    x2 += halfWidth.get(toId);
                 }
             }
 
