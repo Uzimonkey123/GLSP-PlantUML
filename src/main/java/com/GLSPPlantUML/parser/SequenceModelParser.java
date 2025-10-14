@@ -24,10 +24,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     private SequenceDiagram sequenceDiagram;
 
     @Inject
-    private SequenceModelState modelState;
+    SequenceModelState modelState;
 
     @Inject
-    private SequenceModel model;
+    SequenceModel model;
 
     private int anchorCounter = 0; // For counting how many anchors started
     private final Stack<String> anchorIdStack = new Stack<>(); // To keep track of the nesting of anchors
