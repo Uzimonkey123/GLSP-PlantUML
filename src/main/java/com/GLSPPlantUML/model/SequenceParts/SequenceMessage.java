@@ -11,8 +11,8 @@ import java.util.List;
 
 public class SequenceMessage {
     private final String msgId;
-    private final String from;
-    private final String to;
+    private final SequenceNode from;
+    private final SequenceNode to;
     private String message = "";
     private ArrowConfiguration arrowConfiguration = null;
     private String messageType = "";
@@ -28,8 +28,9 @@ public class SequenceMessage {
     private List<SequenceNote> notes;
     private boolean parallel = false;
 
-    public SequenceMessage(String msgId, boolean creating, String from, String to, String message, ArrowConfiguration arrowConfiguration,
-                           String messageType, String numbering, boolean isShort, boolean isSelf) {
+    public SequenceMessage(String msgId, boolean creating, SequenceNode from, SequenceNode to, String message,
+                           ArrowConfiguration arrowConfiguration, String messageType, String numbering,
+                           boolean isShort, boolean isSelf) {
         this.msgId = msgId;
         this.from = from;
         this.to = to;
@@ -44,8 +45,8 @@ public class SequenceMessage {
         this.notes = new ArrayList<>();
     }
 
-    public SequenceMessage(String msgId, String from, String to, String message, ArrowConfiguration arrowConfiguration,
-                           String messageType) {
+    public SequenceMessage(String msgId, SequenceNode from, SequenceNode to, String message,
+                           ArrowConfiguration arrowConfiguration, String messageType) {
         this.msgId = msgId;
         this.from = from;
         this.to = to;
@@ -54,8 +55,9 @@ public class SequenceMessage {
         this.messageType = messageType;
     }
 
-    public SequenceMessage(String msgId, String from, String to, String message, ArrowConfiguration arrowConfiguration,
-                           String messageType, String numbering, boolean isShort, boolean incoming, boolean outgoing) {
+    public SequenceMessage(String msgId, SequenceNode from, SequenceNode to, String message,
+                           ArrowConfiguration arrowConfiguration, String messageType, String numbering,
+                           boolean isShort, boolean incoming, boolean outgoing) {
         this.msgId = msgId;
         this.from = from;
         this.to = to;
@@ -70,7 +72,7 @@ public class SequenceMessage {
         this.notes = new ArrayList<>();
     }
 
-    public SequenceMessage(String msgId, String from, String to, String messageType) {
+    public SequenceMessage(String msgId, SequenceNode from, SequenceNode to, String messageType) {
         this.msgId = msgId;
         this.from = from;
         this.to = to;
@@ -108,12 +110,24 @@ public class SequenceMessage {
         };
     }
 
-    public String getFrom() {
+    public SequenceNode getFrom() {
         return from;
     }
 
-    public String getTo() {
+    public SequenceNode getTo() {
         return to;
+    }
+
+    public String getFromId() {
+        if (incoming) return "[";
+
+        return from != null ? from.getId() : null;
+    }
+
+    public String getToId() {
+        if (outgoing) return "]";
+
+        return to != null ? to.getId() : null;
     }
 
     public String getMessage() {

@@ -195,8 +195,8 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void ReferenceHandler(Reference reference) {
-        String firstParticipant = parseParticipantId(reference.getParticipant().getFirst());
-        String lastParticipant = parseParticipantId(reference.getParticipant().getLast());
+        SequenceNode firstParticipant = getSequenceNode(reference.getParticipant().getFirst());
+        SequenceNode lastParticipant = getSequenceNode(reference.getParticipant().getLast());
 
         String label = String.join("<br>", reference.getStrings());
 
@@ -206,15 +206,15 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageExoHandler(MessageExo msg) {
-        String participant = parseParticipantId(msg.getParticipant());
+        SequenceNode participant = getSequenceNode(msg.getParticipant());
 
-        record Direction(String from, String to, boolean incoming, boolean outgoing) {}
+        record Direction(SequenceNode from, SequenceNode to, boolean incoming, boolean outgoing) {}
 
         Direction exoMsg = switch (msg.getType()) {
-            case FROM_LEFT -> new Direction("[", participant, true, false);
-            case FROM_RIGHT -> new Direction("]", participant, true, false);
-            case TO_LEFT -> new Direction(participant, "[", false, true);
-            case TO_RIGHT -> new Direction(participant, "]", false, true);
+            case FROM_LEFT -> new Direction(null, participant, true, false);
+            case FROM_RIGHT -> new Direction(null, participant, true, false);
+            case TO_LEFT -> new Direction(participant, null, false, true);
+            case TO_RIGHT -> new Direction(participant, null, false, true);
         };
 
         boolean isShort = msg.isShortArrow();
@@ -243,8 +243,8 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     }
 
     private void MessageHandler(Message msg) {
-        String from = parseParticipantId(msg.getParticipant1());
-        String to = parseParticipantId(msg.getParticipant2());
+        SequenceNode from = getSequenceNode(msg.getParticipant1());
+        SequenceNode to = getSequenceNode(msg.getParticipant2());
 
         String num = msg.getMessageNumber();
 
@@ -292,8 +292,8 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
     private void SeparateNoteHandler(Note note, boolean parallel) {
         String id = "msg-note-" + model.messages.size();
-        String from = parseParticipantId(note.getParticipant());
-        String to = parseParticipantId(note.getParticipant2());
+        SequenceNode from = getSequenceNode(note.getParticipant());
+        SequenceNode to = getSequenceNode(note.getParticipant2());
 
         String position = note.getPosition().toString();
         String label = String.join("<br>", note.getDisplay());
@@ -316,7 +316,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         model.notes.add(newNote);
     }
 
-    private void setupAnchor(Message msg, String from, String to) {
+    private void setupAnchor(Message msg, SequenceNode from, SequenceNode to) {
         if (msg.getAnchor().equals("start")) {
             // For the start of an anchor create ID and save it on stack,
             // + set it up in the last message that it connects to.
@@ -469,17 +469,6 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         return false;
     }
 
-    private String parseParticipantId(Participant participant) {
-        if (participant == null) return null;
-
-        String rawName = String.join("<br>", participant.getDisplay(false));
-        return model.participants.stream()
-                .filter(p -> p.getName().equals(rawName))
-                .findFirst()
-                .map(SequenceNode::getId)
-                .orElse(rawName);
-    }
-
     private void addParticipants(List<SequenceNode> participants, SequenceNode node) {
         for (int i = 0; i < participants.size(); i++) {
             int existingOrder = participants.get(i).getOrder();
@@ -537,5 +526,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         model.messageSpaces.put(model.messages.size(), gapLength);
     }
-}
 
+    private SequenceNode getSequenceNode(Participant participant) {
+        if (participant == null) return null;
+
+        String rawName = String.join("<br>", participant.getDisplay(false));
+        return model.participants.stream()
+                .filter(p -> p.getName().equals(rawName))
+                .findFirst()
+                .orElse(null);
+    }
+}

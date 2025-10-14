@@ -1,25 +1,25 @@
 package com.GLSPPlantUML.model.SequenceParts;
 
 public class SequenceAnchor {
-    private final String participant1;
-    private final String participant2;
+    private final SequenceNode participant1;
+    private final SequenceNode participant2;
     private final String anchorId;
     private String label;
     private double topY = 0;
 
-    public SequenceAnchor(String participant1, String participant2, String anchorId, String label) {
+    public SequenceAnchor(SequenceNode participant1, SequenceNode participant2, String anchorId, String label) {
         this.participant1 = participant1;
         this.participant2 = participant2;
         this.anchorId = anchorId;
         this.label = label;
     }
 
-    public String getParticipant1() {
-        return participant1;
+    public String getParticipant1Id() {
+        return participant1.getId();
     }
 
-    public String getParticipant2() {
-        return participant2;
+    public String getParticipant2Id() {
+        return participant2.getId();
     }
 
     public String getAnchorId() {
