@@ -1,9 +1,11 @@
 package com.GLSPPlantUML.parser;
 
+import com.GLSPPlantUML.reconstructor.LineMapper;
 import com.GLSPPlantUML.utils.ErrorMessage;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;
+import com.GLSPPlantUML.utils.LineFinder;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
@@ -29,6 +31,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     @Inject
     SequenceModel model;
 
+    private LineMapper lineMapper;
+    private final Map<Object, Integer> eventToLineNumber = new HashMap<>();
+
     private int anchorCounter = 0; // For counting how many anchors started
     private final Stack<String> anchorIdStack = new Stack<>(); // To keep track of the nesting of anchors
 
@@ -43,12 +48,18 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     public SequenceModelParser() {}
 
     public SequenceModel parse(File file) throws IOException {
-        // Read .puml text
-        System.err.println("We are in the parser");
-        String text = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+        // Read and store original
+        String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+
+        // Prepare text for PlantUML
+        String text = originalText;
         if (!text.contains("@startuml")) {
-            text = "@startuml\n" + text + "\n@enduml";
+            text = "@startuml\n" + originalText + "\n@enduml";
         }
+
+        // Create line mapper and utility
+        lineMapper = new LineMapper(originalText);
+        LineFinder lineFinder = new LineFinder(lineMapper, eventToLineNumber);
 
         // Parse with PlantUML
         SourceStringReader reader = new SourceStringReader(text);
@@ -59,45 +70,52 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             if (d instanceof PSystemError) {
                 String error = String.join("<br>", ((PSystemError) d).getPureAsciiFormatted());
                 modelState.setError(new ErrorMessage(error));
-
                 return model;
             }
 
             if (d instanceof SequenceDiagram sd) {
                 this.sequenceDiagram = sd;
-
                 model.showFoot = sequenceDiagram.isShowFootbox();
 
-                // Check for complete diagram related attributes
                 handleHeader();
                 handleFooter();
                 handleTitle();
                 MainframeHandler();
 
-                // Record all participants, even if unused
+                lineFinder.resetSearch();
+
                 Collection<Participant> participants = sd.participants();
                 for (Participant participant : participants) {
-                    ParticipantHandler(participant);
+                    String name = String.join("<br>", participant.getDisplay(false));
+                    int participantLine = lineFinder.findParticipantLine(name, participant);
+
+                    // Process participant
+                    ParticipantHandler(participant, participantLine);
                 }
 
-                // Extract participants and messages with API
+                lineFinder.resetSearch(); // Reset for events
+
                 for (Event event : sd.events()) {
+                    int eventLine = -1;
+
+                    if (event instanceof Message || event instanceof MessageExo) {
+                        String label = getMessageLabel(event);
+                        eventLine = lineFinder.findMessageLine(label, event);
+                    }
+
+                    // Process event immediately
                     if (event instanceof GroupingStart gs) GroupingStartHandler(gs);
                     if (event instanceof GroupingLeaf leaf) GroupingLeafHandler(leaf);
-
-                    if (event instanceof MessageExo msg) MessageExoHandler(msg);
-                    if (event instanceof Message msg) MessageHandler(msg);
+                    if (event instanceof MessageExo msg) MessageExoHandler(msg, eventLine);
+                    if (event instanceof Message msg) MessageHandler(msg, eventLine);
                     if (event instanceof Delay delay) DelayHandler(delay);
                     if (event instanceof Divider div) DividerHandler(div);
-
                     if (event instanceof LifeEvent le) LifeEventHandler(le);
                     if (event instanceof HSpace hSpace) hSpaceHandler(hSpace);
                     if (event instanceof Reference reference) ReferenceHandler(reference);
                     if (event instanceof Note note) SeparateNoteHandler(note, false);
                     if (event instanceof Notes notes) {
                         List<Note> noteList = notes.asList();
-
-                        // First note is not parallel to keep the same logic as with messages
                         for (int i = 0; i < noteList.size(); i++) {
                             Note note = noteList.get(i);
                             boolean parallel = i > 0;
@@ -105,13 +123,29 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         }
                     }
                 }
+
                 closeLifeEvents();
             }
         }
+
         return model;
     }
 
-    private void ParticipantHandler(Participant participant) {
+    private String getMessageLabel(Event event) {
+        try {
+            if (event instanceof Message) {
+                return String.join("<br>", ((Message) event).getLabel());
+            }
+            if (event instanceof MessageExo) {
+                return String.join(" ", ((MessageExo) event).getLabel());
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return "";
+    }
+
+    private void ParticipantHandler(Participant participant, int lineNum) {
         String name = String.join("<br>", participant.getDisplay(false));
         String type = participant.getType().toString();
         int order = participant.getOrder();
@@ -121,12 +155,20 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         if(!hasParticipant(name)) {
             node = new SequenceNode(id, name, type, order, background, false);
-            // Call to check if participant is englobed or not
-            EngloberHandler(node, sequenceDiagram.getEnglober(participant));
 
+            // Store source info
+            if (lineNum >= 0) {
+                node.setSourceLines(lineNum, lineNum);
+                LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+                if (lineMapper.getLineInfo(lineNum) != null) {
+                    node.setRawSourceText(info.originalText);
+                }
+            }
+
+            EngloberHandler(node, sequenceDiagram.getEnglober(participant));
             addParticipants(model.participants, node);
         }
-        
+
         if (node != null && participant.getStereotype() != null) {
             node.setStereotype(true);
             node.setStereotypeChar(participant.getStereotype().getCharacter());
@@ -205,7 +247,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         model.messages.add(new SequenceMessage(msgId, firstParticipant, lastParticipant, label, null, "edge:ref"));
     }
 
-    private void MessageExoHandler(MessageExo msg) {
+    private void MessageExoHandler(MessageExo msg, int lineNum) {
         SequenceNode participant = getSequenceNode(msg.getParticipant());
 
         record Direction(SequenceNode from, SequenceNode to, boolean incoming, boolean outgoing) {}
@@ -232,6 +274,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 msgId, exoMsg.from(), exoMsg.to(), label, arrowConfig, "edge", num,
                 isShort, exoMsg.incoming(), exoMsg.outgoing());
 
+        if (lineNum >= 0) {
+            message.setSourceLines(lineNum, lineNum);
+            LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+            if (info != null) {
+                message.setRawSourceText(info.originalText);
+            }
+        }
+
         model.messages.add(message);
 
         if (msg.isParallel()) {
@@ -242,7 +292,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         model.invisibleNodes = true;
     }
 
-    private void MessageHandler(Message msg) {
+    private void MessageHandler(Message msg, int lineNum) {
         SequenceNode from = getSequenceNode(msg.getParticipant1());
         SequenceNode to = getSequenceNode(msg.getParticipant2());
 
@@ -261,6 +311,15 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         // Record message
         SequenceMessage message = new SequenceMessage(msgId, msg.isCreate(), from, to, label, arrowConfig,
                 "edge", num, false, isSelf);
+
+        if (lineNum >= 0) {
+            message.setSourceLines(lineNum, lineNum);
+            LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+            if (info != null) {
+                message.setRawSourceText(info.originalText);
+            }
+        }
+
         model.messages.add(message);
 
         if (msg.isParallel()) {
