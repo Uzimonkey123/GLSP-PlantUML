@@ -103,13 +103,23 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         eventLine = lineFinder.findMessageLine(label, event);
                     }
 
+                    if (event instanceof Divider div) {
+                        String divText = String.join("<br>", div.getText());
+                        eventLine = lineFinder.findDividerLine(divText, event);
+                    }
+
+                    if (event instanceof Delay delay) {
+                        String delayText = String.join("<br>", delay.getText());
+                        eventLine = lineFinder.findDelayLine(delayText, event);
+                    }
+
                     // Process event immediately
                     if (event instanceof GroupingStart gs) GroupingStartHandler(gs);
                     if (event instanceof GroupingLeaf leaf) GroupingLeafHandler(leaf);
                     if (event instanceof MessageExo msg) MessageExoHandler(msg, eventLine);
                     if (event instanceof Message msg) MessageHandler(msg, eventLine);
-                    if (event instanceof Delay delay) DelayHandler(delay);
-                    if (event instanceof Divider div) DividerHandler(div);
+                    if (event instanceof Delay delay) DelayHandler(delay, eventLine);
+                    if (event instanceof Divider div) DividerHandler(div, eventLine);
                     if (event instanceof LifeEvent le) LifeEventHandler(le);
                     if (event instanceof HSpace hSpace) hSpaceHandler(hSpace);
                     if (event instanceof Reference reference) ReferenceHandler(reference);
@@ -137,7 +147,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 return String.join("<br>", ((Message) event).getLabel());
             }
             if (event instanceof MessageExo) {
-                return String.join(" ", ((MessageExo) event).getLabel());
+                return String.join("<br>", ((MessageExo) event).getLabel());
             }
         } catch (Exception e) {
             // Ignore
@@ -398,7 +408,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
-    private void DelayHandler(Delay delay) {
+    private void DelayHandler(Delay delay, int lineNum) {
         String label = "";
         if(delay.getText() != null
             && delay.getText().size() > 0) {
@@ -407,17 +417,37 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         String msgId = "msg-" + model.messages.size();
 
-        model.messages.add(new SequenceMessage(msgId, null, null, label,
-                null, "edge:delay"));
+        SequenceMessage message = new SequenceMessage(msgId, null, null, label,
+                null, "edge:delay");
+
+        if (lineNum >= 0) {
+            message.setSourceLines(lineNum, lineNum);
+            LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+            if (info != null) {
+                message.setRawSourceText(info.originalText);
+            }
+        }
+
+        model.messages.add(message);
     }
 
-    private void DividerHandler(Divider div) {
+    private void DividerHandler(Divider div, int lineNum) {
         String label = String.join("<br>", div.getText());
 
         String msgId = "msg-" + model.messages.size();
 
-        model.messages.add(new SequenceMessage(msgId, null, null, label,
-                null, "edge:divider"));
+        SequenceMessage message = new SequenceMessage(msgId, null, null, label,
+                null, "edge:divider");
+
+        if (lineNum >= 0) {
+            message.setSourceLines(lineNum, lineNum);
+            LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+            if (info != null) {
+                message.setRawSourceText(info.originalText);
+            }
+        }
+
+        model.messages.add(message);
     }
 
     private void LifeEventHandler(LifeEvent le) {
