@@ -165,8 +165,8 @@ public class SequenceGroupFactory {
     private void calculateMinMax(SequenceGroup seqGroup) {
         for (int i = seqGroup.getStartIndex(); i < seqGroup.getEndIndex(); i++) {
             SequenceMessage message = model.messages.get(i);
-            double fromX = message.getFrom() != null ? centre.get(message.getFrom()) : -1;
-            double toX = message.getTo() != null ? centre.get(message.getTo()) : -1;
+            double fromX = message.getFrom() != null ? centre.get(message.getFromId()) : -1;
+            double toX = message.getTo() != null ? centre.get(message.getToId()) : -1;
 
             if (fromX != -1) {
                 minX = Math.min(minX, fromX);
