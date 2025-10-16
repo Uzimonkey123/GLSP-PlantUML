@@ -52,6 +52,10 @@ public class LineMapper {
                 return LineType.GROUP_END;
             }
 
+            if (trimmed.contains("{") && trimmed.contains("}") && trimmed.contains("<->")) {
+                return LineType.ANCHOR;
+            }
+
             // Get first word for switch
             String firstWord = trimmed.split("\\s+")[0].toLowerCase();
 
@@ -98,6 +102,7 @@ public class LineMapper {
         GROUP_START,
         GROUP_ELSE,
         GROUP_END,
+        ANCHOR,
         UNKNOWN
     }
 }

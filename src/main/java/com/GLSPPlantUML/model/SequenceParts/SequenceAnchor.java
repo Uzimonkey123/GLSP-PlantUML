@@ -1,6 +1,8 @@
 package com.GLSPPlantUML.model.SequenceParts;
 
-public class SequenceAnchor {
+import com.GLSPPlantUML.reconstructor.SourceElement;
+
+public class SequenceAnchor extends SourceElement {
     private final SequenceNode participant1;
     private final SequenceNode participant2;
     private final String anchorId;
@@ -31,6 +33,10 @@ public class SequenceAnchor {
     }
 
     public void setLabel(String label) {
+        if (!this.label.equals(label)) {
+            setModified();
+        }
+
         this.label = label;
     }
 

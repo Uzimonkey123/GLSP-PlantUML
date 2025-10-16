@@ -27,6 +27,10 @@ public abstract class SourceElement {
         this.rawSourceText = text;
     }
 
+    public String getRawSourceText() {
+        return rawSourceText;
+    }
+
     public void setModified() {
         this.modified = true;
     }

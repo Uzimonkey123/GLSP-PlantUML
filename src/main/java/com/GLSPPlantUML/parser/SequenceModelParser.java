@@ -452,7 +452,18 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
             // Get the message from the diagram linked anchors and create the anchor in the model list
             String anchorLabel = sequenceDiagram.getLinkAnchors().get(model.anchors.size()).getMessage();
-            model.anchors.add(new SequenceAnchor(from, to, anchorId, anchorLabel));
+            SequenceAnchor anchor = new SequenceAnchor(from, to, anchorId, anchorLabel);
+
+            int anchorLine = lineFinder.findAnchorLine("start", anchor);
+            if (anchorLine >= 0) {
+                anchor.setSourceLines(anchorLine, anchorLine);
+                LineMapper.LineInfo info = lineMapper.getLineInfo(anchorLine);
+                if (info != null) {
+                    anchor.setRawSourceText(info.originalText);
+                }
+            }
+
+            model.anchors.add(anchor);
         }
     }
 

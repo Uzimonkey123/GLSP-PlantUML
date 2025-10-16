@@ -52,6 +52,11 @@ public class LineFinder {
         return findLine(LineMapper.LineType.GROUP_END, null, event);
     }
 
+    public int findAnchorLine(String startId, Object event) {
+        String searchPattern = "{" + startId + "}";
+        return findLine(LineMapper.LineType.ANCHOR, searchPattern, event);
+    }
+
     private int findLine(LineMapper.LineType type, String searchText, Object event) {
         List<LineMapper.LineInfo> allLines = lineMapper.getLineInfos();
         int totalLines = allLines.size();
