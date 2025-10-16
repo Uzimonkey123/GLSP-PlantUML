@@ -1,5 +1,6 @@
 package com.GLSPPlantUML.model.SequenceParts;
 
+import com.GLSPPlantUML.reconstructor.SourceElement;
 import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.skin.ArrowConfiguration;
 import net.sourceforge.plantuml.skin.ArrowDecoration;
@@ -9,12 +10,12 @@ import net.sourceforge.plantuml.skin.ArrowPart;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SequenceMessage {
+public class SequenceMessage extends SourceElement {
     private final String msgId;
     private final SequenceNode from;
     private final SequenceNode to;
     private String message = "";
-    private ArrowConfiguration arrowConfiguration = null;
+    public ArrowConfiguration arrowConfiguration = null;
     private String messageType = "";
     private String numbering = "";
     private boolean isShort = false;
@@ -135,6 +136,10 @@ public class SequenceMessage {
     }
 
     public void setMessage(String message) {
+        if (this.message != null && !this.message.equals(message)) {
+            setModified();
+        }
+
         this.message = message;
     }
 

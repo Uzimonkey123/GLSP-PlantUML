@@ -1,5 +1,6 @@
 package com.GLSPPlantUML.model.SequenceParts;
 
+import com.GLSPPlantUML.reconstructor.SourceElement;
 import net.sourceforge.plantuml.klimt.color.HColor;
 
 import java.util.ArrayList;
@@ -7,9 +8,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class SequenceNode {
+public class SequenceNode extends SourceElement {
     private final String id;
     private String name;
+    private String originalName;  // NEW
     private final String type;
     private final int order;
     private final HColor background;
@@ -25,6 +27,7 @@ public class SequenceNode {
     public SequenceNode(String id, String name, String type, int order, HColor background, boolean createdNode) {
         this.id = id;
         this.name = name;
+        this.originalName = name;
         this.type = type;
         this.order = order;
         this.background = background;
@@ -40,7 +43,25 @@ public class SequenceNode {
     }
 
     public void setName(String name) {
+        if (!this.name.equals(name)) {
+            setModified();
+        }
+
         this.name = name;
+    }
+
+    public String getOriginalName() {
+        return originalName;
+    }
+
+    public boolean isNameModified() {
+        return !this.name.equals(this.originalName) || isModified();
+    }
+
+    @Override
+    public void clearModified() {
+        super.clearModified();
+        this.originalName = this.name;
     }
 
     public String getType() {
@@ -85,7 +106,7 @@ public class SequenceNode {
         return lifeEvents.stream()
                 .filter(lifeEvent ->
                         messageIndex >= lifeEvent.getStartMessage() &&
-                        messageIndex <= lifeEvent.getEndMessage())
+                                messageIndex <= lifeEvent.getEndMessage())
                 .findFirst();
     }
 
@@ -98,11 +119,9 @@ public class SequenceNode {
     }
 
     public char getStereotypeChar() {
-        // Empty char, replace it for client
         if ((int) stereotypeChar == 0) {
             stereotypeChar = '-';
         }
-
         return stereotypeChar;
     }
 
