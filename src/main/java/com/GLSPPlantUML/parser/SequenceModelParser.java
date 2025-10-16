@@ -5,7 +5,7 @@ import com.GLSPPlantUML.utils.ErrorMessage;
 import com.GLSPPlantUML.model.SequenceModel;
 import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.state.SequenceModelState;
-import com.GLSPPlantUML.utils.LineFinder;
+import com.GLSPPlantUML.reconstructor.LineFinder;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.BlockUml;
@@ -102,6 +102,10 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     if (event instanceof Message || event instanceof MessageExo) {
                         String label = getMessageLabel(event);
                         eventLine = lineFinder.findMessageLine(label, event);
+
+                        if (eventLine == -1) {
+                            eventLine = lineFinder.findReturnLine(label, event);
+                        }
                     }
 
                     if (event instanceof Divider div) {
@@ -129,6 +133,16 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                         }
                     }
 
+                    if (event instanceof LifeEvent le) {
+                        String participantName = String.join("<br>", le.getParticipant().getDisplay(false));
+
+                        switch (le.getType()) {
+                            case ACTIVATE -> eventLine = lineFinder.findActivateLine(participantName, event);
+                            case DEACTIVATE -> eventLine = lineFinder.findDeactivateLine(participantName, event);
+                            case DESTROY -> eventLine = lineFinder.findDestroyLine(participantName, event);
+                        }
+                    }
+
                     // Process event immediately
                     if (event instanceof GroupingStart gs) GroupingStartHandler(gs, eventLine);
                     if (event instanceof GroupingLeaf leaf) GroupingLeafHandler(leaf, eventLine);
@@ -136,7 +150,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     if (event instanceof Message msg) MessageHandler(msg, eventLine);
                     if (event instanceof Delay delay) DelayHandler(delay, eventLine);
                     if (event instanceof Divider div) DividerHandler(div, eventLine);
-                    if (event instanceof LifeEvent le) LifeEventHandler(le);
+                    if (event instanceof LifeEvent le) LifeEventHandler(le, eventLine);
                     if (event instanceof HSpace hSpace) hSpaceHandler(hSpace);
                     if (event instanceof Reference reference) ReferenceHandler(reference, eventLine);
                     if (event instanceof Note note) SeparateNoteHandler(note, false);
@@ -188,6 +202,16 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
                 if (lineMapper.getLineInfo(lineNum) != null) {
                     node.setRawSourceText(info.originalText);
+                }
+
+            } else {
+                int createLine = lineFinder.findCreateLine(name, participant);
+                if (createLine >= 0) {
+                    node.setSourceLines(createLine, createLine);
+                    LineMapper.LineInfo info = lineMapper.getLineInfo(createLine);
+                    if (info != null) {
+                        node.setRawSourceText(info.originalText);
+                    }
                 }
             }
 
@@ -509,7 +533,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         model.messages.add(message);
     }
 
-    private void LifeEventHandler(LifeEvent le) {
+    private void LifeEventHandler(LifeEvent le, int lineNum) {
         String participant = String.join("<br>", le.getParticipant().getDisplay(false));
         HColor background = le.getSpecificColors().getBackColor();
         SequenceNode currentNode = null;
@@ -552,6 +576,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 // Set the depth of the life event for offset in factory
                 lifeEvent.setLevel(messageStack.size());
 
+                if (lineNum >= 0) {
+                    lifeEvent.setSourceLines(lineNum, lineNum);
+                    LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+                    if (info != null) {
+                        lifeEvent.setRawSourceText(info.originalText);
+                    }
+                }
+
                 currentNode.addLifeEvent(lifeEvent);
             }
 
@@ -564,6 +596,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                     SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
                     // Set the depth of the life event for offset in factory
                     lifeEvent.setLevel(messageStack.size());
+
+                    if (lineNum >= 0) {
+                        lifeEvent.setSourceLines(lineNum, lineNum);
+                        LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+                        if (info != null) {
+                            lifeEvent.setRawSourceText(info.originalText);
+                        }
+                    }
 
                     currentNode.addLifeEvent(lifeEvent);
                 }

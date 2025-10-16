@@ -1,6 +1,4 @@
-package com.GLSPPlantUML.utils;
-
-import com.GLSPPlantUML.reconstructor.LineMapper;
+package com.GLSPPlantUML.reconstructor;
 
 import java.util.List;
 import java.util.Map;
@@ -55,6 +53,26 @@ public class LineFinder {
     public int findAnchorLine(String startId, Object event) {
         String searchPattern = "{" + startId + "}";
         return findLine(LineMapper.LineType.ANCHOR, searchPattern, event);
+    }
+
+    public int findActivateLine(String participantName, Object event) {
+        return findLine(LineMapper.LineType.ACTIVATE, participantName, event);
+    }
+
+    public int findDeactivateLine(String participantName, Object event) {
+        return findLine(LineMapper.LineType.DEACTIVATE, participantName, event);
+    }
+
+    public int findDestroyLine(String participantName, Object event) {
+        return findLine(LineMapper.LineType.DESTROY, participantName, event);
+    }
+
+    public int findReturnLine(String text, Object event) {
+        return findLine(LineMapper.LineType.RETURN, text, event);
+    }
+
+    public int findCreateLine(String participantName, Object event) {
+        return findLine(LineMapper.LineType.CREATE, participantName, event);
     }
 
     private int findLine(LineMapper.LineType type, String searchText, Object event) {

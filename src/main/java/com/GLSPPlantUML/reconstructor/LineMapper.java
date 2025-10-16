@@ -68,6 +68,11 @@ public class LineMapper {
                 case "ref" -> LineType.REFERENCE;
                 case "alt", "opt", "loop", "par", "break", "critical", "group" -> LineType.GROUP_START;
                 case "else" -> LineType.GROUP_ELSE;
+                case "activate" -> LineType.ACTIVATE;
+                case "deactivate" -> LineType.DEACTIVATE;
+                case "destroy" -> LineType.DESTROY;
+                case "return" -> LineType.RETURN;
+                case "create" -> LineType.CREATE;
                 default -> {
                     if (trimmed.startsWith("==") && trimmed.endsWith("==")) yield LineType.DIVIDER;
                     if (trimmed.startsWith("...") && trimmed.endsWith("...")) yield LineType.DELAY;
@@ -103,6 +108,11 @@ public class LineMapper {
         GROUP_ELSE,
         GROUP_END,
         ANCHOR,
+        ACTIVATE,
+        DEACTIVATE,
+        DESTROY,
+        RETURN,
+        CREATE,
         UNKNOWN
     }
 }

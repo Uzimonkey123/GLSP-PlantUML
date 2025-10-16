@@ -1,8 +1,9 @@
 package com.GLSPPlantUML.model.SequenceParts;
 
+import com.GLSPPlantUML.reconstructor.SourceElement;
 import net.sourceforge.plantuml.klimt.color.HColor;
 
-public class SequenceLifeEvent {
+public class SequenceLifeEvent extends SourceElement {
     private final int startMessage;
     private final int endMessage;
     private int level = 0; // Depth of life event - the deeper, more to the right
