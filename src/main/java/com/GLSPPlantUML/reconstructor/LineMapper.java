@@ -44,6 +44,14 @@ public class LineMapper {
         private LineType determineType(String trimmed) {
             if (trimmed.isEmpty()) return LineType.EMPTY;
 
+            if (trimmed.equals("end ref")) {
+                return LineType.END_REFERENCE;
+            }
+
+            if (trimmed.equals("end")) {
+                return LineType.GROUP_END;
+            }
+
             // Get first word for switch
             String firstWord = trimmed.split("\\s+")[0].toLowerCase();
 
@@ -53,6 +61,9 @@ public class LineMapper {
                 case "@enduml" -> LineType.END_UML;
                 case "participant", "actor", "boundary", "control",
                      "entity", "database", "collections" -> LineType.PARTICIPANT;
+                case "ref" -> LineType.REFERENCE;
+                case "alt", "opt", "loop", "par", "break", "critical", "group" -> LineType.GROUP_START;
+                case "else" -> LineType.GROUP_ELSE;
                 default -> {
                     if (trimmed.startsWith("==") && trimmed.endsWith("==")) yield LineType.DIVIDER;
                     if (trimmed.startsWith("...") && trimmed.endsWith("...")) yield LineType.DELAY;
@@ -82,6 +93,11 @@ public class LineMapper {
         MESSAGE,
         DIVIDER,
         DELAY,
+        REFERENCE,
+        END_REFERENCE,
+        GROUP_START,
+        GROUP_ELSE,
+        GROUP_END,
         UNKNOWN
     }
 }

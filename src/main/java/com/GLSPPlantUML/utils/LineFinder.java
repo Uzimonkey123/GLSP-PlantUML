@@ -1,7 +1,6 @@
 package com.GLSPPlantUML.utils;
 
 import com.GLSPPlantUML.reconstructor.LineMapper;
-import net.sourceforge.plantuml.sequencediagram.Event;
 
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,26 @@ public class LineFinder {
 
     public int findDelayLine(String label, Object event) {
         return findLine(LineMapper.LineType.DELAY, label, event);
+    }
+
+    public int findReferenceLine(String text, Object event) {
+        return findLine(LineMapper.LineType.REFERENCE, text, event);
+    }
+
+    public int findEndReferenceLine(String text, Object event) {
+        return findLine(LineMapper.LineType.END_REFERENCE, text, event);
+    }
+
+    public int findGroupStartLine(String label, Object event) {
+        return findLine(LineMapper.LineType.GROUP_START, label, event);
+    }
+
+    public int findGroupElseLine(String label, Object event) {
+        return findLine(LineMapper.LineType.GROUP_ELSE, label, event);
+    }
+
+    public int findGroupEndLine(Object event) {
+        return findLine(LineMapper.LineType.GROUP_END, null, event);
     }
 
     private int findLine(LineMapper.LineType type, String searchText, Object event) {

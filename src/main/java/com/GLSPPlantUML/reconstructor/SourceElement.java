@@ -15,7 +15,7 @@ public abstract class SourceElement {
         return sourceLineStart;
     }
 
-    public int getSourceLineEnd() { // TODO: For groups
+    public int getSourceLineEnd() {
         return sourceLineEnd;
     }
 

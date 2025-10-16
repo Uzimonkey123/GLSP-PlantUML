@@ -1,9 +1,11 @@
 package com.GLSPPlantUML.model.SequenceParts;
 
+import com.GLSPPlantUML.reconstructor.SourceElement;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class SequenceGroup {
+public class SequenceGroup extends SourceElement {
     private final int startIndex;
     private int endIndex = -1;
     private String label;
@@ -14,6 +16,7 @@ public class SequenceGroup {
     private boolean isGroup = false;
     private String backColor = "none";
     private String elementColor = "grey";
+    private final List<Integer> separatorLineNumbers = new ArrayList<>();
 
     public SequenceGroup(int startIndex, String label, String comment, int level) {
         this.startIndex = startIndex;
@@ -58,6 +61,10 @@ public class SequenceGroup {
     }
 
     public void setLabel(String label) {
+        if (!this.label.equals(label)) {
+            setModified();
+        }
+
         this.label = label;
     }
 
@@ -71,6 +78,11 @@ public class SequenceGroup {
     }
 
     public void setComment(String comment) {
+        if ((this.comment == null && comment != null) ||
+                (this.comment != null && !this.comment.equals(comment))) {
+            setModified();
+        }
+
         this.comment = comment;
     }
 
@@ -119,6 +131,17 @@ public class SequenceGroup {
     }
 
     public void setSeparatorLabel(int i, String text) {
-        separatorLabel.set(i, text);
+        if (i >= 0 && i < separatorLabel.size()) {
+            separatorLabel.set(i, text);
+            setModified();
+        }
+    }
+
+    public void addSeparatorLineNumber(int lineNumber) {
+        separatorLineNumbers.add(lineNumber);
+    }
+
+    public List<Integer> getSeparatorLineNumbers() {
+        return separatorLineNumbers;
     }
 }
