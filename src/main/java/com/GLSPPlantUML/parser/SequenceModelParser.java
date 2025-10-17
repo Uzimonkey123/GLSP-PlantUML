@@ -611,46 +611,72 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         participants.add(node);
     }
 
-    void handleTitle() {
+    private void handleTitle() {
         model.title = "";
 
         if (sequenceDiagram.getTitle() != null
                 && sequenceDiagram.getTitle().getDisplay() != null
                 && sequenceDiagram.getTitle().getDisplay().size() > 0) {
             model.title = String.join("<br>", sequenceDiagram.getTitle().getDisplay());
+
+            int startLine = findLineByType(LineMapper.LineType.TITLE);
+            int endLine = findLineByType(LineMapper.LineType.END_TITLE);
+
+            if (startLine >= 0) {
+                model.titleLineStart = startLine;
+                model.titleLineEnd = endLine >= 0 ? endLine : startLine;
+            }
         }
     }
 
-    void handleHeader() {
+    private void handleHeader() {
         model.header = "";
 
         if (sequenceDiagram.getHeader() != null
                 && sequenceDiagram.getHeader().getDisplay() != null
                 && sequenceDiagram.getHeader().getDisplay().size() > 0) {
             model.header = String.join("<br>", sequenceDiagram.getHeader().getDisplay());
+
+            int startLine = findLineByType(LineMapper.LineType.HEADER);
+            int endLine = findLineByType(LineMapper.LineType.END_HEADER);
+
+            if (startLine >= 0) {
+                model.headerLineStart = startLine;
+                model.headerLineEnd = endLine >= 0 ? endLine : startLine;
+            }
         }
     }
 
-    void handleFooter() {
+    private void handleFooter() {
         model.footer = "";
 
         if (sequenceDiagram.getFooter() != null
                 && sequenceDiagram.getFooter().getDisplay() != null
                 && sequenceDiagram.getFooter().getDisplay().size() > 0) {
             model.footer = String.join("<br>", sequenceDiagram.getFooter().getDisplay());
+
+            int startLine = findLineByType(LineMapper.LineType.FOOTER);
+            int endLine = findLineByType(LineMapper.LineType.END_FOOTER);
+
+            if (startLine >= 0) {
+                model.footerLineStart = startLine;
+                model.footerLineEnd = endLine >= 0 ? endLine : startLine;
+            }
         }
     }
 
-    void MainframeHandler() {
+    private void MainframeHandler() {
         model.mainframe = "";
 
         if (sequenceDiagram.getMainFrame() != null) {
             model.isMainframe = true;
             model.mainframe = String.join("<br>", sequenceDiagram.getMainFrame());
+
+            model.mainframeLineNumber = findLineByType(LineMapper.LineType.MAINFRAME);
         }
     }
 
-    void hSpaceHandler(HSpace hspace) {
+    private void hSpaceHandler(HSpace hspace) {
         int gapLength = hspace.getPixel();
 
         model.messageSpaces.put(model.messages.size(), gapLength);
@@ -664,5 +690,15 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 .filter(p -> p.getName().equals(rawName))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private int findLineByType(LineMapper.LineType type) {
+        List<LineMapper.LineInfo> lines = lineMapper.getLineInfos();
+
+        for (LineMapper.LineInfo info : lines) {
+            if (info.type == type) return info.lineNumber;
+        }
+
+        return -1;
     }
 }

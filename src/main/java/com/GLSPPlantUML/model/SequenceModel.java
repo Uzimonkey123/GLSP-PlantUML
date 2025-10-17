@@ -14,10 +14,24 @@ public class SequenceModel {
     public List<SequenceEnglober> englobers = new ArrayList<>();
     public List<SequenceNote> notes = new ArrayList<>();
 
+    public int headerLineStart = -1;
+    public int headerLineEnd = -1;
+    public int footerLineStart = -1;
+    public int footerLineEnd = -1;
+    public int titleLineStart = -1;
+    public int titleLineEnd = -1;
+    public int mainframeLineNumber = -1;
+
+    public boolean headerModified = false;
+    public boolean footerModified = false;
+    public boolean titleModified = false;
+    public boolean mainframeModified = false;
+
     public String footer;
     public String header;
     public String title;
     public String mainframe;
+
     public boolean showFoot;
     public boolean invisibleNodes = false;
     public boolean isMainframe = false;

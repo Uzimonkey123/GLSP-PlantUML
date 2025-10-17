@@ -51,6 +51,15 @@ public class LineMapper {
                 case "end box" -> {
                     return LineType.END_ENGLOBER;
                 }
+                case "end title" -> {
+                    return LineType.END_TITLE;
+                }
+                case "end header" -> {
+                    return LineType.END_HEADER;
+                }
+                case "end footer" -> {
+                    return LineType.END_FOOTER;
+                }
                 case "end" -> {
                     return LineType.GROUP_END;
                 }
@@ -132,11 +141,14 @@ public class LineMapper {
         NOTE, // TODO
         END_NOTE, // TODO
         HEADER,
+        END_HEADER,
         TITLE,
+        END_TITLE,
         FOOTER,
+        END_FOOTER,
         ENGLOBER, // TODO
         END_ENGLOBER, // TODO
-        MAINFRAME, // TODO
+        MAINFRAME,
         UNKNOWN
     }
 }

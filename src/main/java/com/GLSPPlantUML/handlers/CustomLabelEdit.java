@@ -66,14 +66,22 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
     private void checkPageDetails(ApplyLabelEditOperation operation) {
         if (label.getId().startsWith("header")) {
             model.header = operation.getText();
+            model.headerModified = true;
         }
 
         if (label.getId().startsWith("footer")) {
             model.footer = operation.getText();
+            model.footerModified = true;
         }
 
         if (label.getId().startsWith("title")) {
             model.title = operation.getText();
+            model.titleModified = true;
+        }
+
+        if (label.getId().startsWith("mainframe")) {
+            model.mainframe = operation.getText();
+            model.mainframeModified = true;
         }
     }
 

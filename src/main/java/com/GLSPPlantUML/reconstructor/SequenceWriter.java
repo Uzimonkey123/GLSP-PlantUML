@@ -36,6 +36,7 @@ public class SequenceWriter {
         writeMessage();
         writeAnchor();
         writeGroup();
+        writePageDetails();
 
         applyReplacements();
         saveAtomic();
@@ -343,6 +344,53 @@ public class SequenceWriter {
         }
 
         return IndentatHelper.applyIndentation(sb.toString(), indent);
+    }
+
+    private void writePageDetails() {
+        if (model.titleModified) {
+            changeLine(model.titleLineStart, model.titleLineEnd,
+                    replacePageDetails("title", model.title, model.titleLineStart, model.titleLineEnd));
+        }
+
+        if (model.headerModified) {
+            changeLine(model.headerLineStart, model.headerLineEnd,
+                    replacePageDetails("header", model.header, model.headerLineStart, model.headerLineEnd));
+        }
+
+        if (model.footerModified) {
+            changeLine(model.footerLineStart, model.footerLineEnd,
+                    replacePageDetails("footer", model.footer, model.footerLineStart, model.footerLineEnd));
+        }
+
+        if (model.mainframeModified) {
+            String text = model.mainframe.replace("<br>", "\\n");
+            changeLine(model.mainframeLineNumber, model.mainframeLineNumber,
+                    List.of("mainframe " + text));
+        }
+    }
+
+    private List<String> replacePageDetails(String keyword, String content, int startLine, int endLine) {
+        List<String> lines = new ArrayList<>();
+        String indent = IndentatHelper.extractIndentation(sourceLines.get(startLine));
+
+        boolean isMultiline = startLine != endLine;
+
+        if (isMultiline) {
+            lines.add(IndentatHelper.applyIndentation(keyword, indent));
+
+            String[] contentLines = content.split("<br>");
+            for (String line : contentLines) {
+                lines.add(IndentatHelper.applyIndentation(line, indent));
+            }
+
+            lines.add(IndentatHelper.applyIndentation("end " + keyword, indent));
+
+        } else {
+            String text = content.replace("<br>", "\\n");
+            lines.add(IndentatHelper.applyIndentation(keyword + " " + text, indent));
+        }
+
+        return lines;
     }
 
     private void applyReplacements() {
