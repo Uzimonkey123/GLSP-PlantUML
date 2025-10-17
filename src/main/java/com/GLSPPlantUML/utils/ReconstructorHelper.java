@@ -29,7 +29,7 @@ public class ReconstructorHelper {
 
         // No alias, use quotes
         String name = node.getName();
-        if (name.contains(" ") || name.contains(":")) {
+        if (!name.matches("[a-zA-Z0-9_]+")) {
             return "\"" + name + "\"";
         }
 

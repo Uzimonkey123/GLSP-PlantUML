@@ -89,6 +89,8 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                 Collection<Participant> participants = sd.participants();
                 for (Participant participant : participants) {
                     String name = String.join("<br>", participant.getDisplay(false));
+
+                    lineFinder.resetSearch();
                     int participantLine = lineFinder.findParticipantLine(name, participant);
 
                     // Process participant

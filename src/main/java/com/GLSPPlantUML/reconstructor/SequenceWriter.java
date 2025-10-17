@@ -50,6 +50,8 @@ public class SequenceWriter {
 
     private void writeParticipant() {
         for (SequenceNode node : model.participants) {
+            System.err.println("Writing participant " + node.isModified());
+            System.err.println("Has line " + node.hasLine());
             if (!node.isModified()) continue;
 
             if (node.hasLine()) {
@@ -75,6 +77,7 @@ public class SequenceWriter {
 
     private String replaceParticipant(SequenceNode node) {
         StringBuilder sb = new StringBuilder();
+        System.err.println("Replace participant " + node.isModified());
 
         String source = node.getRawSourceText();
         String indent = IndentatHelper.extractIndentation(source);
@@ -90,7 +93,29 @@ public class SequenceWriter {
             sb.append(node.getType().toLowerCase()).append(" ");
         }
 
-        sb.append(ReconstructorHelper.getParticipant(node));
+        String alias = ReconstructorHelper.extractAlias(source);
+
+        if (alias != null && !alias.isEmpty()) {
+            String name = node.getName();
+            if (!name.matches("[a-zA-Z0-9_]+")) {
+                sb.append("\"").append(name).append("\"");
+
+            } else {
+                sb.append(name);
+            }
+            sb.append(" as ").append(alias);
+
+        } else {
+            sb.append(ReconstructorHelper.getParticipant(node));
+        }
+
+        if (node.getOrder() != 0) {
+            sb.append(" order ").append(node.getOrder());
+        }
+
+        if (!node.getBackground().equals("#5d4949")) {
+            sb.append(" ").append(node.getBackground());
+        }
 
         return IndentatHelper.applyIndentation(sb.toString(), indent);
     }
