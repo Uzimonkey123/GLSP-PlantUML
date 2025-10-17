@@ -1,6 +1,6 @@
 package com.GLSPPlantUML.storage;
 
-import com.GLSPPlantUML.model.PlantUMLModelState;
+import com.GLSPPlantUML.state.PlantUMLModelState;
 import com.GLSPPlantUML.parser.PlantUMLParser;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +35,7 @@ public abstract class AbstractPlantUMLStorage<M, S extends PlantUMLModelState<M>
         }
 
         String uriString = uriOpt.get();
+        modelState.setSourceUri(uriString);
         final File file = new File(java.net.URI.create(uriString));
 
         try {
