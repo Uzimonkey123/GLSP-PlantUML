@@ -1,15 +1,8 @@
 package com.GLSPPlantUML.utils;
 
+import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
+
 public class ReconstructorHelper {
-    public static void appendQuotedName(StringBuilder sb, String name) {
-        if (name.contains(" ") || name.contains(":")) {
-            sb.append("\"").append(name).append("\"");
-
-        } else {
-            sb.append(name);
-        }
-    }
-
     public static String extractAlias(String sourceLine) {
         if (sourceLine == null || !sourceLine.contains(" as ")) {
             return null;
@@ -26,5 +19,48 @@ public class ReconstructorHelper {
         }
 
         return afterAs;
+    }
+
+    public static String getParticipant(SequenceNode node) {
+        String alias = extractAlias(node.getRawSourceText());
+        if (alias != null && !alias.isEmpty()) {
+            return alias;
+        }
+
+        // No alias, use quotes
+        String name = node.getName();
+        if (name.contains(" ") || name.contains(":")) {
+            return "\"" + name + "\"";
+        }
+
+        // Use regular name
+        return name;
+    }
+
+    public static String extractLifeEventSymbol(String line) {
+        if (line == null || line.isEmpty()) return "";
+
+        int colonIndex = line.indexOf(':');
+        if (colonIndex == -1) return "";
+
+        String beforeColon = line.substring(0, colonIndex).trim();
+        String[] symbols = {"--++", "++", "--", "!!", "**"};
+
+        for (String symbol : symbols) {
+            int symbolPos = beforeColon.lastIndexOf(symbol);
+            if (symbolPos > 0) {
+                String afterSymbol = beforeColon.substring(symbolPos + symbol.length()).trim();
+
+                // Check for color code
+                if (afterSymbol.startsWith("#")) {
+                    String colorCode = afterSymbol.split("\\s+")[0];
+                    return symbol + " " + colorCode;
+                } else if (afterSymbol.isEmpty()) {
+                    return symbol;
+                }
+            }
+        }
+
+        return "";
     }
 }

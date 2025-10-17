@@ -35,6 +35,7 @@ public class SequenceWriter {
         newLines.clear();
 
         writeParticipant();
+        writeMessage();
 
         applyReplacements();
         saveAtomic();
@@ -55,9 +56,11 @@ public class SequenceWriter {
             }
 
             for (SequenceMessage message : model.messages) {
-                if ((message.getFrom().equals(node) || message.getTo().equals(node)) &&
-                        message.hasLine()) {
-                    // TODO: Message that has this node
+                if (message.hasLine() && ((message.getFrom() != null && message.getFrom().equals(node)) ||
+                     (message.getTo() != null && message.getTo().equals(node))))
+                {
+                    changeLine(message.getSourceLineStart(), message.getSourceLineEnd(),
+                            List.of(replaceMessage(message)));
                 }
             }
 
@@ -86,13 +89,134 @@ public class SequenceWriter {
             sb.append(node.getType().toLowerCase()).append(" ");
         }
 
-        ReconstructorHelper.appendQuotedName(sb, node.getName());
-        String alias = ReconstructorHelper.extractAlias(source);
-        if (alias != null && !alias.isEmpty()) {
-            sb.append(" as ").append(alias);
-        }
+        sb.append(ReconstructorHelper.getParticipant(node));
 
         return IndentatHelper.applyIndentation(sb.toString(), indent);
+    }
+
+    private void writeMessage() {
+        for (SequenceMessage message : model.messages) {
+            if (message.hasLine() && message.isModified()) {
+                changeLine(message.getSourceLineStart(), message.getSourceLineEnd(), List.of(replaceMessage(message)));
+            }
+        }
+    }
+
+    private String replaceMessage(SequenceMessage message) {
+        String sourceText = message.getRawSourceText();
+        String indent = IndentatHelper.extractIndentation(sourceText);
+        String type = message.getType();
+
+        switch (type) {
+            case "edge:delay" -> {
+                return IndentatHelper.applyIndentation("..." + message.getMessage() + "...", indent);
+            }
+            case "edge:divider" -> {
+                return IndentatHelper.applyIndentation("==" + message.getMessage() + "==", indent);
+            }
+        }
+
+        if (lineMap.getLineInfo(message.getSourceLineStart()).type == LineMapper.LineType.RETURN) {
+            return IndentatHelper.applyIndentation("return " + message.getMessage(), indent);
+        }
+
+        return IndentatHelper.applyIndentation(regularMessage(message), indent);
+    }
+
+    private String regularMessage(SequenceMessage message) {
+        StringBuilder sb = new StringBuilder();
+
+        if (message.isParallel()) sb.append("& ");
+
+        if (message.getFrom() != null) {
+            sb.append(ReconstructorHelper.getParticipant(message.getFrom())).append(" ");
+        } else if (message.getFromId().equals("[")) {
+            sb.append(message.isShort() ? "?" : "[");
+        }
+
+        sb.append(messageArrow(message));
+
+        if (message.getTo() != null) {
+            sb.append(" ");
+            sb.append(ReconstructorHelper.getParticipant(message.getTo())).append(" ");
+        } else if (message.getToId().equals("]")) {
+            sb.append(message.isShort() ? "?" : "]").append(" ");
+        }
+
+        sb.append(ReconstructorHelper.extractLifeEventSymbol(message.getRawSourceText()));
+        sb.append(": ");
+        sb.append(message.getMessage());
+
+        return sb.toString();
+    }
+
+    private String messageArrow(SequenceMessage message) {
+        StringBuilder sb = new StringBuilder();
+
+        String startPart = message.getStartPart();
+        String endPart = message.getEndPart();
+
+        if (message.getStartDecor().equals("circle")) sb.append("o");
+
+        String startHead = message.getStartHead();
+        switch (startPart) {
+            case "full" -> {
+                switch (startHead) {
+                    case "block" -> sb.append("<");
+                    case "open" -> sb.append("<<");
+                    case "cross" -> sb.append("x");
+                }
+            }
+            case "bottom" -> {
+                if (startHead.equals("open")) {
+                    sb.append("//");
+                } else if (startHead.equals("block")) {
+                    sb.append("/");
+                }
+            }
+            case "top" -> {
+                if (startHead.equals("open")) {
+                    sb.append("\\\\");
+                } else if (startHead.equals("block")) {
+                    sb.append("\\");
+                }
+            }
+        }
+
+        sb.append(message.isDotted() ? "--" : "-");
+        String color = message.getColor();
+        if (color != null && !color.equals("black")) {
+            sb.append("[").append(color).append("]");
+        }
+
+        String endHead = message.getEndHead();
+        switch (endPart) {
+            case "full" -> {
+                switch (endHead) {
+                    case "block" -> sb.append(">");
+                    case "open" -> sb.append(">>");
+                    case "cross" -> sb.append("x");
+                }
+            }
+            case "bottom" -> {
+                if (endHead.equals("open")) {
+                    sb.append("//");
+                } else if (endHead.equals("block")) {
+                    sb.append("/");
+                }
+            }
+            case "top" -> {
+                if (endHead.equals("open")) {
+                    sb.append("\\\\");
+                } else if (endHead.equals("block")) {
+                    sb.append("\\");
+                }
+            }
+        }
+
+        if (message.getEndDecor().equals("circle")) sb.append("o");
+
+        return sb.toString();
     }
 
     private void applyReplacements() {
