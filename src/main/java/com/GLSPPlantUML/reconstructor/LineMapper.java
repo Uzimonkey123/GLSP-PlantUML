@@ -62,6 +62,9 @@ public class LineMapper {
 
             // Get first word for switch
             String firstWord = trimmed.split("\\s+")[0].toLowerCase();
+            if (firstWord.contains("#")) {
+                firstWord = firstWord.substring(0, firstWord.indexOf("#"));
+            }
 
             return switch (firstWord) {
                 case "'", "/'" -> LineType.COMMENT;
@@ -111,7 +114,7 @@ public class LineMapper {
         COMMENT,
         START_UML,
         END_UML,
-        PARTICIPANT,
+        PARTICIPANT, // TODO: Fix alias, spots
         MESSAGE,
         DIVIDER,
         DELAY,
@@ -122,7 +125,7 @@ public class LineMapper {
         GROUP_END,
         ANCHOR,
         ACTIVATE, // TODO Participant name rewrite
-        DEACTIVATE,
+        DEACTIVATE, // TODO
         DESTROY, // TODO
         RETURN,
         CREATE,

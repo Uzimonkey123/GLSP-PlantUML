@@ -312,13 +312,20 @@ public class SequenceWriter {
         String indent = IndentatHelper.extractIndentation(source);
 
         if (group.isGroup()) {
-            sb.append("group ").append(group.getLabel());
+            sb.append("group");
+            if (!group.getElementColor().equals("grey")) sb.append(group.getElementColor());
+            if (!group.getBackColor().equals("none")) sb.append(" ").append(group.getBackColor());
+            sb.append(" ").append(group.getLabel());
+
             if (group.getComment() != null && !group.getComment().isEmpty()) {
                 sb.append(" [").append(group.getComment()).append("]");
             }
 
         } else {
             sb.append(group.getLabel());
+            if (!group.getElementColor().equals("grey")) sb.append(group.getElementColor());
+            if (!group.getBackColor().equals("none")) sb.append(" ").append(group.getBackColor());
+
             if (group.getComment() != null && !group.getComment().isEmpty()) {
                 sb.append(" ").append(group.getComment());
             }
