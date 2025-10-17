@@ -64,7 +64,7 @@ public class LineMapper {
             String firstWord = trimmed.split("\\s+")[0].toLowerCase();
 
             return switch (firstWord) {
-                case "'", "/*" -> LineType.COMMENT;
+                case "'", "/'" -> LineType.COMMENT;
                 case "@startuml" -> LineType.START_UML;
                 case "@enduml" -> LineType.END_UML;
                 case "participant", "actor", "boundary", "control",
@@ -96,10 +96,11 @@ public class LineMapper {
 
         private boolean containsArrow(String line) {
             String arrowPattern =
-                    "[ox]?" +
+                    "(\\?|\\[|[ox])?" +
                     "[-\\\\/.]+" +
+                    "(\\[#[^\\]]+\\])?" +
                     "[><]+" +
-                    "[ox]?";
+                    "(\\?|\\]|[ox])?";
 
             return line.matches(".*" + arrowPattern + ".*");
         }

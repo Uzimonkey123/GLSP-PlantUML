@@ -142,12 +142,12 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     private int getEventLine(Event event) {
         return switch (event) {
             case MessageExo me -> {
-                String label = String.join("<br>", me.getLabel());
+                String label = String.join("\\n", me.getLabel());
                 int line = lineFinder.findMessageLine(label, event);
                 yield line >= 0 ? line : lineFinder.findReturnLine(label, event);
             }
             case Message m -> {
-                String label = String.join("<br>", m.getLabel());
+                String label = String.join("\\n", m.getLabel());
                 int line = lineFinder.findMessageLine(label, event);
                 yield line >= 0 ? line : lineFinder.findReturnLine(label, event);
             }
