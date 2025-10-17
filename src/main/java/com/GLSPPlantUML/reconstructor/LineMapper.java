@@ -44,12 +44,16 @@ public class LineMapper {
         private LineType determineType(String trimmed) {
             if (trimmed.isEmpty()) return LineType.EMPTY;
 
-            if (trimmed.equals("end ref")) {
-                return LineType.END_REFERENCE;
-            }
-
-            if (trimmed.equals("end")) {
-                return LineType.GROUP_END;
+            switch (trimmed) {
+                case "end ref" -> {
+                    return LineType.END_REFERENCE;
+                }
+                case "end box" -> {
+                    return LineType.END_ENGLOBER;
+                }
+                case "end" -> {
+                    return LineType.GROUP_END;
+                }
             }
 
             if (trimmed.contains("{") && trimmed.contains("}") && trimmed.contains("<->")) {
@@ -73,7 +77,15 @@ public class LineMapper {
                 case "destroy" -> LineType.DESTROY;
                 case "return" -> LineType.RETURN;
                 case "create" -> LineType.CREATE;
+                case "note", "hnote", "rnote" -> LineType.NOTE;
+                case "endnote", "endhnote", "endrnote" -> LineType.END_NOTE;
+                case "header" -> LineType.HEADER;
+                case "title" -> LineType.TITLE;
+                case "footer" -> LineType.FOOTER;
+                case "mainframe" -> LineType.MAINFRAME;
+                case "box" -> LineType.ENGLOBER;
                 default -> {
+                    if (trimmed.equals("end note")) yield LineType.END_NOTE;
                     if (trimmed.startsWith("==") && trimmed.endsWith("==")) yield LineType.DIVIDER;
                     if (trimmed.startsWith("...") && trimmed.endsWith("...")) yield LineType.DELAY;
                     if (containsArrow(trimmed)) yield LineType.MESSAGE;
@@ -108,11 +120,19 @@ public class LineMapper {
         GROUP_ELSE,
         GROUP_END,
         ANCHOR,
-        ACTIVATE,
+        ACTIVATE, // TODO Participant name rewrite
         DEACTIVATE,
-        DESTROY,
+        DESTROY, // TODO
         RETURN,
         CREATE,
+        NOTE, // TODO
+        END_NOTE, // TODO
+        HEADER,
+        TITLE,
+        FOOTER,
+        ENGLOBER, // TODO
+        END_ENGLOBER, // TODO
+        MAINFRAME, // TODO
         UNKNOWN
     }
 }

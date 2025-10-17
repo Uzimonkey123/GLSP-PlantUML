@@ -1,6 +1,8 @@
 package com.GLSPPlantUML.model.SequenceParts;
 
-public class SequenceNote {
+import com.GLSPPlantUML.reconstructor.SourceElement;
+
+public class SequenceNote extends SourceElement {
     private final String id;
     private String label;
     private final String position;
@@ -25,6 +27,10 @@ public class SequenceNote {
     }
 
     public void setLabel(String label) {
+        if (this.label != null && !this.label.equals(label)) {
+            setModified();
+        }
+
         this.label = label;
     }
 
