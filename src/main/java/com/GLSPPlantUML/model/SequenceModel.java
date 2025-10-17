@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.model;
 
 import com.GLSPPlantUML.model.SequenceParts.*;
+import com.GLSPPlantUML.reconstructor.LineMapper;
 
 import java.util.*;
 
@@ -21,8 +22,17 @@ public class SequenceModel {
     public boolean invisibleNodes = false;
     public boolean isMainframe = false;
 
+    LineMapper lineMapper;
 
     public SequenceModel() {}
+
+    public void setMapper(LineMapper lineMapper) {
+        this.lineMapper = lineMapper;
+    }
+
+    public LineMapper getLineMapper() {
+        return lineMapper;
+    }
 
     public SequenceNode getNode(String id) {
         return participants.stream()

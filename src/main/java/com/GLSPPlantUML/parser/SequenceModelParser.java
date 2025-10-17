@@ -135,6 +135,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             }
         }
 
+        model.setMapper(lineMapper);
         return model;
     }
 
