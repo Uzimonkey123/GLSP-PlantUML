@@ -1,6 +1,7 @@
 package com.GLSPPlantUML.reconstructor;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
 import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
@@ -36,6 +37,7 @@ public class SequenceWriter {
 
         writeParticipant();
         writeMessage();
+        writeAnchor();
 
         applyReplacements();
         saveAtomic();
@@ -114,6 +116,9 @@ public class SequenceWriter {
             case "edge:divider" -> {
                 return IndentatHelper.applyIndentation("==" + message.getMessage() + "==", indent);
             }
+            case "edge:ref" -> {
+                return IndentatHelper.applyIndentation(referenceMessage(message), indent);
+            }
         }
 
         if (lineMap.getLineInfo(message.getSourceLineStart()).type == LineMapper.LineType.RETURN) {
@@ -127,6 +132,8 @@ public class SequenceWriter {
         StringBuilder sb = new StringBuilder();
 
         if (message.isParallel()) sb.append("& ");
+        if (message.isAnchorStart()) sb.append("{start} ");
+        if (message.isAnchorEnd()) sb.append("{end} ");
 
         if (message.getFrom() != null) {
             sb.append(ReconstructorHelper.getParticipant(message.getFrom())).append(" ");
@@ -146,6 +153,35 @@ public class SequenceWriter {
         sb.append(ReconstructorHelper.extractLifeEventSymbol(message.getRawSourceText()));
         sb.append(": ");
         sb.append(message.getMessage());
+
+        return sb.toString();
+    }
+
+    private String referenceMessage(SequenceMessage message) {
+        StringBuilder sb = new StringBuilder("ref over ");
+
+        if (message.getFrom() != null) {
+            sb.append(ReconstructorHelper.getParticipant(message.getFrom()));
+        }
+
+        if (message.getTo() != null && !message.getFrom().equals(message.getTo())) {
+            sb.append(", ");
+            sb.append(ReconstructorHelper.getParticipant(message.getTo()));
+        }
+
+        String msgText = message.getMessage();
+        // Check if reference is single line or multiline type
+        if (msgText != null && msgText.contains("<br>")) {
+            sb.append("\n");
+            for (String line : msgText.split("<br>")) {
+                sb.append("  ").append(line).append("\n");
+            }
+
+            sb.append("end ref");
+
+        } else {
+            sb.append(" : ").append(msgText);
+        }
 
         return sb.toString();
     }
@@ -217,6 +253,37 @@ public class SequenceWriter {
         if (message.getEndDecor().equals("circle")) sb.append("o");
 
         return sb.toString();
+    }
+
+    private void writeAnchor() {
+        for (SequenceAnchor anchor : model.anchors) {
+            if (anchor.hasLine() && anchor.isModified()) {
+                changeLine(anchor.getSourceLineStart(), anchor.getSourceLineEnd(), List.of(replaceAnchor(anchor)));
+            }
+        }
+    }
+
+    private String replaceAnchor(SequenceAnchor anchor) {
+        StringBuilder sb = new StringBuilder();
+
+        String source = anchor.getRawSourceText();
+        String indent = IndentatHelper.extractIndentation(source);
+
+        if (source != null && !source.isEmpty()) {
+            int firstBrace = source.indexOf('{');
+            int secondBrace = source.indexOf('}', firstBrace);
+            int thirdBrace = source.indexOf('{', secondBrace);
+            int fourthBrace = source.indexOf('}', thirdBrace);
+
+            if (firstBrace >= 0 && fourthBrace >= 0) {
+                String startMarker = source.substring(firstBrace, secondBrace + 1);
+                String endMarker = source.substring(thirdBrace, fourthBrace + 1);
+                String content = startMarker + " <-> " + endMarker + " : " + anchor.getLabel();
+                return IndentatHelper.applyIndentation(content, indent);
+            }
+        }
+
+        return IndentatHelper.applyIndentation("{start} <-> {end} : " + anchor.getLabel(), indent);
     }
 
     private void applyReplacements() {
