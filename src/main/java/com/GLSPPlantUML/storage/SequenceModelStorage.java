@@ -1,6 +1,8 @@
 package com.GLSPPlantUML.storage;
 
 import com.GLSPPlantUML.model.SequenceModel;
+import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
+import com.GLSPPlantUML.model.SequenceParts.SequenceGroup;
 import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
 import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
 import com.GLSPPlantUML.reconstructor.SequenceWriter;
@@ -34,6 +36,8 @@ public class SequenceModelStorage extends AbstractPlantUMLStorage<SequenceModel,
             // Clear modification flags // TODO: Add rest
             model.participants.forEach(SequenceNode::clearModified);
             model.messages.forEach(SequenceMessage::clearModified);
+            model.anchors.forEach(SequenceAnchor::clearModified);
+            model.groups.forEach(SequenceGroup::clearModified);
 
         } catch (IOException e) {
             System.err.println("Error: Failed to save model: " + e.getMessage());

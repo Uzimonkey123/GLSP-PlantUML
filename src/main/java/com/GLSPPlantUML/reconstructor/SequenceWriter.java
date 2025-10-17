@@ -1,10 +1,7 @@
 package com.GLSPPlantUML.reconstructor;
 
 import com.GLSPPlantUML.model.SequenceModel;
-import com.GLSPPlantUML.model.SequenceParts.SequenceAnchor;
-import com.GLSPPlantUML.model.SequenceParts.SequenceLifeEvent;
-import com.GLSPPlantUML.model.SequenceParts.SequenceMessage;
-import com.GLSPPlantUML.model.SequenceParts.SequenceNode;
+import com.GLSPPlantUML.model.SequenceParts.*;
 import com.GLSPPlantUML.utils.IndentatHelper;
 import com.GLSPPlantUML.utils.NewLine;
 import com.GLSPPlantUML.utils.ReconstructorHelper;
@@ -38,6 +35,7 @@ public class SequenceWriter {
         writeParticipant();
         writeMessage();
         writeAnchor();
+        writeGroup();
 
         applyReplacements();
         saveAtomic();
@@ -284,6 +282,60 @@ public class SequenceWriter {
         }
 
         return IndentatHelper.applyIndentation("{start} <-> {end} : " + anchor.getLabel(), indent);
+    }
+
+    private void writeGroup() {
+        for (SequenceGroup group : model.groups) {
+            if (!group.isModified()) continue;
+
+            // Group start
+            changeLine(group.getSourceLineStart(), group.getSourceLineStart(), List.of(replaceGroupStart(group)));
+
+            // Group else
+            List<Integer> separatorLines = group.getSeparatorLineNumbers();
+            List<String> separatorLabels = group.getSeparatorLabel();
+
+            for (int i = 0; i < separatorLines.size(); i++) {
+                int line = separatorLines.get(i);
+                String label = separatorLabels.get(i);
+                String sourceLine = sourceLines.get(line);
+
+                changeLine(line, line, List.of(replaceGroupElse(label, sourceLine)));
+            }
+        }
+    }
+
+    private String replaceGroupStart(SequenceGroup group) {
+        StringBuilder sb = new StringBuilder();
+
+        String source = group.getRawSourceText();
+        String indent = IndentatHelper.extractIndentation(source);
+
+        if (group.isGroup()) {
+            sb.append("group ").append(group.getLabel());
+            if (group.getComment() != null && !group.getComment().isEmpty()) {
+                sb.append(" [").append(group.getComment()).append("]");
+            }
+
+        } else {
+            sb.append(group.getLabel());
+            if (group.getComment() != null && !group.getComment().isEmpty()) {
+                sb.append(" ").append(group.getComment());
+            }
+        }
+
+        return IndentatHelper.applyIndentation(sb.toString(), indent);
+    }
+
+    private String replaceGroupElse(String label, String source) {
+        StringBuilder sb = new StringBuilder("else");
+        String indent = IndentatHelper.extractIndentation(source);
+
+        if (label != null && !label.isEmpty()) {
+            sb.append(" ").append(label);
+        }
+
+        return IndentatHelper.applyIndentation(sb.toString(), indent);
     }
 
     private void applyReplacements() {
