@@ -54,10 +54,6 @@ public class SequenceNode extends SourceElement {
         return originalName;
     }
 
-    public boolean isNameModified() {
-        return !this.name.equals(this.originalName) || isModified();
-    }
-
     @Override
     public void clearModified() {
         super.clearModified();
