@@ -75,6 +75,17 @@ public class LineFinder {
         return findLine(LineMapper.LineType.CREATE, participantName, event);
     }
 
+    public int findEngloberLine(String boxName, Object event) {
+        // Save searchFrom index because englober is in participant
+        int savedSearchFrom = searchFrom;
+        searchFrom = 0;
+
+        int result = findLine(LineMapper.LineType.ENGLOBER, boxName, event);
+
+        searchFrom = savedSearchFrom;
+        return result;
+    }
+
     private int findLine(LineMapper.LineType type, String searchText, Object event) {
         List<LineMapper.LineInfo> allLines = lineMapper.getLineInfos();
         int totalLines = allLines.size();

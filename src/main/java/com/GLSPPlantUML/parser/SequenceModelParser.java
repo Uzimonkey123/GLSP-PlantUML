@@ -233,7 +233,11 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
             boolean alreadyAdded = model.englobers.stream().anyMatch(e -> e.getId().equals(id));
             if (!alreadyAdded) {
-                model.englobers.add(new SequenceEnglober(id, title, parentId, color, level));
+                SequenceEnglober newEnglober = new SequenceEnglober(id, title, parentId, color, level);
+                int lineNum = lineFinder.findEngloberLine(title, englober);
+                addMapperInfo(newEnglober, lineNum);
+
+                model.englobers.add(newEnglober);
             }
 
             // Assign the englober ID to the node for further search in factory

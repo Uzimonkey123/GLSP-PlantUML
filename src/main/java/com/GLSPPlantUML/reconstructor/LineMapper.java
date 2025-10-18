@@ -146,8 +146,8 @@ public class LineMapper {
         END_TITLE,
         FOOTER,
         END_FOOTER,
-        ENGLOBER, // TODO
-        END_ENGLOBER, // TODO
+        ENGLOBER,
+        END_ENGLOBER,
         MAINFRAME,
         UNKNOWN
     }

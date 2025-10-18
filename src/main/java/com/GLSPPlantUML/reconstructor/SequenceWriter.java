@@ -37,6 +37,7 @@ public class SequenceWriter {
         writeAnchor();
         writeGroup();
         writePageDetails();
+        writeEnglobers();
 
         applyReplacements();
         saveAtomic();
@@ -288,8 +289,6 @@ public class SequenceWriter {
     }
 
     private String replaceAnchor(SequenceAnchor anchor) {
-        StringBuilder sb = new StringBuilder();
-
         String source = anchor.getRawSourceText();
         String indent = IndentatHelper.extractIndentation(source);
 
@@ -418,12 +417,35 @@ public class SequenceWriter {
         return lines;
     }
 
+    private void writeEnglobers() {
+        for (SequenceEnglober englober : model.englobers) {
+            if (!englober.isModified()) continue;
+
+            changeLine(englober.getSourceLineStart(), englober.getSourceLineStart(), List.of(replaceEnglober(englober)));
+        }
+    }
+
+    private String replaceEnglober(SequenceEnglober englober) {
+        StringBuilder sb = new StringBuilder("box ");
+
+        String source = englober.getRawSourceText();
+        String indent = IndentatHelper.extractIndentation(source);
+
+        sb.append("\"").append(englober.getLabel()).append("\"");
+        if (!englober.getColor().equals("#CCCCCC")) {
+            sb.append(" ").append(englober.getColor());
+        }
+
+        return IndentatHelper.applyIndentation(sb.toString(), indent);
+    }
+
     private void applyReplacements() {
         List<Integer> sortedLines = new ArrayList<>(newLines.keySet());
         sortedLines.sort(Collections.reverseOrder());
 
         for (int startLine : sortedLines) {
             NewLine replacement = newLines.get(startLine);
+            System.err.println("Applying replacement: " + replacement);
 
             // Remove old lines
             for (int i = replacement.endLine(); i >= replacement.startLine(); i--) {
