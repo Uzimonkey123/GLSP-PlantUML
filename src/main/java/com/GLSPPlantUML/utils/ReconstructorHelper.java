@@ -61,6 +61,15 @@ public class ReconstructorHelper {
             }
         }
 
+        // Color for auto activation
+        String[] words = beforeColon.split("\\s+");
+        if (words.length > 0) {
+            String lastWord = words[words.length - 1];
+            if (lastWord.startsWith("#")) {
+                return lastWord;
+            }
+        }
+
         return "";
     }
 }
