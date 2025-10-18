@@ -1,7 +1,9 @@
 package com.GLSPPlantUML.reconstructor;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class LineFinder {
     private final LineMapper lineMapper;
@@ -56,15 +58,15 @@ public class LineFinder {
     }
 
     public int findActivateLine(String participantName, Object event) {
-        return findLine(LineMapper.LineType.ACTIVATE, participantName, event);
+        return findLineFromStart(LineMapper.LineType.ACTIVATE, participantName, event);
     }
 
     public int findDeactivateLine(String participantName, Object event) {
-        return findLine(LineMapper.LineType.DEACTIVATE, participantName, event);
+        return findLineFromStart(LineMapper.LineType.DEACTIVATE, participantName, event);
     }
 
     public int findDestroyLine(String participantName, Object event) {
-        return findLine(LineMapper.LineType.DESTROY, participantName, event);
+        return findLineFromStart(LineMapper.LineType.DESTROY, participantName, event);
     }
 
     public int findReturnLine(String text, Object event) {
@@ -77,12 +79,12 @@ public class LineFinder {
 
     public int findEngloberLine(String boxName, Object event) {
         // Save searchFrom index because englober is in participant
-        int savedSearchFrom = searchFrom;
-        searchFrom = 0;
+        int savedSearchFrom = getCurrentPosition();
+        resetSearch();
 
         int result = findLine(LineMapper.LineType.ENGLOBER, boxName, event);
 
-        searchFrom = savedSearchFrom;
+        setPosition(savedSearchFrom);
         return result;
     }
 
@@ -107,6 +109,40 @@ public class LineFinder {
         }
 
         return -1;
+    }
+
+    private final Set<Integer> usedLifeEventLines = new HashSet<>();
+
+    private int findLineFromStart(LineMapper.LineType type, String searchText, Object event) {
+        List<LineMapper.LineInfo> allLines = lineMapper.getLineInfos();
+        boolean hasSearchText = searchText != null && !searchText.isEmpty();
+
+        for (int i = 0; i < allLines.size(); i++) {
+            LineMapper.LineInfo info = allLines.get(i);
+
+            if (usedLifeEventLines.contains(i)) continue;
+
+            if (info.type == type &&
+                (!hasSearchText || info.originalText.contains(searchText))) {
+
+                if (event != null) {
+                    eventToLineMap.put(event, i);
+                }
+
+                usedLifeEventLines.add(i);
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public int getCurrentPosition() {
+        return searchFrom;
+    }
+
+    public void setPosition(int position) {
+        this.searchFrom = position;
     }
 
     public void resetSearch() {

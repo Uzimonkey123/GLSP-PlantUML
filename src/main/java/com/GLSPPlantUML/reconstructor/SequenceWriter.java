@@ -69,8 +69,22 @@ public class SequenceWriter {
             }
 
             for (SequenceLifeEvent event : node.getLifeEvents()) {
-                if (event.hasLine()) {
-                    // TODO: Life events of this node
+                if (!event.hasLine()) continue;
+
+                int startLine = event.getSourceLineStart();
+                int endLine = event.getSourceLineEnd();
+
+                LineMapper.LineInfo startLineInfo = lineMap.getLineInfo(startLine);
+                if (startLineInfo == null) continue;
+
+                if (startLineInfo.type == LineMapper.LineType.DESTROY) {
+                    changeLine(startLine, endLine, List.of(replaceDestroy(node, event)));
+                } else {
+                    changeLine(startLine, startLine, List.of(replaceActivate(node, event)));
+                }
+
+                if (startLine != endLine) {
+                    changeLine(endLine, endLine, List.of(replaceDeactivate(node, event)));
                 }
             }
         }
@@ -118,6 +132,37 @@ public class SequenceWriter {
             sb.append(" ").append(node.getBackground());
         }
 
+        return IndentatHelper.applyIndentation(sb.toString(), indent);
+    }
+
+    private String replaceDestroy(SequenceNode node, SequenceLifeEvent event) {
+        StringBuilder sb = new StringBuilder("destroy ");
+
+        String source = event.rawSourceText;
+        String indent = IndentatHelper.extractIndentation(source);
+
+        sb.append(ReconstructorHelper.getParticipant(node));
+        return IndentatHelper.applyIndentation(sb.toString(), indent);
+    }
+
+    private String replaceActivate(SequenceNode node, SequenceLifeEvent event) {
+        StringBuilder sb = new StringBuilder("activate ");
+
+        String source = event.rawSourceText;
+        String indent = IndentatHelper.extractIndentation(source);
+
+        sb.append(ReconstructorHelper.getParticipant(node));
+        sb.append(" ").append(event.getBackground());
+        return IndentatHelper.applyIndentation(sb.toString(), indent);
+    }
+
+    private String replaceDeactivate(SequenceNode node, SequenceLifeEvent event) {
+        StringBuilder sb = new StringBuilder("deactivate ");
+
+        String source = event.rawSourceText;
+        String indent = IndentatHelper.extractIndentation(source);
+
+        sb.append(ReconstructorHelper.getParticipant(node));
         return IndentatHelper.applyIndentation(sb.toString(), indent);
     }
 

@@ -39,6 +39,7 @@ public class LineMapper {
             this.originalText = originalText;
             this.trimmedText = originalText.trim();
             this.type = determineType(trimmedText);
+            System.err.println("Type: " + type);
         }
 
         private LineType determineType(String trimmed) {
@@ -133,9 +134,9 @@ public class LineMapper {
         GROUP_ELSE,
         GROUP_END,
         ANCHOR,
-        ACTIVATE, // TODO Participant name rewrite
-        DEACTIVATE, // TODO
-        DESTROY, // TODO
+        ACTIVATE,
+        DEACTIVATE,
+        DESTROY,
         RETURN,
         CREATE,
         NOTE, // TODO

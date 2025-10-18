@@ -42,6 +42,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     // Map of Participant name - activate life event to store life event start for deactivation
     private final Map<String, Stack<Integer>> activationStacks = new HashMap<>();
     private final Map<String, Stack<HColor>> activationColorStacks = new HashMap<>();
+    private final Map<String, Stack<Integer>> activationLineStacks = new HashMap<>();
 
     // Map for storing leaf group attributes to the corresponding parent group (parent = GroupingStart)
     private final Map<GroupingStart, SequenceGroup> groupStack = new HashMap<>();
@@ -104,12 +105,16 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
                     if (event instanceof LifeEvent le) {
                         String participantName = String.join("<br>", le.getParticipant().getDisplay(false));
+                        int savedPosition = lineFinder.getCurrentPosition();
+                        lineFinder.resetSearch();
 
                         switch (le.getType()) {
                             case ACTIVATE -> eventLine = lineFinder.findActivateLine(participantName, event);
                             case DEACTIVATE -> eventLine = lineFinder.findDeactivateLine(participantName, event);
                             case DESTROY -> eventLine = lineFinder.findDestroyLine(participantName, event);
                         }
+
+                        lineFinder.setPosition(savedPosition);
                     }
 
                     // Process event immediately
@@ -512,9 +517,11 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         // Initialize stack for this participant
         activationStacks.putIfAbsent(participant, new Stack<>());
         activationColorStacks.putIfAbsent(participant, new Stack<>());
+        activationLineStacks.putIfAbsent(participant, new Stack<>());
 
         Stack<Integer> messageStack = activationStacks.get(participant);
         Stack<HColor> colorStack = activationColorStacks.get(participant);
+        Stack<Integer> lineStack = activationLineStacks.get(participant);
 
         int index = model.messages.size() - 1;
 
@@ -522,6 +529,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
             case ACTIVATE -> {
                 messageStack.push(index); // Save current index
                 colorStack.push(background); // Save the color
+                lineStack.push(lineNum); // Save activate line num for writer
             }
 
             case DEACTIVATE -> {
@@ -529,13 +537,14 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
                 int startIndex = messageStack.pop(); // Last start for participant is ending first, on top of stack
                 HColor color = colorStack.pop();
+                int activateLine = lineStack.pop();
 
                 // Add life event to the list
                 SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
                 // Set the depth of the life event for offset in factory
                 lifeEvent.setLevel(messageStack.size());
 
-                addMapperInfo(lifeEvent, lineNum);
+                addMapperInfo(lifeEvent, activateLine, lineNum);
 
                 currentNode.addLifeEvent(lifeEvent);
             }
