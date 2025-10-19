@@ -402,6 +402,20 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
                             : note.getColors().getColor(ColorType.BACK).asString();
 
             SequenceNote newNote = new SequenceNote(id, label, position, color, shape);
+
+            int startLine = lineFinder.findNoteLine(null, note);
+            int endLine = startLine;
+
+            if (startLine >= 0) {
+                LineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
+
+                if (info != null && !info.originalText.contains(":")) {
+                    endLine = lineFinder.findNoteEndLine(note);
+                }
+            }
+
+            addMapperInfo(newNote, startLine, endLine);
+
             message.addNotes(newNote);
             model.notes.add(newNote);
         }
@@ -424,6 +438,19 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
 
         SequenceNote newNote = new SequenceNote("note-" + model.notes.size(), label, position, color, shape);
         msg.addNotes(newNote);
+
+        int startLine = lineFinder.findNoteLine(null, note);
+        int endLine = startLine;
+
+        if (startLine >= 0) {
+            LineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
+
+            if (info != null && !info.originalText.contains(":")) {
+                endLine = lineFinder.findNoteEndLine(note);
+            }
+        }
+
+        addMapperInfo(newNote, startLine, endLine);
 
         if (parallel) {
             msg.setParallel(true); // For Y offset in factory

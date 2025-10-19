@@ -88,6 +88,14 @@ public class LineFinder {
         return result;
     }
 
+    public int findNoteLine(String text, Object event) {
+        return findLine(LineMapper.LineType.NOTE, text, event);
+    }
+
+    public int findNoteEndLine(Object event) {
+        return findLine(LineMapper.LineType.END_NOTE, null, event);
+    }
+
     private int findLine(LineMapper.LineType type, String searchText, Object event) {
         List<LineMapper.LineInfo> allLines = lineMapper.getLineInfos();
         int totalLines = allLines.size();
