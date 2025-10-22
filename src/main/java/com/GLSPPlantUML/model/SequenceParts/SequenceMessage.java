@@ -26,7 +26,7 @@ public class SequenceMessage extends SourceElement {
     private boolean anchorStart = false;
     private boolean anchorEnd = false;
     private String anchorId = "";
-    private List<SequenceNote> notes;
+    private List<SequenceNote> notes = new ArrayList<>();
     private boolean parallel = false;
 
     public SequenceMessage(String msgId, boolean creating, SequenceNode from, SequenceNode to, String message,

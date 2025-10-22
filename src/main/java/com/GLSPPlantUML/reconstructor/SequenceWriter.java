@@ -501,10 +501,63 @@ public class SequenceWriter {
         boolean isMultiline = startLine != endLine;
 
         if (isMultiline) {
-
+            changeLine(startLine, endLine - 1, List.of(replaceMultiLineNote(message, note)));
         } else {
             changeLine(startLine, endLine, List.of(replaceSingleLineNote(message, note)));
         }
+    }
+
+    private String replaceMultiLineNote(SequenceMessage message, SequenceNote note) {
+        StringBuilder sb = new StringBuilder();
+
+        String source = note.getRawSourceText();
+        String indent = IndentatHelper.extractIndentation(source);
+
+        String shape = note.getShape();
+        switch (shape) {
+            case "HEXAGONAL" -> sb.append("hnote ");
+            case "BOX" -> sb.append("rnote ");
+            case "NORMAL" -> sb.append("note ");
+        }
+
+        if (source.contains("across")) {
+            sb.append("across");
+        } else {
+            String position = note.getPosition();
+            boolean overSeveral = false;
+            switch (position) {
+                case "LEFT" -> sb.append("left ");
+                case "RIGHT" -> sb.append("right ");
+                case "OVER" -> sb.append("over ");
+                case "OVER_SEVERAL" -> {
+                    overSeveral = true;
+                    sb.append("over ");
+                }
+            }
+
+            if (!message.getType().equals("edge:note")) {
+                sb.append(note.getLabel().replace("<br>", "\n"));
+                return IndentatHelper.applyIndentation(sb.toString(), indent);
+            }
+
+            if (position.equals("LEFT") || position.equals("RIGHT")) {
+                sb.append("of ");
+            }
+
+            sb.append(ReconstructorHelper.getParticipant(message.getFrom()));
+            if (overSeveral) {
+                sb.append(", ").append(ReconstructorHelper.getParticipant(message.getTo()));
+            }
+
+            if (!note.getBackground().equals("#FFFFE0")) {
+                sb.append(" ").append(note.getBackground());
+            }
+
+            sb.append("\n");
+        }
+
+        sb.append(note.getLabel().replace("<br>", "\n"));
+        return IndentatHelper.applyIndentation(sb.toString(), indent);
     }
 
     private String replaceSingleLineNote(SequenceMessage message, SequenceNote note) {
