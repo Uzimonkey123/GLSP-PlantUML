@@ -108,14 +108,21 @@ public class LineMapper {
         }
 
         private boolean containsArrow(String line) {
-            String arrowPattern =
+            String leftToRightPattern =
                     "(\\?|\\[|[ox])?" +
-                    "[-\\\\/.]+" +
-                    "(\\[#[^\\]]+\\])?" +
-                    "[><]+" +
-                    "(\\?|\\]|[ox])?";
+                            "[-\\\\/.]+" +
+                            "(\\[#[^\\]]+\\])?" +
+                            "[><]+" +
+                            "(\\?|\\]|[ox])?";
 
-            return line.matches(".*" + arrowPattern + ".*");
+            String rightToLeftPattern =
+                    "(\\?|\\[|[ox])?" +
+                            "[><]+" +
+                            "(\\[#[^\\]]+\\])?" +
+                            "[-\\\\/.]+" +
+                            "(\\?|\\]|[ox])?";
+
+            return line.matches(".*(" + leftToRightPattern + "|" + rightToLeftPattern + ").*");
         }
     }
 
@@ -139,8 +146,8 @@ public class LineMapper {
         DESTROY,
         RETURN,
         CREATE,
-        NOTE, // TODO
-        END_NOTE, // TODO
+        NOTE,
+        END_NOTE,
         HEADER,
         END_HEADER,
         TITLE,
