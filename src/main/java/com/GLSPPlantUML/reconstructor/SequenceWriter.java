@@ -513,6 +513,10 @@ public class SequenceWriter {
         String source = note.getRawSourceText();
         String indent = IndentatHelper.extractIndentation(source);
 
+        if (note.isParalell()) {
+            sb.append("/ ");
+        }
+
         String shape = note.getShape();
         switch (shape) {
             case "HEXAGONAL" -> sb.append("hnote ");
@@ -565,6 +569,10 @@ public class SequenceWriter {
 
         String source = note.getRawSourceText();
         String indent = IndentatHelper.extractIndentation(source);
+
+        if (note.isParalell()) {
+            sb.append("/ ");
+        }
 
         String shape = note.getShape();
         switch (shape) {

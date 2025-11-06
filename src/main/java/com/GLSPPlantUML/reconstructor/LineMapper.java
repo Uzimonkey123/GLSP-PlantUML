@@ -90,7 +90,7 @@ public class LineMapper {
                 case "destroy" -> LineType.DESTROY;
                 case "return" -> LineType.RETURN;
                 case "create" -> LineType.CREATE;
-                case "note", "hnote", "rnote" -> LineType.NOTE;
+                case "note", "hnote", "rnote", "/" -> LineType.NOTE;
                 case "endnote", "endhnote", "endrnote" -> LineType.END_NOTE;
                 case "header" -> LineType.HEADER;
                 case "title" -> LineType.TITLE;
