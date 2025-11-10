@@ -1,4 +1,4 @@
-package com.GLSPPlantUML;
+package com.diagrams.ClassDiagram;
 
 import org.eclipse.glsp.server.diagram.BaseDiagramConfiguration;
 import org.eclipse.glsp.server.layout.ServerLayoutKind;
