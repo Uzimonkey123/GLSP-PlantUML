@@ -2,6 +2,7 @@ package com.GLSPPlantUML.storage;
 
 import com.GLSPPlantUML.state.PlantUMLModelState;
 import com.GLSPPlantUML.parser.PlantUMLParser;
+import com.diagrams.SequenceDiagram.storage.SequenceModelStorage;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

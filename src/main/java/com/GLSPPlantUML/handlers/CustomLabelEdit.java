@@ -1,8 +1,8 @@
 package com.GLSPPlantUML.handlers;
 
-import com.GLSPPlantUML.model.SequenceModel;
-import com.GLSPPlantUML.model.SequenceParts.*;
-import com.GLSPPlantUML.state.SequenceModelState;
+import com.diagrams.SequenceDiagram.model.SequenceModel;
+import com.diagrams.SequenceDiagram.state.SequenceModelState;
+import com.diagrams.SequenceDiagram.model.SequenceParts.*;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.glsp.graph.GLabel;
 import org.eclipse.glsp.server.features.directediting.ApplyLabelEditOperation;

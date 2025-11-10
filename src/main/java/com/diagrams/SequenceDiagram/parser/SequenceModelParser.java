@@ -1,0 +1,747 @@
+package com.diagrams.SequenceDiagram.parser;
+
+import com.GLSPPlantUML.parser.PlantUMLParser;
+import com.diagrams.SequenceDiagram.reconstructor.LineMapper;
+import com.diagrams.SequenceDiagram.reconstructor.SourceElement;
+import com.diagrams.SequenceDiagram.utils.ErrorMessage;
+import com.diagrams.SequenceDiagram.model.SequenceModel;
+import com.diagrams.SequenceDiagram.state.SequenceModelState;
+import com.diagrams.SequenceDiagram.reconstructor.LineFinder;
+import com.diagrams.SequenceDiagram.model.SequenceParts.*;
+import com.google.inject.Inject;
+import net.sourceforge.plantuml.SourceStringReader;
+import net.sourceforge.plantuml.BlockUml;
+import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.error.PSystemError;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.sequencediagram.*;
+import net.sourceforge.plantuml.skin.ArrowConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.*;
+
+public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
+    private SequenceDiagram sequenceDiagram;
+
+    @Inject
+    SequenceModelState modelState;
+
+    @Inject
+    SequenceModel model;
+
+    private LineFinder lineFinder;
+    private LineMapper lineMapper;
+    private final Map<Object, Integer> eventToLineNumber = new HashMap<>();
+
+    private int anchorCounter = 0; // For counting how many anchors started
+    private final Stack<String> anchorIdStack = new Stack<>(); // To keep track of the nesting of anchors
+
+    // Map of Participant name - activate life event to store life event start for deactivation
+    private final Map<String, Stack<Integer>> activationStacks = new HashMap<>();
+    private final Map<String, Stack<HColor>> activationColorStacks = new HashMap<>();
+    private final Map<String, Stack<Integer>> activationLineStacks = new HashMap<>();
+
+    // Map for storing leaf group attributes to the corresponding parent group (parent = GroupingStart)
+    private final Map<GroupingStart, SequenceGroup> groupStack = new HashMap<>();
+
+    @Inject
+    public SequenceModelParser() {}
+
+    public SequenceModel parse(File file) throws IOException {
+        // Read and store original
+        String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+
+        // Prepare text for PlantUML
+        String text = originalText;
+        if (!text.contains("@startuml")) {
+            text = "@startuml\n" + originalText + "\n@enduml";
+        }
+
+        // Create line mapper and utility
+        lineMapper = new LineMapper(originalText);
+        lineFinder = new LineFinder(lineMapper, eventToLineNumber);
+
+        // Parse with PlantUML
+        SourceStringReader reader = new SourceStringReader(text);
+        List<BlockUml> blocks = reader.getBlocks();
+
+        for (BlockUml block : blocks) {
+            Diagram d = block.getDiagram();
+            if (d instanceof PSystemError) {
+                String error = String.join("<br>", ((PSystemError) d).getPureAsciiFormatted());
+                modelState.setError(new ErrorMessage(error));
+                return model;
+            }
+
+            if (d instanceof SequenceDiagram sd) {
+                this.sequenceDiagram = sd;
+                model.showFoot = sequenceDiagram.isShowFootbox();
+
+                handleHeader();
+                handleFooter();
+                handleTitle();
+                MainframeHandler();
+
+                lineFinder.resetSearch();
+
+                Collection<Participant> participants = sd.participants();
+                for (Participant participant : participants) {
+                    String name = String.join("<br>", participant.getDisplay(false));
+
+                    lineFinder.resetSearch();
+                    int participantLine = lineFinder.findParticipantLine(name, participant);
+
+                    // Process participant
+                    ParticipantHandler(participant, participantLine);
+                }
+
+                lineFinder.resetSearch(); // Reset for events
+
+                for (Event event : sd.events()) {
+                    int eventLine = getEventLine(event);
+
+                    if (event instanceof LifeEvent le) {
+                        String participantName = String.join("<br>", le.getParticipant().getDisplay(false));
+                        int savedPosition = lineFinder.getCurrentPosition();
+                        lineFinder.resetSearch();
+
+                        switch (le.getType()) {
+                            case ACTIVATE -> eventLine = lineFinder.findActivateLine(participantName, event);
+                            case DEACTIVATE -> eventLine = lineFinder.findDeactivateLine(participantName, event);
+                            case DESTROY -> eventLine = lineFinder.findDestroyLine(participantName, event);
+                        }
+
+                        lineFinder.setPosition(savedPosition);
+                    }
+
+                    // Process event immediately
+                    if (event instanceof GroupingStart gs) GroupingStartHandler(gs, eventLine);
+                    if (event instanceof GroupingLeaf leaf) GroupingLeafHandler(leaf, eventLine);
+                    if (event instanceof MessageExo msg) MessageExoHandler(msg, eventLine);
+                    if (event instanceof Message msg) MessageHandler(msg, eventLine);
+                    if (event instanceof Delay delay) DelayHandler(delay, eventLine);
+                    if (event instanceof Divider div) DividerHandler(div, eventLine);
+                    if (event instanceof LifeEvent le) LifeEventHandler(le, eventLine);
+                    if (event instanceof HSpace hSpace) hSpaceHandler(hSpace);
+                    if (event instanceof Reference reference) ReferenceHandler(reference);
+                    if (event instanceof Note note) SeparateNoteHandler(note, false);
+                    if (event instanceof Notes notes) {
+                        List<Note> noteList = notes.asList();
+                        for (int i = 0; i < noteList.size(); i++) {
+                            Note note = noteList.get(i);
+                            boolean parallel = i > 0;
+                            SeparateNoteHandler(note, parallel);
+                        }
+                    }
+                }
+
+                closeLifeEvents();
+            }
+        }
+
+        model.setMapper(lineMapper);
+        return model;
+    }
+
+    private int getEventLine(Event event) {
+        return switch (event) {
+            case MessageExo me -> {
+                String label = String.join("\\n", me.getLabel());
+                int line = lineFinder.findMessageLine(label, event);
+                yield line >= 0 ? line : lineFinder.findReturnLine(label, event);
+            }
+            case Message m -> {
+                String label = String.join("\\n", m.getLabel());
+                int line = lineFinder.findMessageLine(label, event);
+                yield line >= 0 ? line : lineFinder.findReturnLine(label, event);
+            }
+            case Divider div -> lineFinder.findDividerLine(String.join("<br>", div.getText()), event);
+            case Delay delay -> lineFinder.findDelayLine(String.join("<br>", delay.getText()), event);
+            case GroupingStart gs -> lineFinder.findGroupStartLine(gs.getTitle() != null ? gs.getTitle() : "", event);
+            case GroupingLeaf leaf when leaf.getType() == GroupingType.ELSE ->
+                    lineFinder.findGroupElseLine(leaf.getComment() != null ? leaf.getComment() : "", event);
+            case GroupingLeaf leaf when leaf.getType() == GroupingType.END ->
+                    lineFinder.findGroupEndLine(event);
+            default -> -1;
+        };
+    }
+
+    private void addMapperInfo(SourceElement element, int lineNum) {
+        if (lineNum >= 0) {
+            element.setSourceLines(lineNum, lineNum);
+            LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+            if (info != null) {
+                element.setRawSourceText(info.originalText);
+            }
+        }
+    }
+
+    private void addMapperInfo(SourceElement element, int startLine, int endLine) {
+        if (startLine >= 0) {
+            element.setSourceLines(startLine, endLine);
+            LineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
+            if (info != null) {
+                element.setRawSourceText(info.originalText);
+            }
+        }
+    }
+
+    private void ParticipantHandler(Participant participant, int lineNum) {
+        String name = String.join("<br>", participant.getDisplay(false));
+        String type = participant.getType().toString();
+        int order = participant.getOrder();
+        HColor background = participant.getColors().getColor(ColorType.BACK);
+        SequenceNode node = null;
+        String id = "par-" + model.participants.size();
+
+        if(!hasParticipant(name)) {
+            node = new SequenceNode(id, name, type, order, background, false);
+
+            // Store source info
+            if (lineNum >= 0) { // If lineNum at this point is > 0, explicit declaration
+                node.setSourceLines(lineNum, lineNum);
+                LineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+                if (lineMapper.getLineInfo(lineNum) != null) {
+                    node.setRawSourceText(info.originalText);
+                }
+
+            } else { // Implicit participant declaration
+                int createLine = lineFinder.findCreateLine(name, participant);
+                addMapperInfo(node, createLine);
+            }
+
+            EngloberHandler(node, sequenceDiagram.getEnglober(participant));
+            addParticipants(model.participants, node);
+        }
+
+        if (node != null && participant.getStereotype() != null) {
+            node.setStereotype(true);
+            node.setStereotypeChar(participant.getStereotype().getCharacter());
+            if (participant.getStereotype().getHtmlColor() != null) {
+                node.setCharColor(participant.getStereotype().getHtmlColor().asString());
+            }
+        }
+    }
+
+    private void EngloberHandler(SequenceNode node, ParticipantEnglober englober) {
+        if (englober == null) return;
+
+        for (ParticipantEnglober part : englober.getGenealogy()) {
+            String title = String.join("<br>", part.getTitle());
+            String id = "englober-" + title;
+            String parentId = part.getParent() == null ? null : "englober-" + part.getParent().getTitle().toString().hashCode();
+            String color = part.getBoxColor() != null ? part.getBoxColor().asString() : "#CCCCCC";
+            int level = part.getGenealogy().size() - 1; // Level indicating depth of the box to set offset
+
+            boolean alreadyAdded = model.englobers.stream().anyMatch(e -> e.getId().equals(id));
+            if (!alreadyAdded) {
+                SequenceEnglober newEnglober = new SequenceEnglober(id, title, parentId, color, level);
+                int lineNum = lineFinder.findEngloberLine(title, englober);
+                addMapperInfo(newEnglober, lineNum);
+
+                model.englobers.add(newEnglober);
+            }
+
+            // Assign the englober ID to the node for further search in factory
+            node.addEngloberId(id);
+        }
+    }
+
+    private void GroupingStartHandler(GroupingStart groupStart, int lineNum) {
+        SequenceGroup group = new SequenceGroup(model.messages.size(),
+                                                groupStart.getTitle(),
+                                                groupStart.getComment(),
+                                                groupStart.getLevel());
+
+        addMapperInfo(group, lineNum);
+
+        groupStack.put(groupStart, group);
+        model.groups.add(group);
+
+        if (groupStart.getBackColorGeneral() != null) {
+            group.setBackColor(groupStart.getBackColorGeneral().asString());
+        }
+
+        if (groupStart.getBackColorElement() != null) {
+            group.setElementColor(groupStart.getBackColorElement().asString());
+        }
+    }
+
+    private void GroupingLeafHandler(GroupingLeaf groupLeaf, int lineNum) {
+        GroupingStart parent = groupLeaf.getGroupingStart();
+        if (parent != null) {
+            SequenceGroup seqGroup = groupStack.get(parent);
+            GroupingType type = groupLeaf.getType();
+            if (type == GroupingType.END) {
+                seqGroup.setEndIndex(model.messages.size());
+
+                if (lineNum >= 0 && seqGroup.hasLine()) {
+                    seqGroup.setSourceLines(seqGroup.getSourceLineStart(), lineNum);
+                }
+
+            }
+
+            if (type == GroupingType.ELSE) {
+                seqGroup.addSeparator(model.messages.size());
+
+                if (lineNum >= 0) {
+                    seqGroup.addSeparatorLineNumber(lineNum);
+                }
+
+                if (groupLeaf.getComment() == null) {
+                    seqGroup.addSeparatorLabel("");
+                } else {
+                    seqGroup.addSeparatorLabel(groupLeaf.getComment());
+                }
+            }
+        }
+    }
+
+    private void ReferenceHandler(Reference reference) {
+        SequenceNode firstParticipant = getSequenceNode(reference.getParticipant().getFirst());
+        SequenceNode lastParticipant = getSequenceNode(reference.getParticipant().getLast());
+
+        String label = String.join("<br>", reference.getStrings());
+        int lineNum = lineFinder.findReferenceLine("ref over " + firstParticipant.getName(), reference);
+        int endLine = label.contains("<br>") ? lineFinder.findEndReferenceLine("end ref", reference)
+                                            : lineNum;
+
+        String msgId = "msg-" + model.messages.size();
+
+        SequenceMessage message = new SequenceMessage(msgId, firstParticipant, lastParticipant,
+                                                        label, null, "edge:ref");
+
+        addMapperInfo(message, lineNum, endLine);
+
+        model.messages.add(message);
+    }
+
+    private void MessageExoHandler(MessageExo msg, int lineNum) {
+        SequenceNode participant = getSequenceNode(msg.getParticipant());
+
+        record Direction(SequenceNode from, SequenceNode to, boolean incoming, boolean outgoing) {}
+
+        Direction exoMsg = switch (msg.getType()) {
+            case FROM_LEFT, FROM_RIGHT -> new Direction(null, participant, true, false);
+            case TO_LEFT, TO_RIGHT -> new Direction(participant, null, false, true);
+        };
+
+        boolean isShort = msg.isShortArrow();
+        String num = msg.getMessageNumber();
+        if(num == null) {
+            num = "";
+        }
+
+        String label = String.join(" ", msg.getLabel());
+        ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
+
+        String msgId = "msg-" + model.messages.size();
+
+        SequenceMessage message = new SequenceMessage(
+                msgId, exoMsg.from(), exoMsg.to(), label, arrowConfig, "edge", num,
+                isShort, exoMsg.incoming(), exoMsg.outgoing());
+
+        addMapperInfo(message, lineNum);
+
+        model.messages.add(message);
+
+        if (msg.isParallel()) {
+            message.setParallel(true);
+        }
+
+        MessageNoteHandler(msg, message);
+        model.invisibleNodes = true;
+    }
+
+    private void MessageHandler(Message msg, int lineNum) {
+        SequenceNode from = getSequenceNode(msg.getParticipant1());
+        SequenceNode to = getSequenceNode(msg.getParticipant2());
+
+        String num = msg.getMessageNumber();
+
+        String label = String.join("<br>", msg.getLabel());
+        if(num == null) {
+            num = "";
+        }
+
+        ArrowConfiguration arrowConfig = msg.getArrowConfiguration();
+        boolean isSelf = msg.isSelfMessage();
+
+        String msgId = "msg-" + model.messages.size();
+
+        // Record message
+        SequenceMessage message = new SequenceMessage(msgId, msg.isCreate(), from, to, label, arrowConfig,
+                "edge", num, false, isSelf);
+
+        addMapperInfo(message, lineNum);
+
+        model.messages.add(message);
+
+        if (msg.isParallel()) {
+            message.setParallel(true);
+        }
+
+        MessageNoteHandler(msg, message);
+
+        if (msg.getAnchor() != null) {
+            setupAnchor(msg, from, to);
+        }
+    }
+
+    private void MessageNoteHandler(AbstractMessage msg, SequenceMessage message) {
+        for(Note note : msg.getNoteOnMessages()) {
+            String id = "note-" + model.notes.size();
+            String label = String.join("<br>", note.getDisplay());
+            String position = note.getPosition().toString();
+            String shape = note.getNoteStyle().toString();
+            String color = note.getColors().getColor(ColorType.BACK) == null
+                            ? "#FFFFE0"
+                            : note.getColors().getColor(ColorType.BACK).asString();
+
+            SequenceNote newNote = new SequenceNote(id, label, position, color, shape);
+
+            int startLine = lineFinder.findNoteLine(null, note);
+            int endLine = startLine;
+
+            if (startLine >= 0) {
+                LineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
+
+                if (info != null && !info.originalText.contains(":")) {
+                    endLine = lineFinder.findNoteEndLine(note);
+                }
+            }
+
+            addMapperInfo(newNote, startLine, endLine);
+
+            message.addNotes(newNote);
+            model.notes.add(newNote);
+        }
+    }
+
+    private void SeparateNoteHandler(Note note, boolean parallel) {
+        String id = "msg-note-" + model.messages.size();
+        SequenceNode from = getSequenceNode(note.getParticipant());
+        SequenceNode to = getSequenceNode(note.getParticipant2());
+
+        String position = note.getPosition().toString();
+        String label = String.join("<br>", note.getDisplay());
+        String shape = note.getNoteStyle().toString();
+        String color = note.getColors().getColor(ColorType.BACK) == null
+                ? "#FFFFE0"
+                : note.getColors().getColor(ColorType.BACK).asString();
+
+        SequenceMessage msg = new SequenceMessage(id, from, to, "edge:note");
+        model.messages.add(msg);
+
+        SequenceNote newNote = new SequenceNote("note-" + model.notes.size(), label, position, color, shape);
+        msg.addNotes(newNote);
+
+        int startLine = lineFinder.findNoteLine(null, note);
+        int endLine = startLine;
+
+        if (startLine >= 0) {
+            LineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
+
+            if (info != null && !info.originalText.contains(":")) {
+                endLine = lineFinder.findNoteEndLine(note);
+            }
+        }
+
+        addMapperInfo(newNote, startLine, endLine);
+
+        if (parallel) {
+            msg.setParallel(true); // For Y offset in factory
+            newNote.setParalell(true); // For X offset between nodes in NodeGap
+        }
+
+        model.notes.add(newNote);
+    }
+
+    private void setupAnchor(Message msg, SequenceNode from, SequenceNode to) {
+        if (msg.getAnchor().equals("start")) {
+            // For the start of an anchor create ID and save it on stack,
+            // + set it up in the last message that it connects to.
+            String anchorId = "anchor-" + anchorCounter++;
+            model.messages.getLast().setAnchorStart(true);
+            model.messages.getLast().setAnchorId(anchorId);
+            anchorIdStack.push(anchorId);
+
+        } else if (msg.getAnchor().equals("end")) {
+            if (anchorIdStack.isEmpty()) return;
+
+            // Get the anchor ID from stack and set up the last message as end holder
+            String anchorId = anchorIdStack.pop();
+            model.messages.getLast().setAnchorEnd(true);
+            model.messages.getLast().setAnchorId(anchorId);
+
+            // Get the message from the diagram linked anchors and create the anchor in the model list
+            String anchorLabel = sequenceDiagram.getLinkAnchors().get(model.anchors.size()).getMessage();
+            SequenceAnchor anchor = new SequenceAnchor(from, to, anchorId, anchorLabel);
+
+            int anchorLine = lineFinder.findAnchorLine("start", anchor);
+            if (anchorLine >= 0) {
+                anchor.setSourceLines(anchorLine, anchorLine);
+                LineMapper.LineInfo info = lineMapper.getLineInfo(anchorLine);
+                if (info != null) {
+                    anchor.setRawSourceText(info.originalText);
+                }
+            }
+
+            model.anchors.add(anchor);
+        }
+    }
+
+    private void DelayHandler(Delay delay, int lineNum) {
+        String label = "";
+        if(delay.getText() != null
+            && delay.getText().size() > 0) {
+            label = String.join("<br>", delay.getText());
+        }
+
+        String msgId = "msg-" + model.messages.size();
+
+        SequenceMessage message = new SequenceMessage(msgId, null, null, label,
+                null, "edge:delay");
+
+        addMapperInfo(message, lineNum);
+
+        model.messages.add(message);
+    }
+
+    private void DividerHandler(Divider div, int lineNum) {
+        String label = String.join("<br>", div.getText());
+
+        String msgId = "msg-" + model.messages.size();
+
+        SequenceMessage message = new SequenceMessage(msgId, null, null, label,
+                null, "edge:divider");
+
+        addMapperInfo(message, lineNum);
+
+        model.messages.add(message);
+    }
+
+    private void LifeEventHandler(LifeEvent le, int lineNum) {
+        String participant = String.join("<br>", le.getParticipant().getDisplay(false));
+        HColor background = le.getSpecificColors().getBackColor();
+        SequenceNode currentNode = null;
+
+        // Search for node in the participant list
+        for (SequenceNode node : model.participants) {
+            if (node.getName().equals(participant)) {
+                currentNode = node;
+                break;
+            }
+        }
+
+        if (currentNode == null) {
+            throw new RuntimeException("Error setting node for given life event.");
+        }
+
+        // Initialize stack for this participant
+        activationStacks.putIfAbsent(participant, new Stack<>());
+        activationColorStacks.putIfAbsent(participant, new Stack<>());
+        activationLineStacks.putIfAbsent(participant, new Stack<>());
+
+        Stack<Integer> messageStack = activationStacks.get(participant);
+        Stack<HColor> colorStack = activationColorStacks.get(participant);
+        Stack<Integer> lineStack = activationLineStacks.get(participant);
+
+        int index = model.messages.size() - 1;
+
+        switch (le.getType()) {
+            case ACTIVATE -> {
+                messageStack.push(index); // Save current index
+                colorStack.push(background); // Save the color
+                lineStack.push(lineNum); // Save activate line num for writer
+            }
+
+            case DEACTIVATE -> {
+                if (messageStack.isEmpty()) return;
+
+                int startIndex = messageStack.pop(); // Last start for participant is ending first, on top of stack
+                HColor color = colorStack.pop();
+                int activateLine = lineStack.pop();
+
+                // Add life event to the list
+                SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
+                // Set the depth of the life event for offset in factory
+                lifeEvent.setLevel(messageStack.size());
+
+                addMapperInfo(lifeEvent, activateLine, lineNum);
+
+                currentNode.addLifeEvent(lifeEvent);
+            }
+
+            case DESTROY -> {
+                if (!messageStack.isEmpty()) {
+                    int startIndex = messageStack.pop();
+                    HColor color = colorStack.pop();
+
+                    // Add life event to the list
+                    SequenceLifeEvent lifeEvent = new SequenceLifeEvent(startIndex, index, color);
+                    // Set the depth of the life event for offset in factory
+                    lifeEvent.setLevel(messageStack.size());
+
+                    addMapperInfo(lifeEvent, lineNum);
+
+                    currentNode.addLifeEvent(lifeEvent);
+                }
+
+                // Set the destroy index for the node
+                currentNode.setDestroyIndex(index);
+            }
+
+            case CREATE -> {
+                currentNode.setCreatedNode(true);
+                currentNode.setCreatedIndex(model.messages.size());
+            }
+        }
+    }
+
+    private void closeLifeEvents() {
+        int lastMsg = model.messages.isEmpty() ? 0 : model.messages.size() - 1;
+
+        activationStacks.forEach((participant, starts) -> {
+            Stack<HColor> colors = activationColorStacks.get(participant);
+
+            SequenceNode currentNode = null;
+
+            // Search for node in the participant list
+            for (SequenceNode node : model.participants) {
+                if (node.getName().equals(participant)) {
+                    currentNode = node;
+                    break;
+                }
+            }
+            if (currentNode == null) return;
+
+            while (!starts.isEmpty()) {
+                int startIndex = starts.pop();
+                HColor color  = colors.pop();
+
+                SequenceLifeEvent le = new SequenceLifeEvent(startIndex, lastMsg, color);
+                le.setLevel(starts.size());
+                currentNode.addLifeEvent(le);
+            }
+        });
+    }
+
+    private boolean hasParticipant(String name) {
+        for (SequenceNode node : model.participants) {
+            if (node.getName().equals(name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void addParticipants(List<SequenceNode> participants, SequenceNode node) {
+        for (int i = 0; i < participants.size(); i++) {
+            int existingOrder = participants.get(i).getOrder();
+            if (node.getOrder() < existingOrder) {
+                participants.add(i, node);
+                return;
+            }
+        }
+
+        // Add to last position
+        participants.add(node);
+    }
+
+    private void handleTitle() {
+        model.title = "";
+
+        if (sequenceDiagram.getTitle() != null
+                && sequenceDiagram.getTitle().getDisplay() != null
+                && sequenceDiagram.getTitle().getDisplay().size() > 0) {
+            model.title = String.join("<br>", sequenceDiagram.getTitle().getDisplay());
+
+            int startLine = findLineByType(LineMapper.LineType.TITLE);
+            int endLine = findLineByType(LineMapper.LineType.END_TITLE);
+
+            if (startLine >= 0) {
+                model.titleLineStart = startLine;
+                model.titleLineEnd = endLine >= 0 ? endLine : startLine;
+            }
+        }
+    }
+
+    private void handleHeader() {
+        model.header = "";
+
+        if (sequenceDiagram.getHeader() != null
+                && sequenceDiagram.getHeader().getDisplay() != null
+                && sequenceDiagram.getHeader().getDisplay().size() > 0) {
+            model.header = String.join("<br>", sequenceDiagram.getHeader().getDisplay());
+
+            int startLine = findLineByType(LineMapper.LineType.HEADER);
+            int endLine = findLineByType(LineMapper.LineType.END_HEADER);
+
+            if (startLine >= 0) {
+                model.headerLineStart = startLine;
+                model.headerLineEnd = endLine >= 0 ? endLine : startLine;
+            }
+        }
+    }
+
+    private void handleFooter() {
+        model.footer = "";
+
+        if (sequenceDiagram.getFooter() != null
+                && sequenceDiagram.getFooter().getDisplay() != null
+                && sequenceDiagram.getFooter().getDisplay().size() > 0) {
+            model.footer = String.join("<br>", sequenceDiagram.getFooter().getDisplay());
+
+            int startLine = findLineByType(LineMapper.LineType.FOOTER);
+            int endLine = findLineByType(LineMapper.LineType.END_FOOTER);
+
+            if (startLine >= 0) {
+                model.footerLineStart = startLine;
+                model.footerLineEnd = endLine >= 0 ? endLine : startLine;
+            }
+        }
+    }
+
+    private void MainframeHandler() {
+        model.mainframe = "";
+
+        if (sequenceDiagram.getMainFrame() != null) {
+            model.isMainframe = true;
+            model.mainframe = String.join("<br>", sequenceDiagram.getMainFrame());
+
+            model.mainframeLineNumber = findLineByType(LineMapper.LineType.MAINFRAME);
+        }
+    }
+
+    private void hSpaceHandler(HSpace hspace) {
+        int gapLength = hspace.getPixel();
+
+        model.messageSpaces.put(model.messages.size(), gapLength);
+    }
+
+    private SequenceNode getSequenceNode(Participant participant) {
+        if (participant == null) return null;
+
+        String rawName = String.join("<br>", participant.getDisplay(false));
+        return model.participants.stream()
+                .filter(p -> p.getName().equals(rawName))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private int findLineByType(LineMapper.LineType type) {
+        List<LineMapper.LineInfo> lines = lineMapper.getLineInfos();
+
+        for (LineMapper.LineInfo info : lines) {
+            if (info.type == type) return info.lineNumber;
+        }
+
+        return -1;
+    }
+}

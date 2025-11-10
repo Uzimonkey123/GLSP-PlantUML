@@ -1,0 +1,241 @@
+package com.diagrams.SequenceDiagram.model.SequenceParts;
+
+import com.diagrams.SequenceDiagram.reconstructor.SourceElement;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.skin.ArrowConfiguration;
+import net.sourceforge.plantuml.skin.ArrowDecoration;
+import net.sourceforge.plantuml.skin.ArrowHead;
+import net.sourceforge.plantuml.skin.ArrowPart;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class SequenceMessage extends SourceElement {
+    private final String msgId;
+    private final SequenceNode from;
+    private final SequenceNode to;
+    private String message = "";
+    public ArrowConfiguration arrowConfiguration = null;
+    private String messageType = "";
+    private String numbering = "";
+    private boolean isShort = false;
+    private boolean isSelf = false;
+    private boolean incoming = false;
+    private boolean outgoing = false;
+    private boolean creating = false;
+    private boolean anchorStart = false;
+    private boolean anchorEnd = false;
+    private String anchorId = "";
+    private List<SequenceNote> notes = new ArrayList<>();
+    private boolean parallel = false;
+
+    public SequenceMessage(String msgId, boolean creating, SequenceNode from, SequenceNode to, String message,
+                           ArrowConfiguration arrowConfiguration, String messageType, String numbering,
+                           boolean isShort, boolean isSelf) {
+        this.msgId = msgId;
+        this.from = from;
+        this.to = to;
+        this.message = message;
+        this.arrowConfiguration = arrowConfiguration;
+        this.messageType = messageType;
+        this.isSelf = isSelf;
+        this.creating = creating;
+        this.numbering = numbering;
+        this.isShort = isShort;
+
+        this.notes = new ArrayList<>();
+    }
+
+    public SequenceMessage(String msgId, SequenceNode from, SequenceNode to, String message,
+                           ArrowConfiguration arrowConfiguration, String messageType) {
+        this.msgId = msgId;
+        this.from = from;
+        this.to = to;
+        this.message = message;
+        this.arrowConfiguration = arrowConfiguration;
+        this.messageType = messageType;
+    }
+
+    public SequenceMessage(String msgId, SequenceNode from, SequenceNode to, String message,
+                           ArrowConfiguration arrowConfiguration, String messageType, String numbering,
+                           boolean isShort, boolean incoming, boolean outgoing) {
+        this.msgId = msgId;
+        this.from = from;
+        this.to = to;
+        this.message = message;
+        this.arrowConfiguration = arrowConfiguration;
+        this.messageType = messageType;
+        this.numbering = numbering;
+        this.isShort = isShort;
+        this.incoming = incoming;
+        this.outgoing = outgoing;
+
+        this.notes = new ArrayList<>();
+    }
+
+    public SequenceMessage(String msgId, SequenceNode from, SequenceNode to, String messageType) {
+        this.msgId = msgId;
+        this.from = from;
+        this.to = to;
+        this.messageType = messageType;
+
+        this.notes = new ArrayList<>();
+    }
+
+    public String getMsgId() {
+        return msgId;
+    }
+
+    public String getNumbering() {
+        return numbering;
+    }
+
+    public String getType() {
+        return messageType;
+    }
+
+    private String getHead(ArrowHead arrowHead) {
+        return switch (arrowHead) {
+            case NORMAL -> "block";
+            case ASYNC -> "open";
+            case CROSSX -> "cross";
+            default -> "none";
+        };
+    }
+
+    private String getPart(ArrowPart arrowPart) {
+        return switch (arrowPart) {
+            case BOTTOM_PART -> "bottom";
+            case TOP_PART -> "top";
+            default -> "full";
+        };
+    }
+
+    public SequenceNode getFrom() {
+        return from;
+    }
+
+    public SequenceNode getTo() {
+        return to;
+    }
+
+    public String getFromId() {
+        if (incoming) return "[";
+
+        return from != null ? from.getId() : null;
+    }
+
+    public String getToId() {
+        if (outgoing) return "]";
+
+        return to != null ? to.getId() : null;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        if (this.message != null && !this.message.equals(message)) {
+            setModified();
+        }
+
+        this.message = message;
+    }
+
+    public boolean isDotted() {
+        return arrowConfiguration.isDotted();
+    }
+
+    public String getStartHead() {
+        return this.getHead(arrowConfiguration.getDressing1().getHead());
+    }
+
+    public String getEndHead() {
+        return this.getHead(arrowConfiguration.getDressing2().getHead());
+    }
+
+    public String getStartPart() {
+        return this.getPart(arrowConfiguration.getDressing1().getPart());
+    }
+
+    public String getEndPart() {
+        return this.getPart(arrowConfiguration.getDressing2().getPart());
+    }
+
+    public String getStartDecor() {
+        return arrowConfiguration.getDecoration1() == ArrowDecoration.CIRCLE ? "circle" : "none";
+    }
+
+    public String getEndDecor() {
+        return arrowConfiguration.getDecoration2() == ArrowDecoration.CIRCLE ? "circle" : "none";
+    }
+
+    public boolean isSelf() {
+        return this.isSelf;
+    }
+
+    public String getColor() {
+        HColor color = arrowConfiguration.getColor();
+        if (color == null) {
+            return "black";
+        }
+
+        return color.asString();
+    }
+
+    public String decideWay() {
+        if (this.incoming) return "incoming";
+        if (this.outgoing) return "outgoing";
+
+        return "normal";
+    }
+
+    public boolean isShort() {
+        return this.isShort;
+    }
+
+    public boolean isCreating() {
+        return this.creating;
+    }
+
+    public void setAnchorStart(boolean anchorStart) {
+        this.anchorStart = anchorStart;
+    }
+
+    public void setAnchorEnd(boolean anchorEnd) {
+        this.anchorEnd = anchorEnd;
+    }
+
+    public boolean isAnchorStart() {
+        return this.anchorStart;
+    }
+
+    public boolean isAnchorEnd() {
+        return this.anchorEnd;
+    }
+
+    public String getAnchorId() {
+        return this.anchorId;
+    }
+
+    public void setAnchorId(String anchorId) {
+        this.anchorId = anchorId;
+    }
+
+    public List<SequenceNote> getNotes() {
+        return this.notes;
+    }
+
+    public void addNotes(SequenceNote note) {
+        this.notes.add(note);
+    }
+
+    public boolean isParallel() {
+        return this.parallel;
+    }
+
+    public void setParallel(boolean parallel) {
+        this.parallel = parallel;
+    }
+}
