@@ -6,10 +6,10 @@ import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.diagrams.ClassDiagram.ClassDiagramConfiguration;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.state.ClassModelState;
+import com.diagrams.ClassDiagram.storage.ClassModelStorage;
 import com.diagrams.SequenceDiagram.factory.SequenceModelFactory;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.parser.SequenceModelParser;
-import com.diagrams.SequenceDiagram.storage.SequenceModelStorage;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -38,7 +38,7 @@ public class ClassDiagramModule extends DiagramModule {
     @Override
     protected Class<? extends SourceModelStorage> bindSourceModelStorage() {
         System.err.println("ClassDiagramModule.bindSourceModelStorage");
-        return SequenceModelStorage.class;
+        return ClassModelStorage.class;
     }
 
     @Override
