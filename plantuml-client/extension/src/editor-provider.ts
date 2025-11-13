@@ -5,6 +5,7 @@ import {
   GlspEditorProvider,
   GlspVscodeConnector,
 } from '@eclipse-glsp/vscode-integration';
+import parseDiagramType from "./diagramTypeParser";
 
 export default class PumlEditorProvider extends GlspEditorProvider {
   diagramType = 'sequence-diagram';
@@ -14,6 +15,16 @@ export default class PumlEditorProvider extends GlspEditorProvider {
     protected override readonly glspVscodeConnector: GlspVscodeConnector
   ) {
     super(glspVscodeConnector);
+  }
+
+  async resolveCustomEditor(
+      document: vscode.CustomDocument,
+      webviewPanel: vscode.WebviewPanel,
+      token: vscode.CancellationToken
+  ): Promise<void> {
+      this.diagramType = await parseDiagramType(document);
+
+      return super.resolveCustomEditor(document, webviewPanel, token);
   }
 
   setUpWebview(
