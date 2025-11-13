@@ -80,10 +80,4 @@ public class SequenceDiagramModule extends DiagramModule {
         bind(new TypeLiteral<PlantUMLParser<SequenceModel>>() {})
                 .to(SequenceModelParser.class);
     }
-
-    @Provides
-    @Singleton
-    public SequenceModel provideSequenceModel(SequenceModelState modelState) {
-        return modelState.getModel();
-    }
 }

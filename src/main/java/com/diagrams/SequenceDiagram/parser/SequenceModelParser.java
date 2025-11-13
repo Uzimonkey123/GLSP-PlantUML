@@ -30,7 +30,6 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     @Inject
     SequenceModelState modelState;
 
-    @Inject
     SequenceModel model;
 
     private LineFinder lineFinder;
@@ -54,6 +53,7 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     public SequenceModel parse(File file) throws IOException {
         // Read and store original
         String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+        this.model = new SequenceModel();
 
         // Prepare text for PlantUML
         String text = originalText;

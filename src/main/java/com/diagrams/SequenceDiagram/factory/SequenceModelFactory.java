@@ -28,8 +28,6 @@ public class SequenceModelFactory implements GModelFactory {
 
     @Inject
     protected SequenceModelState modelState;
-
-    @Inject
     protected SequenceModel model;
 
     @Override
@@ -40,6 +38,8 @@ public class SequenceModelFactory implements GModelFactory {
             errorHandler(error);
             return;
         }
+
+        this.model = modelState.getModel();
 
         double nodeY = 30;
         double nodeHeight = 30;
