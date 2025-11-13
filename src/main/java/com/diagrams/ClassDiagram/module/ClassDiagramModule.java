@@ -4,14 +4,11 @@ import com.GLSPPlantUML.handlers.IgnoreComputeBoundsHandler;
 import com.GLSPPlantUML.handlers.SetDirtyStateHandler;
 import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.diagrams.ClassDiagram.ClassDiagramConfiguration;
+import com.diagrams.ClassDiagram.factory.ClassModelFactory;
 import com.diagrams.ClassDiagram.model.ClassModel;
+import com.diagrams.ClassDiagram.parser.ClassModelParser;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import com.diagrams.ClassDiagram.storage.ClassModelStorage;
-import com.diagrams.SequenceDiagram.factory.SequenceModelFactory;
-import com.diagrams.SequenceDiagram.model.SequenceModel;
-import com.diagrams.SequenceDiagram.parser.SequenceModelParser;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import org.eclipse.glsp.server.actions.ActionHandler;
 import org.eclipse.glsp.server.di.DiagramModule;
@@ -43,7 +40,7 @@ public class ClassDiagramModule extends DiagramModule {
 
     @Override
     protected Class<? extends GModelFactory> bindGModelFactory() {
-        return SequenceModelFactory.class;
+        return ClassModelFactory.class;
     }
 
     @Override
@@ -68,14 +65,7 @@ public class ClassDiagramModule extends DiagramModule {
     @Override
     protected void configure() {
         super.configure();
-        // Adding Parsers into the configuration
-        bind(new TypeLiteral<PlantUMLParser<SequenceModel>>() {})
-                .to(SequenceModelParser.class);
-    }
-
-    @Provides
-    @Singleton
-    public ClassModel provideSequenceModel(ClassModelState modelState) {
-        return modelState.getModel();
+        bind(new TypeLiteral<PlantUMLParser<ClassModel>>() {})
+                .to(ClassModelParser.class);
     }
 }
