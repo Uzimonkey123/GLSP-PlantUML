@@ -3,6 +3,7 @@ package com.diagrams.ClassDiagram.parser;
 import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
+import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import com.google.inject.Inject;
@@ -55,8 +56,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 List<Link> links = cd.getLinks();
 
                 for (Link link : links) {
-                    System.err.println(link.getEntity1().getDisplay().toString() + " " + link.getEntity2().getDisplay().toString()
-                                        + " " + link.getLinkArg().toString() + " " + link.getLinkArrow().toString());
+                    handleLink(link);
                 }
             }
         }
@@ -86,5 +86,19 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         ClassEntity newEntity = new ClassEntity(x, y, id, name, type, methods, fields);
         model.entities.add(newEntity);
         System.err.println(newEntity);
+    }
+
+    private void handleLink(Link link) {
+        String id = "link-" + model.links.size();
+        ClassEntity entity1 = model.getClassEntity(
+                                String.join("<br>", link.getEntity1().getDisplay().toString()));
+        ClassEntity entity2 = model.getClassEntity(
+                                String.join("<br>", link.getEntity2().getDisplay().toString()));
+        String type = link.getType().toString();
+        String message = String.join("<br>", link.getLabel().toString());
+
+        ClassLink newLink = new ClassLink(id, entity1, entity2, type, message);
+        model.links.add(newLink);
+        System.err.println(newLink);
     }
 }
