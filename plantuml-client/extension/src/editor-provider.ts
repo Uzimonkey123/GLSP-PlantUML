@@ -78,6 +78,9 @@ export default class PumlEditorProvider extends GlspEditorProvider {
             }
           </style>
         </head>
+        <script>
+            window.DIAGRAM_TYPE = '${this.diagramType}';
+        </script>
         <body>
           <div id="${clientId}_container"></div>
           <script src="${webviewScriptSourceUri}"></script>
