@@ -1,7 +1,7 @@
 import {injectable} from "inversify";
 import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
-import {getNodeArgs} from "./utils";
+import {getNodeArgs} from "../utils";
 
 /** @jsx svg */
 

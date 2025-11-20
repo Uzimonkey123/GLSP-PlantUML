@@ -12,8 +12,8 @@ import {
 	svg
 } from '@eclipse-glsp/client';
 import {VNode} from "snabbdom";
-import '../css/diagram.css';
-import {createIcon, TspanConverter} from "./utils";
+import '../../css/diagram.css';
+import {createIcon, TspanConverter} from "../utils";
 
 /** @jsx svg */
 

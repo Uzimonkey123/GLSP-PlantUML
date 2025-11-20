@@ -1,5 +1,94 @@
 import {VNode} from "snabbdom";
-import {GNode, svg} from "@eclipse-glsp/client";
+import {EditLabelUI, GNode, svg} from "@eclipse-glsp/client";
+import {injectable} from "inversify";
+
+@injectable()
+export class BrEditLabelUI extends EditLabelUI {
+    private isMultilineLabel(): boolean {
+        const id = this.label?.id ?? '';
+        return !id.startsWith('group-');  // Groups do not have multiline label/comment/separator
+    }
+
+    public override get editControl(): HTMLInputElement | HTMLTextAreaElement {
+        // Check if input or text area is needed for label/multiline
+        return this.isMultilineLabel() ? this.textAreaElement : this.inputElement;
+    }
+
+    protected override configureAndAdd(
+        element: HTMLInputElement | HTMLTextAreaElement,
+        container: HTMLElement
+    ): void {
+        // Make the previous handlers as they should be
+        super.configureAndAdd(element, container);
+
+        element.style.overflow = 'hidden'; // no scrollbar
+        element.style.resize = 'none';
+
+        element.addEventListener('keydown', (ev: Event) => {
+            const e = ev as KeyboardEvent;
+            if (e.key === 'Enter' && e.shiftKey) { // Shift enter for next line
+                e.preventDefault();
+                e.stopPropagation(); // Do not apply at shift + enter
+                this.insertAtCursor(element, '\n');
+                this.autoSizeEditor();
+            }
+        });
+
+        // To change size automatically
+        element.addEventListener('input', () => this.autoSizeEditor());
+
+        // Create the first sized elements with DOM
+        requestAnimationFrame(() => this.autoSizeEditor());
+    }
+
+    protected override applyTextContents(): void {
+        if (!this.label) return;
+        // To display multilines instead of simple <br>
+        const display = (this.label.text ?? '').replace(/<br>/g, '\n');
+        this.editControl.value = display;
+
+        if (this.editControl instanceof HTMLTextAreaElement) {
+            // To see the beginning of the message, not scrolled etc...
+            this.editControl.selectionStart = this.editControl.selectionEnd = display.length;
+            this.editControl.scrollTop = 0;
+            this.editControl.scrollLeft = 0;
+
+        } else {
+            // For input text
+            this.editControl.setSelectionRange(0, display.length);
+        }
+    }
+
+    protected override applyFontStyling(): void {
+        super.applyFontStyling();
+        requestAnimationFrame(() => this.autoSizeEditor());
+    }
+
+    protected override async applyLabelEdit(): Promise<void> {
+        this.editControl.value = this.editControl.value
+            .replace(/\r?\n/g, '<br>');
+        await super.applyLabelEdit();
+    }
+
+    private insertAtCursor(el: HTMLInputElement | HTMLTextAreaElement, text: string): void {
+        const start = el.selectionStart ?? 0;
+        const end   = el.selectionEnd ?? 0;
+        el.value = el.value.substring(0, start) + text + el.value.substring(end);
+        const pos = start + text.length;
+        el.setSelectionRange(pos, pos);
+    }
+
+    private autoSizeEditor(): void {
+        if (!(this.editControl instanceof HTMLTextAreaElement)) return;
+        const ta = this.editControl;
+
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+
+        ta.style.width = 'auto';
+        ta.style.width = ta.scrollWidth + 4 + 'px';
+    }
+}
 
 export function TspanConverter(html: string): VNode[][] {
     type Style = { //TODO: Add more styles according to plantuml
