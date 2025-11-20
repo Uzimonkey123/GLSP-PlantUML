@@ -1,10 +1,11 @@
 import { GLSPStarter } from '@eclipse-glsp/vscode-integration-webview';
 import { ContainerConfiguration } from '@eclipse-glsp/client';
 import { Container } from 'inversify';
-import { initializePlantUmlDiagramContainer } from '@plantuml-client/glsp-client';
+import { initializeSequenceContainer } from '@plantuml-client/glsp-client';
+import { initializeClassContainer } from '@plantuml-client/glsp-client'
 
 class PlantUmlGLSPStarter extends GLSPStarter {
-    private diagramType: string;
+    private readonly diagramType: string;
 
     constructor() {
         super();
@@ -13,7 +14,11 @@ class PlantUmlGLSPStarter extends GLSPStarter {
     }
 
     createContainer(...containerConfiguration: ContainerConfiguration): Container {
-        return initializePlantUmlDiagramContainer(new Container(), ...containerConfiguration);
+        if (this.diagramType == 'class-diagram') {
+            return initializeClassContainer(new Container(), ...containerConfiguration)
+        }
+
+        return initializeSequenceContainer(new Container(), ...containerConfiguration);
     }
 }
 
