@@ -18,6 +18,7 @@ public class ClassEntityFactory {
     private final List<GModelElement> elements;
 
     private final int padding = 20;
+    private double cursor = 40;
 
     public ClassEntityFactory(ClassModel model, EntityBuild entityBuild, List<GModelElement> elements) {
         this.model = model;
@@ -34,7 +35,7 @@ public class ClassEntityFactory {
 
             double entityHeight = entityLength(entity);
 
-            entity.setX(entity.getX() + entityWidth);
+            entity.setX(cursor);
 
             List<String> methodNames = new ArrayList<>();
             for (EntityMethod method : entity.getMethods()) {
@@ -47,6 +48,8 @@ public class ClassEntityFactory {
             }
 
             elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames));
+
+            cursor += entityWidth;
         }
     }
 
@@ -54,19 +57,25 @@ public class ClassEntityFactory {
         double length = 0;
 
         for (EntityMethod method : attribute) {
-            length = Math.max(WidthCalculator.calculateWidth(method.getMethodName(), padding), length);
+            length = Math.max(WidthCalculator.calculateWidth(method.getMethodName(), padding / 2), length);
         }
 
         return length;
     }
 
     private double entityLength(ClassEntity entity) {
-        double length = 0;
+        int lineHeight = 14;
 
-        length += entity.getMethods().size() + entity.getFields().size() + padding;
-        length += WidthCalculator.calculateWidth(entity.getName(), 7);
+        int name = entity.getName().split("<br>").length;
+        int headerHeight = name * lineHeight + padding / 2;
 
-        return length;
+        int fieldsHeight = entity.getFields().size() * lineHeight;
+        int methodsHeight = entity.getMethods().size() * lineHeight;
+
+        int separators = (entity.getFields().isEmpty() ? 0 : 1)
+                + (entity.getMethods().isEmpty() ? 0 : 1);
+
+        return headerHeight + fieldsHeight + methodsHeight + separators * (padding / 2);
     }
 
 }
