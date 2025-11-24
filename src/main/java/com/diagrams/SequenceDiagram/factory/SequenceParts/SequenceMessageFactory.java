@@ -5,7 +5,7 @@ import com.diagrams.SequenceDiagram.builders.MessageBuild;
 import com.diagrams.SequenceDiagram.builders.NodeBuild;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.utils.NodeGap;
-import com.diagrams.SequenceDiagram.utils.WidthCalculator;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceAnchor;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceLifeEvent;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceMessage;

@@ -1,5 +1,6 @@
 package com.diagrams.SequenceDiagram.utils;
 
+import com.GLSPPlantUML.utils.WidthCalculator;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceMessage;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNote;

@@ -5,7 +5,7 @@ import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceMessage;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNote;
-import com.diagrams.SequenceDiagram.utils.WidthCalculator;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.List;

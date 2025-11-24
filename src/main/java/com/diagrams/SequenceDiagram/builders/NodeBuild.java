@@ -3,7 +3,7 @@ package com.diagrams.SequenceDiagram.builders;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceAnchor;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;
-import com.diagrams.SequenceDiagram.utils.WidthCalculator;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
