@@ -80,8 +80,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             fields.add(entityMethod);
         }
 
-        int x = 0;
-        int y = model.entities.size() * 40;
+        int x = model.entities.size() * 40;
+        int y = 0;
 
         ClassEntity newEntity = new ClassEntity(x, y, id, name, type, methods, fields);
         model.entities.add(newEntity);
