@@ -1,12 +1,12 @@
 import {
     bindAsService,
     bindOrRebind,
-    configureDefaultModelElements,
+    configureDefaultModelElements, configureModelElement,
     ContainerConfiguration,
     debugModule,
     DeleteElementContextMenuItemProvider,
     EditLabelUI,
-    FeatureModule,
+    FeatureModule, GNode,
     gridModule,
     helperLineModule,
     initializeDiagramContainer,
@@ -28,6 +28,7 @@ import {BrEditLabelUI} from "../utils";
 
 import {Container} from "inversify";
 import {defaultModule as clientDefaultModule} from "@eclipse-glsp/client/lib/base/default.module";
+import {EntityView} from "./class-entity-views";
 
 export const ClassDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
@@ -42,6 +43,7 @@ export const ClassDiagramModule = new FeatureModule(
         bindOrRebind(context, TYPES.IUIExtension).to(BrEditLabelUI).inSingletonScope().whenTargetNamed(EditLabelUI.ID);
 
         configureDefaultModelElements(context);
+        configureModelElement(context, "entity", GNode, EntityView);
     }
 );
 
