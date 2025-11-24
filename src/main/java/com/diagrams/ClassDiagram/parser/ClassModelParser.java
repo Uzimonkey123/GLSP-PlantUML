@@ -60,7 +60,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 }
             }
         }
-        return null;
+
+        return model;
     }
 
     private void handleEntity(Entity entity) {

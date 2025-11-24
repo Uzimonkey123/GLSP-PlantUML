@@ -62,7 +62,7 @@ public class ClassEntity extends NodePosition {
 
     @Override
     public String toString() {
-        return String.format("ClassEntity{id='%s', name='%s', type=%s, visibility='%s', pos=(%d,%d), fields=%d, methods=%d}",
+        return String.format("ClassEntity{id='%s', name='%s', type=%s, visibility='%s', pos=(%f,%f), fields=%d, methods=%d}",
                 id, name, type, visibility, getX(), getY(), fields.size(), methods.size());
     }
 }
