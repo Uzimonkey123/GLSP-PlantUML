@@ -17,7 +17,7 @@ public class ClassEntityFactory {
 
     private final List<GModelElement> elements;
 
-    private final int padding = 20;
+    private final int horizontalPadding = 20;
     private double cursor = 40;
 
     public ClassEntityFactory(ClassModel model, EntityBuild entityBuild, List<GModelElement> elements) {
@@ -31,7 +31,8 @@ public class ClassEntityFactory {
             double methodWidth = entityAttributesLength(entity.getMethods());
             double fieldsWidth = entityAttributesLength(entity.getFields());
             double attributesWidth = Math.max(methodWidth, fieldsWidth);
-            double entityWidth = Math.max(WidthCalculator.calculateWidth(entity.getName(), padding), attributesWidth);
+            double entityWidth = Math.max(
+                                WidthCalculator.calculateWidth(entity.getName(), horizontalPadding), attributesWidth);
 
             double entityHeight = entityLength(entity);
 
@@ -49,7 +50,7 @@ public class ClassEntityFactory {
 
             elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames));
 
-            cursor += entityWidth;
+            cursor += entityWidth + 40;
         }
     }
 
@@ -57,7 +58,7 @@ public class ClassEntityFactory {
         double length = 0;
 
         for (EntityMethod method : attribute) {
-            length = Math.max(WidthCalculator.calculateWidth(method.getMethodName(), padding / 2), length);
+            length = Math.max(WidthCalculator.calculateWidth(method.getMethodName(), horizontalPadding / 2), length);
         }
 
         return length;
@@ -65,17 +66,18 @@ public class ClassEntityFactory {
 
     private double entityLength(ClassEntity entity) {
         int lineHeight = 14;
+        int verticalPadding = 5;
+        int emptyHeight = 10;
+        int headerHeight = 30;
 
-        int name = entity.getName().split("<br>").length;
-        int headerHeight = name * lineHeight + padding / 2;
+        int fieldsHeight = !entity.getFields().isEmpty()
+                ? entity.getFields().size() * lineHeight + verticalPadding * 2
+                : emptyHeight;
 
-        int fieldsHeight = entity.getFields().size() * lineHeight;
-        int methodsHeight = entity.getMethods().size() * lineHeight;
+        int methodsHeight = !entity.getMethods().isEmpty()
+                ? entity.getMethods().size() * lineHeight + verticalPadding * 2
+                : emptyHeight;
 
-        int separators = (entity.getFields().isEmpty() ? 0 : 1)
-                + (entity.getMethods().isEmpty() ? 0 : 1);
-
-        return headerHeight + fieldsHeight + methodsHeight + separators * (padding / 2);
+        return headerHeight + fieldsHeight + methodsHeight;
     }
-
 }

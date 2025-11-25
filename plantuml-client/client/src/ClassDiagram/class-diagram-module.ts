@@ -4,15 +4,15 @@ import {
     configureDefaultModelElements, configureModelElement,
     ContainerConfiguration,
     debugModule,
-    DeleteElementContextMenuItemProvider,
+    DeleteElementContextMenuItemProvider, editLabelFeature,
     EditLabelUI,
-    FeatureModule, GNode,
+    FeatureModule, GLabel, GNode,
     gridModule,
     helperLineModule,
     initializeDiagramContainer,
-    labelEditModule,
+    labelEditModule, moveFeature,
     resizeModule,
-    RevealNamedElementActionProvider,
+    RevealNamedElementActionProvider, selectFeature,
     TYPES
 } from "@eclipse-glsp/client";
 
@@ -29,6 +29,8 @@ import {BrEditLabelUI} from "../utils";
 import {Container} from "inversify";
 import {defaultModule as clientDefaultModule} from "@eclipse-glsp/client/lib/base/default.module";
 import {EntityView} from "./class-entity-views";
+import {ParticipantLabelView} from "../SequenceDiagram/sequence-views";
+import {HtmlLabelView} from "../../lib/sequence-views";
 
 export const ClassDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
@@ -44,6 +46,9 @@ export const ClassDiagramModule = new FeatureModule(
 
         configureDefaultModelElements(context);
         configureModelElement(context, "entity", GNode, EntityView);
+        configureModelElement(context, "label:entityName", GLabel, ParticipantLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
+        configureModelElement(context, "label:method", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:field", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
     }
 );
 

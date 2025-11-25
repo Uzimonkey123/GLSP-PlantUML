@@ -10,19 +10,32 @@ import java.util.List;
 public class EntityBuild {
     public GModelElement buildEntity(ClassEntity entity, double width, double height,
                                      List<String> methods, List<String> fields) {
-        GLabelBuilder labelBuilder = new GLabelBuilder("label:entityName")
-                .id(entity.getId() + "-label")
-                .text(entity.getName());
-
-        return new GNodeBuilder("entity")
+        GNodeBuilder nodeBuilder = new GNodeBuilder("entity")
                 .id(entity.getId())
                 .layout("vbox")
                 .position(entity.getX(), entity.getY())
                 .size(width, height)
-                .addArgument("type", entity.getType())
-                .addArgument("methods", methods)
-                .addArgument("fields", fields)
-                .add(labelBuilder.build())
-                .build();
+                .addArgument("type", entity.getType());
+
+        nodeBuilder.add(new GLabelBuilder("label:entityName")
+                .id(entity.getId() + "-label-name")
+                .text(entity.getName())
+                .build());
+
+        for (int i = 0; i < fields.size(); i++) {
+            nodeBuilder.add(new GLabelBuilder("label:field")
+                    .id(entity.getId() + "-field-" + i)
+                    .text(fields.get(i))
+                    .build());
+        }
+
+        for (int i = 0; i < methods.size(); i++) {
+            nodeBuilder.add(new GLabelBuilder("label:method")
+                    .id(entity.getId() + "-method-" + i)
+                    .text(methods.get(i))
+                    .build());
+        }
+
+        return nodeBuilder.build();
     }
 }
