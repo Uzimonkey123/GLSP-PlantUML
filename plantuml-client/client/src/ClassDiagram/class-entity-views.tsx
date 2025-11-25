@@ -31,7 +31,7 @@ export class EntityView extends ShapeView {
 
             <g>
                 {nameLabel && (
-                    <g transform={`translate(${w/2}, ${headerH/2 + 5})`}>
+                    <g transform={`translate(${w/2}, ${headerH/2})`}>
                         {context.renderElement(nameLabel)}
                     </g>
                 )}
@@ -40,7 +40,7 @@ export class EntityView extends ShapeView {
 
             <g>
                 {fieldLabels.map((field, index) => (
-                    <g transform={`translate(${w/2}, ${headerH + padding + (index * lineHeight) + 10})`}>
+                    <g transform={`translate(${w/2}, ${headerH + padding + (index * lineHeight) + 5})`}>
                         {context.renderElement(field)}
                     </g>
                 ))}
@@ -49,7 +49,7 @@ export class EntityView extends ShapeView {
 
             <g>
                 {methodLabels.map((method, index) => (
-                    <g transform={`translate(${w/2}, ${headerH + fieldH + padding + (index * lineHeight) + 10})`}>
+                    <g transform={`translate(${w/2}, ${headerH + fieldH + padding + (index * lineHeight) + 5})`}>
                         {context.renderElement(method)}
                     </g>
                 ))}
