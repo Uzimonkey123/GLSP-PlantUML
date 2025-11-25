@@ -66,7 +66,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleEntity(Entity entity) {
         String id = "ent-" + model.entities.size();
-        String name = String.join("<br>", entity.getDisplay().toString());
+        String name = String.join("<br>", entity.getDisplay().toString())
+                        .replaceAll("^\\[|]$", "");
         String type = entity.getLeafType().toString();
 
         List<EntityMethod> methods = new ArrayList<>();

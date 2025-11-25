@@ -27,12 +27,12 @@ export class EntityLabelView extends GLabelView {
         const isBold = text.startsWith('=');
         const content = isBold ? text.slice(1).trim() : text;
 
-        const isItalic = ['abstract', 'abstract class', 'interface'].includes(type);
+        const isItalic = ['abstract_class', 'interface'].includes(type);
 
         return <g>
             {createIcon(width, background, stereotypeChar)}
             <text
-                x={0}
+                x={5}
                 y={0}
                 style={{
                     fontWeight: isBold ? 'bold' : 'normal',
