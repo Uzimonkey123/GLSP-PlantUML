@@ -20,6 +20,8 @@ public class EntityBuild {
         nodeBuilder.add(new GLabelBuilder("label:entityName")
                 .id(entity.getId() + "-label-name")
                 .text(entity.getName())
+                .addArgument("type", entity.getType().toLowerCase())
+                .addArgument("width", width)
                 .build());
 
         for (int i = 0; i < fields.size(); i++) {
