@@ -13,6 +13,7 @@ import net.sourceforge.plantuml.abel.Entity;
 import net.sourceforge.plantuml.abel.Link;
 import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.decoration.LinkDecor;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,13 +94,19 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     private void handleLink(Link link) {
         String id = "link-" + model.links.size();
         ClassEntity entity1 = model.getClassEntity(
-                                String.join("<br>", link.getEntity1().getDisplay().toString()));
+                                String.join("<br>", link.getEntity1().getDisplay().toString())
+                                        .replaceAll("^\\[|]$", ""));
         ClassEntity entity2 = model.getClassEntity(
-                                String.join("<br>", link.getEntity2().getDisplay().toString()));
+                                String.join("<br>", link.getEntity2().getDisplay().toString())
+                                        .replaceAll("^\\[|]$", ""));
         String type = link.getType().toString();
         String message = String.join("<br>", link.getLabel().toString());
 
-        ClassLink newLink = new ClassLink(id, entity1, entity2, type, message);
+        int length = link.getLength();
+        String decorator1 = link.getType().getDecor1().toString();
+        String decorator2 = link.getType().getDecor2().toString();
+
+        ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length, decorator1, decorator2);
         model.links.add(newLink);
         System.err.println(newLink);
     }

@@ -1,18 +1,26 @@
 package com.diagrams.ClassDiagram.model.ClassParts;
 
 public class ClassLink {
-    private String linkId;
-    private ClassEntity entity1;
-    private ClassEntity entity2;
-    private String type;
+    private final String linkId;
+    private final ClassEntity entity1;
+    private final ClassEntity entity2;
+    private final String type;
     private String message;
+    private int length;
+    private final String decorator1;
+    private final String decorator2;
 
-    public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2, String type, String message) {
+    public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2,
+                     String type, String message, int length,
+                     String decorator1, String decorator2) {
         this.linkId = linkId;
         this.entity1 = entity1;
         this.entity2 = entity2;
         this.type = type;
         this.message = message;
+        this.length = length;
+        this.decorator1 = decorator1;
+        this.decorator2 = decorator2;
     }
 
     public String getLinkId() {
@@ -37,6 +45,22 @@ public class ClassLink {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
+    public String getDecorator1() {
+        return decorator1;
+    }
+
+    public String getDecorator2() {
+        return decorator2;
     }
 
     @Override
