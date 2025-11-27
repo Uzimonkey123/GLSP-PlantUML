@@ -71,6 +71,12 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                         .replaceAll("^\\[|]$", "");
         String type = entity.getLeafType().toString();
 
+        List<EntityMethod> body = new ArrayList<>();
+        for (CharSequence item : entity.getBodier().getRawBody()) {
+            EntityMethod bodyItem = new EntityMethod(item.toString());
+            body.add(bodyItem);
+        }
+
         List<EntityMethod> methods = new ArrayList<>();
         for (CharSequence method : entity.getBodier().getMethodsToDisplay()) {
             EntityMethod entityMethod = new EntityMethod(method.toString());
@@ -86,7 +92,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         int x = model.entities.size() * 40;
         int y = 0;
 
-        ClassEntity newEntity = new ClassEntity(x, y, id, name, type, methods, fields);
+        ClassEntity newEntity = new ClassEntity(x, y, id, name, type, methods, fields, body);
         model.entities.add(newEntity);
         System.err.println(newEntity);
     }

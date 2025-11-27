@@ -13,15 +13,17 @@ public class ClassEntity extends NodePosition {
     private String visibility = "";
     private final List<EntityMethod> methods = new ArrayList<>();
     private final List<EntityMethod> fields = new ArrayList<>();
+    private final List<EntityMethod> rawBody = new ArrayList<>();
 
     public ClassEntity(int x, int y, String id, String name, String type,
-                        List<EntityMethod> methods, List<EntityMethod> fields) {
+                        List<EntityMethod> methods, List<EntityMethod> fields, List<EntityMethod> rawBody) {
         super(x, y);
         this.id = id;
         this.name = name;
         this.type = type;
         this.methods.addAll(methods);
         this.fields.addAll(fields);
+        this.rawBody.addAll(rawBody);
     }
 
     public String getId() {
@@ -58,6 +60,10 @@ public class ClassEntity extends NodePosition {
 
     public List<EntityMethod> getFields() {
         return fields;
+    }
+
+    public List<EntityMethod> getRawBody() {
+        return rawBody;
     }
 
     @Override

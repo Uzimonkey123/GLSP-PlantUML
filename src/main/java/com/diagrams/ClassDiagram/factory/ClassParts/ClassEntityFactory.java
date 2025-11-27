@@ -48,7 +48,14 @@ public class ClassEntityFactory {
                 fieldNames.add(fields.getMethodName());
             }
 
-            elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames));
+            List<String> bodyLines = new ArrayList<>();
+            for (EntityMethod item : entity.getRawBody()) {
+                bodyLines.add(item.getMethodName());
+            }
+
+            System.err.println(fieldNames);
+
+            elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames, bodyLines));
 
             cursor += entityWidth + 40;
         }

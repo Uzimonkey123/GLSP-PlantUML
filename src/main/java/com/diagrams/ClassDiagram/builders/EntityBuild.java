@@ -9,7 +9,7 @@ import java.util.List;
 
 public class EntityBuild {
     public GModelElement buildEntity(ClassEntity entity, double width, double height,
-                                     List<String> methods, List<String> fields) {
+                                     List<String> methods, List<String> fields, List<String> bodyLines) {
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity")
                 .id(entity.getId())
                 .layout("vbox")
@@ -35,6 +35,13 @@ public class EntityBuild {
             nodeBuilder.add(new GLabelBuilder("label:method")
                     .id(entity.getId() + "-method-" + i)
                     .text(methods.get(i))
+                    .build());
+        }
+
+        for (int i = 0; i < bodyLines.size(); i++) {
+            nodeBuilder.add(new GLabelBuilder("label:body")
+                    .id(entity.getId() + "-body-" + i)
+                    .text(bodyLines.get(i))
                     .build());
         }
 
