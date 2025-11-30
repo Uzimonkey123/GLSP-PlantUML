@@ -5,6 +5,7 @@ import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
+import com.diagrams.ClassDiagram.model.Visibility;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.BlockUml;
@@ -14,6 +15,7 @@ import net.sourceforge.plantuml.abel.Link;
 import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.decoration.LinkDecor;
+import net.sourceforge.plantuml.skin.VisibilityModifier;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,12 +91,28 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             fields.add(entityMethod);
         }
 
-        int x = model.entities.size() * 40;
-        int y = 0;
-
-        ClassEntity newEntity = new ClassEntity(x, y, id, name, type, methods, fields, body);
+        ClassEntity newEntity = new ClassEntity(0, 0, id, name, type, methods, fields, body);
         model.entities.add(newEntity);
+
+        if (entity.getVisibilityModifier() != null) {
+            handleEntityVisibility(newEntity, entity);
+        }
+
         System.err.println(newEntity);
+    }
+
+    private void handleEntityVisibility(ClassEntity newEntity, Entity entity) {
+        String visibility = switch(entity.getVisibilityModifier()) {
+            case VisibilityModifier.PRIVATE_METHOD -> "-";
+            case VisibilityModifier.PROTECTED_METHOD -> "#";
+            case VisibilityModifier.PACKAGE_PRIVATE_METHOD -> "~";
+            case VisibilityModifier.PUBLIC_METHOD -> "+";
+            default -> "";
+        };
+
+        if (!visibility.isEmpty()) {
+            newEntity.setVisibility(Visibility.fromChar(visibility.charAt(0)));
+        }
     }
 
     private void handleLink(Link link) {
