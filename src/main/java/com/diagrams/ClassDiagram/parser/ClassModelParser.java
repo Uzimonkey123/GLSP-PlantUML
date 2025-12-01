@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import net.sourceforge.plantuml.BlockUml;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.abel.LeafType;
 import net.sourceforge.plantuml.abel.Link;
 import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.core.Diagram;
@@ -69,9 +70,17 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleEntity(Entity entity) {
         String id = "ent-" + model.entities.size();
+        String type = entity.getLeafType().toString();
+        if (type.equals("CIRCLE") || type.equals("DESCRIPTION")) {
+            handleCircleEntity(entity, id);
+        }
+
+        if (type.equals("DIAMOND") || type.equals("ASSOCIATION")) {
+            handleDiamondEntity(entity, id);
+        }
+
         String name = String.join("<br>", entity.getDisplay().toString())
                         .replaceAll("^\\[|]$", "");
-        String type = entity.getLeafType().toString();
 
         List<EntityMethod> body = new ArrayList<>();
         for (CharSequence item : entity.getBodier().getRawBody()) {
@@ -99,6 +108,23 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         System.err.println(newEntity);
+    }
+
+    private void handleCircleEntity(Entity entity, String id) {
+        String type = "CIRCLE";
+        String name = String.join("<br>", entity.getDisplay().toString())
+                .replaceAll("^\\[|]$", "");
+
+        ClassEntity circleEntity = new ClassEntity(0, 0, id, name, type);
+        model.entities.add(circleEntity);
+
+    }
+
+    private void handleDiamondEntity(Entity entity, String id) {
+        String type = "DIAMOND";
+
+        ClassEntity diamondEntity = new ClassEntity(0, 0, id, type);
+        model.entities.add(diamondEntity);
     }
 
     private void handleEntityVisibility(ClassEntity newEntity, Entity entity) {

@@ -26,6 +26,19 @@ public class ClassEntity extends NodePosition {
         this.rawBody.addAll(rawBody);
     }
 
+    public ClassEntity(int x, int y, String id, String name, String type) {
+        super(x, y);
+        this.id = id;
+        this.name = name;
+        this.type = type;
+    }
+
+    public ClassEntity(int x, int y, String id, String type) {
+        super(x, y);
+        this.id = id;
+        this.type = type;
+    }
+
     public String getId() {
         return id;
     }
