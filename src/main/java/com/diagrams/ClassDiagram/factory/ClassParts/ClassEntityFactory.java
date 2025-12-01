@@ -30,12 +30,12 @@ public class ClassEntityFactory {
         for (ClassEntity entity : model.entities) {
             if (entity.getType().equals("CIRCLE")) {
                 createCircleEntity(entity);
-                return;
+                continue;
             }
 
             if (entity.getType().equals("DIAMOND")) {
                 createDiamondEntity(entity);
-                return;
+                continue;
             }
 
             double methodWidth = entityAttributesLength(entity.getMethods());
@@ -73,12 +73,16 @@ public class ClassEntityFactory {
         double entityWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
         double entityHeight = entityLength(entity);
 
+        entity.setX(cursor);
+
         elements.add(entityBuild.buildCircleEntity(entity, entityWidth, entityHeight));
         cursor += entityWidth + 40;
     }
 
     private void createDiamondEntity(ClassEntity entity) {
         double entityWidth = 30;
+
+        entity.setX(cursor);
 
         elements.add(entityBuild.buildDiamondEntity(entity, entityWidth));
         cursor += entityWidth + 40;

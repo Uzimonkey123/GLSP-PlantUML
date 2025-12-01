@@ -56,7 +56,7 @@ public class EntityBuild {
                 .size(width, height)
                 .addArgument("type", entity.getType().toLowerCase());
 
-        nodeBuilder.add(new GLabelBuilder("label:entityName")
+        nodeBuilder.add(new GLabelBuilder("label:method")
                 .id(entity.getId() + "-label-name")
                 .text(entity.getName())
                 .addArgument("type", entity.getType().toLowerCase())

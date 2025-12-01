@@ -60,7 +60,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 List<Link> links = cd.getLinks();
 
                 for (Link link : links) {
-                    handleLink(link);
+                    //handleLink(link);
                 }
             }
         }
@@ -76,7 +76,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             return;
         }
 
-        if (type.equals("DIAMOND") || type.equals("ASSOCIATION")) {
+        if (type.equals("STATE_CHOICE") || type.equals("ASSOCIATION")) {
             handleDiamondEntity(entity, id);
             return;
         }
