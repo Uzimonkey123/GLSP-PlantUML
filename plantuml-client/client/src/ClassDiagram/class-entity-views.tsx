@@ -1,5 +1,5 @@
 import {injectable} from "inversify";
-import {GNode, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
+import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
 
 /** @jsx svg */
@@ -180,5 +180,60 @@ export class EntityView extends ShapeView {
             default:
                 return { y1: y, y2: null, attrs: {}};
         }
+    }
+}
+
+@injectable()
+export class DiamondEntityView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+        const background = "#FFFFFF";
+
+        const cx = w/2;
+        const cy = h/2;
+
+        return <g>
+            <polygon
+                points={`${cx},0 ${w},${cy} ${cx},${h} 0,${cy}`}
+                fill={background}
+                stroke="black"
+                stroke-width="2"
+            />
+        </g>
+    }
+}
+
+@injectable()
+export class CircleEntityView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const h = node.size.height;
+        const background = "#FFFFFF";
+
+        const radius = 15;
+        const cx = w / 2;
+        const cy = radius + 5;
+
+        return <g>
+            <circle
+                cx={cx}
+                cy={cy}
+                r={radius}
+                fill={background}
+                stroke="black"
+                stroke-width="2"
+            />
+
+            <g transform={`translate(${cx}, ${cy + radius + 15})`}>
+                {context.renderChildren(node)}
+            </g>
+        </g>;
     }
 }
