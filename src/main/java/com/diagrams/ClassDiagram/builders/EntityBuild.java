@@ -47,4 +47,34 @@ public class EntityBuild {
 
         return nodeBuilder.build();
     }
+
+    public GModelElement buildCircleEntity(ClassEntity entity, double width, double height) {
+        GNodeBuilder nodeBuilder = new GNodeBuilder("entity:circle")
+                .id(entity.getId())
+                .layout("vbox")
+                .position(entity.getX(), entity.getY())
+                .size(width, height)
+                .addArgument("type", entity.getType().toLowerCase());
+
+        nodeBuilder.add(new GLabelBuilder("label:entityName")
+                .id(entity.getId() + "-label-name")
+                .text(entity.getName())
+                .addArgument("type", entity.getType().toLowerCase())
+                .addArgument("width", width)
+                .build());
+
+        return nodeBuilder.build();
+    }
+
+    public GModelElement buildDiamondEntity(ClassEntity entity, double width) {
+        GNodeBuilder nodeBuilder = new GNodeBuilder("entity:diamond")
+                .id(entity.getId())
+                .layout("vbox")
+                .position(entity.getX(), entity.getY())
+                .size(width, width)
+                .addArgument("type", entity.getType().toLowerCase());
+
+        return nodeBuilder.build();
+    }
 }
+

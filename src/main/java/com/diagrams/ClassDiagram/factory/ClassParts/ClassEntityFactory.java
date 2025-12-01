@@ -28,6 +28,16 @@ public class ClassEntityFactory {
 
     public void createEntities() {
         for (ClassEntity entity : model.entities) {
+            if (entity.getType().equals("CIRCLE")) {
+                createCircleEntity(entity);
+                return;
+            }
+
+            if (entity.getType().equals("DIAMOND")) {
+                createDiamondEntity(entity);
+                return;
+            }
+
             double methodWidth = entityAttributesLength(entity.getMethods());
             double fieldsWidth = entityAttributesLength(entity.getFields());
             double attributesWidth = Math.max(methodWidth, fieldsWidth);
@@ -53,12 +63,25 @@ public class ClassEntityFactory {
                 bodyLines.add(item.getMethodName());
             }
 
-            System.err.println(fieldNames);
-
             elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames, bodyLines));
 
             cursor += entityWidth + 40;
         }
+    }
+
+    private void createCircleEntity(ClassEntity entity) {
+        double entityWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
+        double entityHeight = entityLength(entity);
+
+        elements.add(entityBuild.buildCircleEntity(entity, entityWidth, entityHeight));
+        cursor += entityWidth + 40;
+    }
+
+    private void createDiamondEntity(ClassEntity entity) {
+        double entityWidth = 30;
+
+        elements.add(entityBuild.buildDiamondEntity(entity, entityWidth));
+        cursor += entityWidth + 40;
     }
 
     private double entityAttributesLength(List<EntityMethod> attribute) {

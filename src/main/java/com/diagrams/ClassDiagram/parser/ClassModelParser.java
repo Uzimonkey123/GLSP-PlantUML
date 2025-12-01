@@ -70,13 +70,15 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleEntity(Entity entity) {
         String id = "ent-" + model.entities.size();
-        String type = entity.getLeafType().toString();
+        String type = entity.getLeafType().toString();;
         if (type.equals("CIRCLE") || type.equals("DESCRIPTION")) {
             handleCircleEntity(entity, id);
+            return;
         }
 
         if (type.equals("DIAMOND") || type.equals("ASSOCIATION")) {
             handleDiamondEntity(entity, id);
+            return;
         }
 
         String name = String.join("<br>", entity.getDisplay().toString())
