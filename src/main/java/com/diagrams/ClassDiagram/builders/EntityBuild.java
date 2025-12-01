@@ -28,6 +28,8 @@ public class EntityBuild {
             nodeBuilder.add(new GLabelBuilder("label:field")
                     .id(entity.getId() + "-field-" + i)
                     .text(fields.get(i))
+                    .addArgument("visibility", entity.getFields().get(i).getVisibilityChar())
+                    .addArgument("boxWidth", width)
                     .build());
         }
 
@@ -35,6 +37,8 @@ public class EntityBuild {
             nodeBuilder.add(new GLabelBuilder("label:method")
                     .id(entity.getId() + "-method-" + i)
                     .text(methods.get(i))
+                    .addArgument("visibility", entity.getMethods().get(i).getVisibilityChar())
+                    .addArgument("boxWidth", width)
                     .build());
         }
 
@@ -42,6 +46,8 @@ public class EntityBuild {
             nodeBuilder.add(new GLabelBuilder("label:body")
                     .id(entity.getId() + "-body-" + i)
                     .text(bodyLines.get(i))
+                    .addArgument("visibility", entity.getRawBody().get(i).getVisibilityChar())
+                    .addArgument("boxWidth", width)
                     .build());
         }
 
