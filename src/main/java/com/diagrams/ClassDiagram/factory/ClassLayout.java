@@ -21,7 +21,7 @@ public class ClassLayout {
 
     public void layoutEntities(List<ClassEntity> entities, List<ClassLink> links, Map<String, Size> dimensions) {
         MutableGraph graph = mutGraph("class_diagram").setDirected(true).graphAttrs().add(
-                        attr("rankdir", "TB"),
+                        attr("rankdir", "BT"),
                         attr("nodesep", 1.5),
                         attr("ranksep", 1.0),
                         attr("splines", "polyline"),
