@@ -1,5 +1,5 @@
 import {VNode} from "snabbdom";
-import {EditLabelUI, GNode, svg} from "@eclipse-glsp/client";
+import {EditLabelUI, GLabel, GLabelView, GNode, IViewArgs, RenderingContext, svg} from "@eclipse-glsp/client";
 import {injectable} from "inversify";
 
 @injectable()
@@ -87,6 +87,97 @@ export class BrEditLabelUI extends EditLabelUI {
 
         ta.style.width = 'auto';
         ta.style.width = ta.scrollWidth + 4 + 'px';
+    }
+}
+
+@injectable()
+export class HtmlLabelView extends GLabelView {
+    override render(label: Readonly<GLabel>, context: RenderingContext, args?: IViewArgs): VNode {
+        const num = (label as any).args?.numbering as string | undefined;
+        const visibility = (label as any).args?.visibility as string | undefined;
+        const boxWidth = (label as any).args?.boxWidth as number | undefined;
+        const text = label.text ?? '';
+
+        const numLines = num ? TspanConverter(num) : [];
+        const textLines = TspanConverter(text);
+
+        const lines: VNode[] = [];
+        const max = Math.max(numLines.length, textLines.length);
+        const initialY = max > 1 ? "10" : "0";
+
+        for (let i = 0; i < max; i++) {
+            const numSpans = numLines[i] ?? [];
+            const textSpans = textLines[i] ?? [];
+            const dy = i === 0 ? initialY : "1.2em";
+
+            lines.push(
+                <tspan x="0" {...(i === 0 ? { y: dy } : { dy })}>
+                    {numSpans}
+                    {numSpans.length > 0 && textSpans.length > 0 ? <tspan></tspan> : null}
+                    {textSpans}
+                </tspan>
+            );
+        }
+
+        const visibilityShape = this.renderVisibilityShape(visibility);
+
+        const shapeOffset = boxWidth ? -boxWidth/2 + 3 : 0;
+
+        return (
+            <g>
+                {visibilityShape && <g transform={`translate(${shapeOffset}, 0)`}>{visibilityShape}</g>}
+                <text
+                    class-sprotty-label={true}
+                    text-anchor="start"
+                    x="0"
+                    y="0"
+                >
+                    {lines}
+                </text>
+            </g>
+        );
+    }
+
+    private renderVisibilityShape(visibility: string | undefined): VNode | null {
+        if (!visibility) return null;
+
+        const size = 8;
+        const cy = 0;
+
+        switch (visibility) {
+            case 'public':
+                return <circle cx={size/2} cy={cy} r={size/2} fill="green" stroke="green" stroke-width="1"/>;
+
+            case 'protected':
+                return <polygon
+                    points={`${size/2},${cy-size/2} ${size},${cy} ${size/2},${cy+size/2} 0,${cy}`}
+                    fill="yellow"
+                    stroke="yellow"
+                    stroke-width="1"
+                />;
+
+            case 'private':
+                return <rect
+                    x={0}
+                    y={cy-size/2}
+                    width={size}
+                    height={size}
+                    fill="red"
+                    stroke="red"
+                    stroke-width="1"
+                />;
+
+            case 'package_private':
+                return <polygon
+                    points={`${size/2},${cy-size/2} ${size},${cy+size/2} 0,${cy+size/2}`}
+                    fill="blue"
+                    stroke="blue"
+                    stroke-width="1"
+                />;
+
+            default:
+                return null;
+        }
     }
 }
 

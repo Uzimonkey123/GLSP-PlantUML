@@ -24,12 +24,11 @@ import {
 
 import {PlantUmlGLSPDiagramWidget} from "../plantuml-diagram-widget";
 import {PlantUmlStartup} from "../plantuml-startup";
-import {BrEditLabelUI} from "../utils";
+import {BrEditLabelUI, HtmlLabelView} from "../utils";
 
 import {Container} from "inversify";
 import {defaultModule as clientDefaultModule} from "@eclipse-glsp/client/lib/base/default.module";
 import {CircleEntityView, DiamondEntityView, EntityView} from "./class-entity-views";
-import {HtmlLabelView} from "../../lib/sequence-views";
 import {EntityLabelView} from "./class-views";
 
 export const ClassDiagramModule = new FeatureModule(
