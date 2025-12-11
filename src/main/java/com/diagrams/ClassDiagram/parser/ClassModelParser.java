@@ -60,7 +60,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 List<Link> links = cd.getLinks();
 
                 for (Link link : links) {
-                    //handleLink(link);
+                    handleLink(link);
                 }
             }
         }

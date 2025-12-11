@@ -5,10 +5,13 @@ import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
+import com.diagrams.ClassDiagram.factory.ClassLayout;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ClassEntityFactory {
 
@@ -16,6 +19,7 @@ public class ClassEntityFactory {
     private final EntityBuild entityBuild;
 
     private final List<GModelElement> elements;
+    private final ClassLayout layoutEngine;
 
     private final int horizontalPadding = 20;
     private double cursor = 40;
@@ -24,9 +28,38 @@ public class ClassEntityFactory {
         this.model = model;
         this.entityBuild = entityBuild;
         this.elements = elements;
+        this.layoutEngine = new ClassLayout();
     }
 
     public void createEntities() {
+        Map<String, ClassLayout.Size> dimensions = new HashMap<>();
+
+        for (ClassEntity entity : model.entities) {
+            double width, height;
+
+            if (entity.getType().equals("CIRCLE")) {
+                width = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
+                height = entityLength(entity);
+
+            } else if (entity.getType().equals("DIAMOND")) {
+                width = 30;
+                height = 30;
+
+            } else {
+                double methodWidth = entityAttributesLength(entity.getMethods());
+                double fieldsWidth = entityAttributesLength(entity.getFields());
+                double attributesWidth = Math.max(methodWidth, fieldsWidth);
+                width = Math.max(
+                        WidthCalculator.calculateWidth(entity.getName(), horizontalPadding),
+                        attributesWidth);
+                height = entityLength(entity);
+            }
+
+            dimensions.put(entity.getId(), new ClassLayout.Size(width, height));
+        }
+
+        layoutEngine.layoutEntities(model.entities, model.links, dimensions);
+
         for (ClassEntity entity : model.entities) {
             if (entity.getType().equals("CIRCLE")) {
                 createCircleEntity(entity);
@@ -38,15 +71,9 @@ public class ClassEntityFactory {
                 continue;
             }
 
-            double methodWidth = entityAttributesLength(entity.getMethods());
-            double fieldsWidth = entityAttributesLength(entity.getFields());
-            double attributesWidth = Math.max(methodWidth, fieldsWidth);
-            double entityWidth = Math.max(
-                                WidthCalculator.calculateWidth(entity.getName(), horizontalPadding), attributesWidth);
-
-            double entityHeight = entityLength(entity);
-
-            entity.setX(cursor);
+            ClassLayout.Size size = dimensions.get(entity.getId());
+            double entityWidth = size.width;
+            double entityHeight = size.height;
 
             List<String> methodNames = new ArrayList<>();
             for (EntityMethod method : entity.getMethods()) {
@@ -64,8 +91,6 @@ public class ClassEntityFactory {
             }
 
             elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames, bodyLines));
-
-            cursor += entityWidth + 40;
         }
     }
 
@@ -76,7 +101,6 @@ public class ClassEntityFactory {
         entity.setX(cursor);
 
         elements.add(entityBuild.buildCircleEntity(entity, entityWidth, entityHeight));
-        cursor += entityWidth + 40;
     }
 
     private void createDiamondEntity(ClassEntity entity) {
@@ -85,7 +109,6 @@ public class ClassEntityFactory {
         entity.setX(cursor);
 
         elements.add(entityBuild.buildDiamondEntity(entity, entityWidth));
-        cursor += entityWidth + 40;
     }
 
     private double entityAttributesLength(List<EntityMethod> attribute) {
