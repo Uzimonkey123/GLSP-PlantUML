@@ -22,6 +22,7 @@ public class EntityBuild {
                 .text(entity.getName())
                 .addArgument("type", entity.getType().toLowerCase())
                 .addArgument("width", width)
+                .addArgument("visibility", entity.getVisibility())
                 .build());
 
         for (int i = 0; i < fields.size(); i++) {
@@ -67,6 +68,7 @@ public class EntityBuild {
                 .text(entity.getName())
                 .addArgument("type", entity.getType().toLowerCase())
                 .addArgument("width", width)
+                .addArgument("visibility", entity.getVisibility())
                 .build());
 
         return nodeBuilder.build();

@@ -119,7 +119,7 @@ export class HtmlLabelView extends GLabelView {
             );
         }
 
-        const visibilityShape = this.renderVisibilityShape(visibility);
+        const visibilityShape = renderVisibilityShape(visibility);
 
         const shapeOffset = boxWidth ? -boxWidth/2 + 3 : 0;
 
@@ -137,47 +137,47 @@ export class HtmlLabelView extends GLabelView {
             </g>
         );
     }
+}
 
-    private renderVisibilityShape(visibility: string | undefined): VNode | null {
-        if (!visibility) return null;
+export function renderVisibilityShape(visibility: string | undefined): VNode | null {
+    if (!visibility) return null;
 
-        const size = 8;
-        const cy = 0;
+    const size = 8;
+    const cy = 0;
 
-        switch (visibility) {
-            case 'public':
-                return <circle cx={size/2} cy={cy} r={size/2} fill="green" stroke="green" stroke-width="1"/>;
+    switch (visibility) {
+        case 'public':
+            return <circle cx={size/2} cy={cy} r={size/2} fill="green" stroke="green" stroke-width="1"/>;
 
-            case 'protected':
-                return <polygon
-                    points={`${size/2},${cy-size/2} ${size},${cy} ${size/2},${cy+size/2} 0,${cy}`}
-                    fill="yellow"
-                    stroke="yellow"
-                    stroke-width="1"
-                />;
+        case 'protected':
+            return <polygon
+                points={`${size/2},${cy-size/2} ${size},${cy} ${size/2},${cy+size/2} 0,${cy}`}
+                fill="yellow"
+                stroke="yellow"
+                stroke-width="1"
+            />;
 
-            case 'private':
-                return <rect
-                    x={0}
-                    y={cy-size/2}
-                    width={size}
-                    height={size}
-                    fill="red"
-                    stroke="red"
-                    stroke-width="1"
-                />;
+        case 'private':
+            return <rect
+                x={0}
+                y={cy-size/2}
+                width={size}
+                height={size}
+                fill="red"
+                stroke="red"
+                stroke-width="1"
+            />;
 
-            case 'package_private':
-                return <polygon
-                    points={`${size/2},${cy-size/2} ${size},${cy+size/2} 0,${cy+size/2}`}
-                    fill="blue"
-                    stroke="blue"
-                    stroke-width="1"
-                />;
+        case 'package_private':
+            return <polygon
+                points={`${size/2},${cy-size/2} ${size},${cy+size/2} 0,${cy+size/2}`}
+                fill="blue"
+                stroke="blue"
+                stroke-width="1"
+            />;
 
-            default:
-                return null;
-        }
+        default:
+            return null;
     }
 }
 
