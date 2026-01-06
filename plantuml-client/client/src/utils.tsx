@@ -207,13 +207,49 @@ export function TspanConverter(html: string): VNode[][] {
         );
     };
 
+    const applyLineModifier = (styleKey: 'italic' | 'underline') => {
+        // Update base style
+        stack[0] = { ...stack[0], [styleKey]: true };
+
+        // Update all styles in the stack
+        for (let i = 1; i < stack.length; i++) {
+            stack[i] = { ...stack[i], [styleKey]: true };
+        }
+
+        currentLine = currentLine.map(vnode => {
+            const attrs = vnode.data?.attrs || {};
+            const newAttrs: any = { ...attrs };
+
+            if (styleKey === 'italic') {
+                newAttrs['font-style'] = 'italic';
+            } else if (styleKey === 'underline') {
+                newAttrs['text-decoration'] = 'underline';
+            }
+
+            return {
+                ...vnode,
+                data: {...vnode.data, attrs: newAttrs}
+            };
+        });
+    };
+
     // Replace <br> with \n
     const normalized = html.replace(/<br\s*\/?>/gi, '\n');
 
     // Tokenize the input so it takes the \n, <.., />
-    const tokens = normalized.match(/<<[^<>]+>>|<\/?[^>]+>|[^<\n]+|\n/g) || [];
+    const tokens = normalized.match(/<<[^<>]+>>|\{abstract\}|\{static\}|\{classifier\}|<\/?[^>]+>|[^<\n{}]+|\n/g) || [];
 
     for (const token of tokens) {
+        if (token === '{abstract}') {
+            applyLineModifier('italic');
+            continue;
+        }
+
+        if (token === '{static}' || token === '{classifier}') {
+            applyLineModifier('underline');
+            continue;
+        }
+
         if (token.startsWith('<<') && token.endsWith('>>')) {
             applyStyle(token);
             continue;
