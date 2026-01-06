@@ -4,7 +4,7 @@ import com.diagrams.ClassDiagram.model.Visibility;
 
 public class EntityMethod {
     private String visibilityChar;
-    private final String methodName;
+    private String methodName;
 
     public EntityMethod(String methodName) {
         String tempName;
@@ -20,6 +20,13 @@ public class EntityMethod {
         }
 
         this.methodName = tempName;
+        removeBracketed();
+    }
+
+    private void removeBracketed() {
+        this.methodName = this.methodName
+                .replaceAll("\\{(?!static\\}|classifier\\}|abstract\\})[^}]*\\}", "")
+                .trim();
     }
 
     public String getVisibilityChar() {
