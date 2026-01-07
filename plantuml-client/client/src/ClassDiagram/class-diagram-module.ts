@@ -6,7 +6,7 @@ import {
     debugModule,
     DeleteElementContextMenuItemProvider, editLabelFeature,
     EditLabelUI,
-    FeatureModule, GLabel, GNode,
+    FeatureModule, GEdge, GLabel, GNode,
     gridModule,
     helperLineModule,
     initializeDiagramContainer,
@@ -29,7 +29,7 @@ import {BrEditLabelUI, HtmlLabelView} from "../utils";
 import {Container} from "inversify";
 import {defaultModule as clientDefaultModule} from "@eclipse-glsp/client/lib/base/default.module";
 import {CircleEntityView, DiamondEntityView, EntityView} from "./class-entity-views";
-import {EntityLabelView} from "./class-views";
+import {ClassLinkView, EntityLabelView} from "./class-views";
 
 export const ClassDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
@@ -47,6 +47,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "entity", GNode, EntityView);
         configureModelElement(context, "entity:circle", GNode, CircleEntityView);
         configureModelElement(context, "entity:diamond", GNode, DiamondEntityView);
+        configureModelElement(context, "link", GEdge, ClassLinkView);
         configureModelElement(context, "label:entityName", GLabel, EntityLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
         configureModelElement(context, "label:method", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:field", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });

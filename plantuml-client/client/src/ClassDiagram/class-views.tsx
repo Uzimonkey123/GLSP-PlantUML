@@ -1,14 +1,15 @@
 import {injectable} from 'inversify';
 import {
+    GEdge,
     GLabel,
     GLabelView,
-    IViewArgs,
+    IViewArgs, Point, PolylineEdgeView,
     RenderingContext,
     svg
 } from '@eclipse-glsp/client';
 import {VNode} from "snabbdom";
 import '../../css/diagram.css';
-import {createIcon, renderVisibilityShape, TspanConverter} from "../utils";
+import {createIcon, renderVisibilityShape} from "../utils";
 
 /** @jsx svg */
 
@@ -72,5 +73,35 @@ export class EntityLabelView extends GLabelView {
         };
 
         return configs[type] || configs['class'];
+    }
+}
+
+@injectable()
+export class ClassLinkView extends PolylineEdgeView {
+    protected override renderAdditionals(
+        edge: GEdge,
+        segments: Point[],
+        context: RenderingContext,
+        args?: IViewArgs
+    ): VNode[] {
+
+        const additionals = super.renderAdditionals(edge, segments, context);
+        if (segments.length < 2) return additionals;
+
+        const start = segments[0];
+        const end = segments[segments.length - 1];
+
+        additionals.unshift(
+            <path
+                d={`M ${start.x} ${start.y} L ${end.x} ${end.y}`}
+                stroke="black"
+                strokeWidth={1}
+                marker-end="none"
+                fill="none"
+                class-sprotty-edge={true}
+            />
+        );
+
+        return additionals;
     }
 }

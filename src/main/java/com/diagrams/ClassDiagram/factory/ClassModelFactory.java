@@ -3,10 +3,12 @@ package com.diagrams.ClassDiagram.factory;
 import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.factory.ClassParts.ClassEntityFactory;
 import com.diagrams.ClassDiagram.model.ClassModel;
+import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import jakarta.inject.Inject;
 import org.eclipse.glsp.graph.GGraph;
 import org.eclipse.glsp.graph.GModelElement;
+import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
 import org.eclipse.glsp.graph.builder.impl.GGraphBuilder;
 import org.eclipse.glsp.server.features.core.model.GModelFactory;
 
@@ -28,6 +30,16 @@ public class ClassModelFactory implements GModelFactory {
 
         ClassEntityFactory entityFactory = new ClassEntityFactory(model, entityBuild, elements);
         entityFactory.createEntities();
+
+        for (ClassLink link : model.links) {
+            GModelElement element = new GEdgeBuilder("link")
+                    .id(link.getLinkId())
+                    .sourceId(link.getEntity1().getId())
+                    .targetId(link.getEntity2().getId())
+                    .build();
+
+            elements.add(element);
+        }
 
         GGraph newGModel = new GGraphBuilder()
                 .id("class-diagram")
