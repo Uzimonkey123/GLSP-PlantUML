@@ -157,8 +157,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         int length = link.getLength();
         String decorator1 = link.getType().getDecor1().toString();
         String decorator2 = link.getType().getDecor2().toString();
+        String quant1 = link.getQuantifier1();
+        String quant2 = link.getQuantifier2();
 
-        ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length, decorator1, decorator2);
+        ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length,
+                                            decorator1, decorator2, quant1, quant2);
         model.links.add(newLink);
         System.err.println(newLink);
     }

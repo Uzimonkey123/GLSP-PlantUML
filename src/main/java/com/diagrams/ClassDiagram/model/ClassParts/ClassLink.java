@@ -9,10 +9,12 @@ public class ClassLink {
     private int length;
     private final String decorator1;
     private final String decorator2;
+    private final String quantifier1;
+    private final String quantifier2;
 
     public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2,
                      String type, String message, int length,
-                     String decorator1, String decorator2) {
+                     String decorator1, String decorator2, String quantifier1, String quantifier2) {
         this.linkId = linkId;
         this.entity1 = entity1;
         this.entity2 = entity2;
@@ -21,6 +23,8 @@ public class ClassLink {
         this.length = length;
         this.decorator1 = decorator1;
         this.decorator2 = decorator2;
+        this.quantifier1 = quantifier1;
+        this.quantifier2 = quantifier2;
     }
 
     public String getLinkId() {
@@ -63,9 +67,21 @@ public class ClassLink {
         return decorator2;
     }
 
+    public String getQuantifier1() {
+        if (quantifier1 == null) return "";
+
+        return quantifier1;
+    }
+
+    public String getQuantifier2() {
+        if (quantifier2 == null) return "";
+
+        return quantifier2;
+    }
+
     @Override
     public String toString() {
-        return String.format("{ClassLink: %s, Entity1: %s, Entity2: %s, Type: %s, Message: %s}",
-                linkId, entity1, entity2, type, message);
+        return String.format("{ClassLink: %s, Entity1: %s, Entity2: %s, Type: %s, Message: %s, Dec1: %s, Dec2: %s}",
+                linkId, entity1.getId(), entity2.getId(), type, message, decorator1, decorator2);
     }
 }
