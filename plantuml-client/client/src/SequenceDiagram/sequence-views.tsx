@@ -160,7 +160,7 @@ export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersection
 	}
 }
 
-interface renderLine {
+export interface renderLine {
 	startArrowPos: {x: number, y: number};
 	endArrowPos: {x: number, y: number};
 	angle: number;
