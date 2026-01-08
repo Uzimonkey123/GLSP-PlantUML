@@ -2,6 +2,7 @@ package com.diagrams.ClassDiagram.factory;
 
 import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.factory.ClassParts.ClassEntityFactory;
+import com.diagrams.ClassDiagram.factory.ClassParts.ClassLinkFactory;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.state.ClassModelState;
@@ -31,15 +32,8 @@ public class ClassModelFactory implements GModelFactory {
         ClassEntityFactory entityFactory = new ClassEntityFactory(model, entityBuild, elements);
         entityFactory.createEntities();
 
-        for (ClassLink link : model.links) {
-            GModelElement element = new GEdgeBuilder("link")
-                    .id(link.getLinkId())
-                    .sourceId(link.getEntity1().getId())
-                    .targetId(link.getEntity2().getId())
-                    .build();
-
-            elements.add(element);
-        }
+        ClassLinkFactory linkFactory = new ClassLinkFactory(model, elements);
+        linkFactory.createLinks();
 
         GGraph newGModel = new GGraphBuilder()
                 .id("class-diagram")
