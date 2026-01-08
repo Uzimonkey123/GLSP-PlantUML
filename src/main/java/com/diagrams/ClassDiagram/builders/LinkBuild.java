@@ -11,6 +11,13 @@ public class LinkBuild {
                 .sourceId(link.getEntity1().getId())
                 .targetId(link.getEntity2().getId());
 
+        addLinkArguments(link, edge);
         return edge.build();
+    }
+
+    private void addLinkArguments(ClassLink link, GEdgeBuilder edge) {
+        edge.addArgument("headStart", link.getDecorator2());
+        edge.addArgument("headEnd", link.getDecorator1());
+        edge.addArgument("style", link.getType());
     }
 }

@@ -140,8 +140,9 @@ export class ClassLinkView extends PolylineEdgeView {
         this.start = segments[0];
         this.end = segments[segments.length - 1];
 
-        this.headStart = "CROWFOOT";
-        this.headEnd = "PLUS";
+        this.style = (edge.args?.style as string) ?? 'normal'
+        this.headStart = (edge.args?.headStart as string) ?? 'none';
+        this.headEnd = (edge.args?.headEnd as string) ?? 'none';
 
         this.drawSimpleArrow(additionals);
 
@@ -153,7 +154,7 @@ export class ClassLinkView extends PolylineEdgeView {
         const dy = end.y - start.y;
         const length = Math.sqrt(dx * dx + dy * dy);
 
-        const strokeWidth = this.style === 'bold' ? 2.5 : 1.5;
+        const strokeWidth = 1.5;
 
         const startHeadSize = this.getHeadSize(this.headStart);
         const endHeadSize = this.getHeadSize(this.headEnd);
