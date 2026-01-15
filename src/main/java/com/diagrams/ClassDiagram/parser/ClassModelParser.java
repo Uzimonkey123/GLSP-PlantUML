@@ -11,11 +11,9 @@ import com.google.inject.Inject;
 import net.sourceforge.plantuml.BlockUml;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.abel.Entity;
-import net.sourceforge.plantuml.abel.LeafType;
 import net.sourceforge.plantuml.abel.Link;
 import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.core.Diagram;
-import net.sourceforge.plantuml.decoration.LinkDecor;
 import net.sourceforge.plantuml.skin.VisibilityModifier;
 
 import java.io.File;
@@ -52,10 +50,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
             if (d instanceof ClassDiagram cd) {
                 Entity root = cd.getRootGroup();
-
-                for (Entity entity : root.leafs()) {
-                    handleEntity(entity);
-                }
+                processEntityRecursively(root);
 
                 List<Link> links = cd.getLinks();
 
@@ -66,6 +61,20 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         return model;
+    }
+
+    private void processEntityRecursively(Entity entity) {
+        for (Entity leaf : entity.leafs()) {
+            if (!leaf.isHidden() && !leaf.isRemoved()) {
+                handleEntity(leaf);
+            }
+        }
+
+        for (Entity group : entity.groups()) {
+            if (!group.isHidden() && !group.isRemoved()) {
+                processEntityRecursively(group);
+            }
+        }
     }
 
     private void handleEntity(Entity entity) {
@@ -144,12 +153,18 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     }
 
     private void handleLink(Link link) {
+        Entity linkEntity1 = link.getEntity1();
+        Entity linkEntity2 = link.getEntity2();
+        if (linkEntity1.isRemoved() || linkEntity2.isRemoved() || linkEntity1.isHidden() || linkEntity2.isHidden()) {
+            return;
+        }
+
         String id = "link-" + model.links.size();
         ClassEntity entity1 = model.getClassEntity(
-                                String.join("<br>", link.getEntity1().getDisplay().toString())
+                                String.join("<br>", linkEntity1.getDisplay().toString())
                                         .replaceAll("^\\[|]$", ""));
         ClassEntity entity2 = model.getClassEntity(
-                                String.join("<br>", link.getEntity2().getDisplay().toString())
+                                String.join("<br>", linkEntity2.getDisplay().toString())
                                         .replaceAll("^\\[|]$", ""));
         String type = link.getType().toString();
         String message = String.join("<br>", link.getLabel().toString());
@@ -163,6 +178,5 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length,
                                             decorator1, decorator2, quant1, quant2);
         model.links.add(newLink);
-        System.err.println(newLink);
     }
 }
