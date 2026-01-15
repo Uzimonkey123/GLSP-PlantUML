@@ -22,8 +22,8 @@ public class ClassLayout {
     public void layoutEntities(List<ClassEntity> entities, List<ClassLink> links, Map<String, Size> dimensions) {
         MutableGraph graph = mutGraph("class_diagram").setDirected(true).graphAttrs().add(
                         attr("rankdir", "BT"),
-                        attr("nodesep", 1.5),
-                        attr("ranksep", 1.0),
+                        attr("nodesep", 2.0),
+                        attr("ranksep", 1.5),
                         attr("splines", "polyline"),
                         attr("pad", "0.5,0.5")
                 );
@@ -50,8 +50,13 @@ public class ClassLayout {
 
         for (ClassLink link : links) {
             if (link.getEntity1() != null && link.getEntity2() != null) {
+                int minlen = calculateMinLen(link.getMessage());
+
                 graph.add(mutNode(link.getEntity1().getId())
-                        .addLink(mutNode(link.getEntity2().getId())));
+                        .addLink(
+                                to(mutNode(link.getEntity2().getId()))
+                                        .add(attr("minlen", minlen))
+                        ));
             }
         }
 
@@ -98,6 +103,17 @@ public class ClassLayout {
                 entity.setY(centerY - (size.height / 2) + 40);
             }
         }
+    }
+
+    private int calculateMinLen(String message) {
+        if (message == null || message.isEmpty()) {
+            return 2;
+        }
+
+        double textWidth = message.length() * 4;
+
+        int minlen = (int) Math.ceil(textWidth / 36.0);
+        return Math.max(1, Math.min(minlen, 10));
     }
 
     public static class Size {

@@ -1,10 +1,13 @@
 package com.diagrams.ClassDiagram.builders;
 
+import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
-import org.eclipse.glsp.graph.GModelElement;
+import org.eclipse.glsp.graph.*;
 import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
+import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 
 public class LinkBuild {
+
     public GModelElement buildLink(ClassLink link) {
         GEdgeBuilder edge = new GEdgeBuilder("link")
                 .id(link.getLinkId())
@@ -12,6 +15,7 @@ public class LinkBuild {
                 .targetId(link.getEntity2().getId());
 
         addLinkArguments(link, edge);
+        addLinkLabels(link, edge, link.getEntity1(), link.getEntity2());
         return edge.build();
     }
 
@@ -19,5 +23,28 @@ public class LinkBuild {
         edge.addArgument("headStart", link.getDecorator2());
         edge.addArgument("headEnd", link.getDecorator1());
         edge.addArgument("style", link.getType());
+    }
+
+    private void addLinkLabels(ClassLink link, GEdgeBuilder edge, ClassEntity sourceNode, ClassEntity targetNode) {
+        GLabel quantifier1 = new GLabelBuilder("label:invis")
+                .id("quant1-" + link.getLinkId())
+                .text(link.getQuantifier1())
+                .build();
+
+        edge.add(quantifier1);
+
+        GLabel quantifier2 = new GLabelBuilder("label:invis")
+                .id("quant2-" + link.getLinkId())
+                .text(link.getQuantifier2())
+                .build();
+
+        edge.add(quantifier2);
+
+        GLabel label = new GLabelBuilder("label:invis")
+                .id("label-" + link.getLinkId())
+                .text(link.getMessage())
+                .build();
+
+        edge.add(label);
     }
 }

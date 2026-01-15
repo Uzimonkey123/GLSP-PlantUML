@@ -29,7 +29,7 @@ import {BrEditLabelUI, HtmlLabelView} from "../utils";
 import {Container} from "inversify";
 import {defaultModule as clientDefaultModule} from "@eclipse-glsp/client/lib/base/default.module";
 import {CircleEntityView, DiamondEntityView, EntityView} from "./class-entity-views";
-import {ClassLinkView, EntityLabelView} from "./class-views";
+import {ClassLinkView, EntityLabelView, HiddenLabelView} from "./class-views";
 
 export const ClassDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
@@ -52,6 +52,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "label:method", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:field", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:body", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:invis", GLabel, HiddenLabelView);
 
     }
 );
