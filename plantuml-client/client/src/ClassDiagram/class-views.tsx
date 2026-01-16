@@ -2,7 +2,7 @@ import {injectable} from 'inversify';
 import {
     GEdge,
     GLabel,
-    GLabelView,
+    GLabelView, IView,
     IViewArgs, Point, PolylineEdgeView,
     RenderingContext,
     svg
@@ -78,6 +78,13 @@ export class EntityLabelView extends GLabelView {
 }
 
 @injectable()
+export class HiddenLabelView implements IView {
+    render(label: Readonly<GLabel>, context: RenderingContext): VNode {
+        return <g></g>;
+    }
+}
+
+@injectable()
 export class ClassLinkView extends PolylineEdgeView {
     private start = {x: 0, y: 0};
     private end = {x: 0, y: 0};
@@ -145,8 +152,104 @@ export class ClassLinkView extends PolylineEdgeView {
         this.headEnd = (edge.args?.headEnd as string) ?? 'none';
 
         this.drawSimpleArrow(additionals);
+        this.renderLabels(edge, additionals);
 
         return additionals;
+    }
+
+    private renderLabels(edge: GEdge, additionals: VNode[]) {
+        const quant1 = edge.children?.find(c => c.id.startsWith('quant1-'));
+        const quant2 = edge.children?.find(c => c.id.startsWith('quant2-'));
+        const messageLabel = edge.children?.find(c => c.id.startsWith('label-'));
+
+        const {unitVector, perpVector} = this.calculateVectors(this.start, this.end);
+
+        if (quant1) {
+            this.renderQuantifierLabel(quant1, this.start, unitVector, perpVector, this.headStart, true, additionals);
+        }
+
+        if (quant2) {
+            this.renderQuantifierLabel(quant2, this.end, unitVector, perpVector, this.headEnd, false, additionals);
+        }
+
+        if (messageLabel) {
+            this.renderMessageLabel(messageLabel, unitVector, perpVector, additionals);
+        }
+    }
+
+    private calculateVectors(start: Point, end: Point) {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+
+        return {
+            unitVector: { x: dx / length, y: dy / length },
+            perpVector: { x: -dy / length, y: dx / length }
+        };
+    }
+
+    private renderQuantifierLabel(
+        quantifier: any,
+        position: Point,
+        unitVector: Point,
+        perpVector: Point,
+        arrowHead: string,
+        isStart: boolean,
+        additionals: VNode[]
+    ) {
+        if (!quantifier.text) return;
+
+        const lineOffset = 15;
+        const perpOffset = 15; // kolmica
+        const headSize = this.getHeadSize(arrowHead);
+        const direction = isStart ? 1 : -1;
+
+        const x = position.x + unitVector.x * direction * (headSize + lineOffset) + perpVector.x * perpOffset;
+        const y = position.y + unitVector.y * direction * (headSize + lineOffset) + perpVector.y * perpOffset;
+
+        additionals.push(
+            <text
+                x={x}
+                y={y}
+                class-sprotty-label={true}
+                text-anchor="middle"
+                dominant-baseline="middle"
+            >
+                {quantifier.text}
+            </text>
+        );
+    }
+
+    private renderMessageLabel(label: any, unitVector: Point, perpVector: Point, additionals: VNode[]) {
+        if (!label.text) return;
+
+        const perpBaseOffset = 15;
+        const char = 5;
+
+        const midX = (this.start.x + this.end.x) / 2;
+        const midY = (this.start.y + this.end.y) / 2;
+
+        const dx = this.end.x - this.start.x;
+        const dy = this.end.y - this.start.y;
+        const isVertical = Math.abs(dy) > Math.abs(dx);
+
+        const textWidth = label.text.length * char;
+        const perpOffset = isVertical ? perpBaseOffset + (textWidth / 2) : perpBaseOffset;
+
+        const x = midX - perpVector.x * perpOffset;
+        const y = midY - perpVector.y * perpOffset;
+
+        additionals.push(
+            <text
+                x={x}
+                y={y}
+                class-sprotty-label={true}
+                text-anchor="middle"
+                dominant-baseline="middle"
+            >
+                {label.text}
+            </text>
+        );
     }
 
     private drawMessageLine(start: {x: number, y:number}, end: {x: number, y: number}, additionals: VNode[]): renderLine {
