@@ -23,6 +23,8 @@ public class LinkBuild {
         edge.addArgument("headStart", link.getDecorator2());
         edge.addArgument("headEnd", link.getDecorator1());
         edge.addArgument("style", link.getType());
+        edge.addArgument("color", link.getColor());
+        edge.addArgument("thickness", link.getThickness());
     }
 
     private void addLinkLabels(ClassLink link, GEdgeBuilder edge, ClassEntity sourceNode, ClassEntity targetNode) {

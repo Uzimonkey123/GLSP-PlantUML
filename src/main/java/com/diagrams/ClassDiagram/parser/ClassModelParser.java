@@ -14,6 +14,8 @@ import net.sourceforge.plantuml.abel.Entity;
 import net.sourceforge.plantuml.abel.Link;
 import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.klimt.UStroke;
+import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.skin.VisibilityModifier;
 
 import java.io.File;
@@ -178,5 +180,20 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length,
                                             decorator1, decorator2, quant1, quant2);
         model.links.add(newLink);
+        linkAttributes(newLink, link);
+        System.err.println(newLink);
+    }
+
+    private void linkAttributes(ClassLink newLink, Link link) {
+        if (link.getColors().getColor(ColorType.LINE) != null) {
+            String color = link.getColors().getColor(ColorType.LINE).asString();
+            newLink.setColor(color);
+            System.err.println(color);
+        }
+
+        UStroke stroke = link.getType().getStroke3(null);
+        double thickness = stroke.getThickness();
+        newLink.setThickness(thickness);
+
     }
 }

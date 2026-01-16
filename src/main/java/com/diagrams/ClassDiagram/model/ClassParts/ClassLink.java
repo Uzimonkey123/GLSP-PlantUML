@@ -12,6 +12,9 @@ public class ClassLink {
     private final String quantifier1;
     private final String quantifier2;
 
+    private String color = "#000000";
+    private double thickness = 1.0;
+
     public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2,
                      String type, String message, int length,
                      String decorator1, String decorator2, String quantifier1, String quantifier2) {
@@ -77,6 +80,22 @@ public class ClassLink {
         if (quantifier2 == null) return "";
 
         return quantifier2;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public double getThickness() {
+        return thickness;
+    }
+
+    public void setThickness(double thickness) {
+        this.thickness = thickness;
     }
 
     @Override
