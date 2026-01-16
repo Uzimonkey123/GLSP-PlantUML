@@ -93,6 +93,7 @@ export class ClassLinkView extends PolylineEdgeView {
     private headStart! : string;
     private headEnd! : string;
     private arrColor! : string;
+    private thickness! : number;
 
     private headPath(kind: string): string | undefined {
         let offset = 8;
@@ -150,6 +151,8 @@ export class ClassLinkView extends PolylineEdgeView {
         this.style = (edge.args?.style as string) ?? 'normal'
         this.headStart = (edge.args?.headStart as string) ?? 'none';
         this.headEnd = (edge.args?.headEnd as string) ?? 'none';
+        this.thickness = (edge.args?.thickness as number) ?? 1.0;
+        this.arrColor = (edge.args?.color as string) ?? '#000000';
 
         this.drawSimpleArrow(additionals);
         this.renderLabels(edge, additionals);
@@ -257,10 +260,10 @@ export class ClassLinkView extends PolylineEdgeView {
         const dy = end.y - start.y;
         const length = Math.sqrt(dx * dx + dy * dy);
 
-        const strokeWidth = 1.5;
+        const startHeadSize = this.getHeadSize(this.headStart) * this.thickness;
+        const endHeadSize = this.getHeadSize(this.headEnd) * this.thickness;
 
-        const startHeadSize = this.getHeadSize(this.headStart);
-        const endHeadSize = this.getHeadSize(this.headEnd);
+        const strokeWidth = this.thickness;
 
         const ux = dx / length;
         const uy = dy / length;
@@ -278,11 +281,10 @@ export class ClassLinkView extends PolylineEdgeView {
         additionals.unshift(
             <path
                 d={`M ${lineStart.x} ${lineStart.y} L ${lineEnd.x} ${lineEnd.y}`}
-                stroke="black"
-                strokeWidth={strokeWidth}
+                stroke={this.arrColor}
+                stroke-width={this.thickness}
                 marker-end="none"
                 fill="none"
-                class-sprotty-edge={true}
             />
         );
 
@@ -313,12 +315,16 @@ export class ClassLinkView extends PolylineEdgeView {
 
         const d = this.headPath(kind);
         if (d) {
+            const isFilled = kind === 'COMPOSITION';
+            const scale = strokeWidth;
+            const normalizedStroke = isFilled ? 1 : 1;
+
             additionals.push(
                 <path d={d}
-                      transform={`translate(${at.x} ${at.y}) rotate(${ang})`}
-                      style={{ fill: kind === 'COMPOSITION' ? "black" : 'none' }}
-                      stroke="black"
-                      strokeWidth={strokeWidth}
+                      transform={`translate(${at.x} ${at.y}) rotate(${ang}) scale(${scale})`}
+                      style={{ fill: isFilled ? this.arrColor : 'none' }}
+                      stroke={this.arrColor}
+                      stroke-width={normalizedStroke}
                 />
             );
         }
