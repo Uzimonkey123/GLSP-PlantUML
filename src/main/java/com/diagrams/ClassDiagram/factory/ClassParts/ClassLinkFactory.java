@@ -21,6 +21,10 @@ public class ClassLinkFactory {
 
     public void createLinks() {
         for (ClassLink link : model.links) {
+            if(link.getType().equals("INVISIBLE")) {
+                continue;
+            }
+
             elements.add(linkBuild.buildLink(link));
         }
     }

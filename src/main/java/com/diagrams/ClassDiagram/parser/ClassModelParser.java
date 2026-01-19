@@ -170,6 +170,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                                         .replaceAll("^\\[|]$", ""));
         String type = link.getType().toString();
         String message = String.join("<br>", link.getLabel().toString());
+        if (message.equals("NULL")) {
+            message = "";
+        }
 
         int length = link.getLength();
         String decorator1 = link.getType().getDecor1().toString();
@@ -188,7 +191,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         if (link.getColors().getColor(ColorType.LINE) != null) {
             String color = link.getColors().getColor(ColorType.LINE).asString();
             newLink.setColor(color);
-            System.err.println(color);
         }
 
         UStroke stroke = link.getType().getStroke3(null);

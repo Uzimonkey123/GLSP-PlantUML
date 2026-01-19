@@ -22,12 +22,27 @@ public class ClassLink {
         this.entity1 = entity1;
         this.entity2 = entity2;
         this.type = type;
-        this.message = message;
+        cleanMessage(message);
         this.length = length;
         this.decorator1 = decorator1;
         this.decorator2 = decorator2;
         this.quantifier1 = quantifier1;
         this.quantifier2 = quantifier2;
+    }
+
+    private void cleanMessage(String message) {
+        if (message.equals("NULL")) {
+            this.message = "";
+            return;
+        }
+
+
+        if (message.startsWith("[") && message.endsWith("]")) {
+            this.message = message.substring(1, message.length() - 1);
+
+        } else {
+            this.message = message;
+        }
     }
 
     public String getLinkId() {
@@ -43,7 +58,14 @@ public class ClassLink {
     }
 
     public String getType() {
-        return type;
+        int startIndex = this.type.indexOf("-") + 1;
+        int endIndex = this.type.indexOf("(");
+
+        if (startIndex > 0 && endIndex > startIndex) {
+            return this.type.substring(startIndex, endIndex);
+        }
+
+        return this.type;
     }
 
     public String getMessage() {
@@ -51,7 +73,7 @@ public class ClassLink {
     }
 
     public void setMessage(String message) {
-        this.message = message;
+        cleanMessage(message);
     }
 
     public int getLength() {
