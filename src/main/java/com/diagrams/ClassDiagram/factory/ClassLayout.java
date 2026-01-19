@@ -23,7 +23,7 @@ public class ClassLayout {
         MutableGraph graph = mutGraph("class_diagram").setDirected(true).graphAttrs().add(
                         attr("rankdir", "BT"),
                         attr("nodesep", 2.0),
-                        attr("ranksep", 1.5),
+                        attr("ranksep", 1.3),
                         attr("splines", "polyline"),
                         attr("pad", "0.5,0.5")
                 );
@@ -50,7 +50,7 @@ public class ClassLayout {
 
         for (ClassLink link : links) {
             if (link.getEntity1() != null && link.getEntity2() != null) {
-                int minlen = calculateMinLen(link.getMessage());
+                int minlen = calculateMinLen(link);
 
                 graph.add(mutNode(link.getEntity1().getId())
                         .addLink(
@@ -105,14 +105,18 @@ public class ClassLayout {
         }
     }
 
-    private int calculateMinLen(String message) {
-        if (message == null || message.isEmpty()) {
-            return 2;
+    private int calculateMinLen(ClassLink link) {
+        int baseLength = link.getLength();
+
+        String message = link.getMessage();
+        int messageSpace = 0;
+
+        if (message != null && !message.isEmpty()) {
+            double textWidth = message.length() * 4;
+            messageSpace = (int) Math.ceil(textWidth / 36.0);
         }
 
-        double textWidth = message.length() * 4;
-
-        int minlen = (int) Math.ceil(textWidth / 36.0);
+        int minlen = Math.max(baseLength, messageSpace);
         return Math.max(1, Math.min(minlen, 10));
     }
 
