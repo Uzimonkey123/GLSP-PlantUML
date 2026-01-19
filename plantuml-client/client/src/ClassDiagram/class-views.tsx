@@ -283,6 +283,7 @@ export class ClassLinkView extends PolylineEdgeView {
                 d={`M ${lineStart.x} ${lineStart.y} L ${lineEnd.x} ${lineEnd.y}`}
                 stroke={this.arrColor}
                 stroke-width={this.thickness}
+                stroke-dasharray={this.style === "DASHED" ? "5,5" : "none"}
                 marker-end="none"
                 fill="none"
             />
