@@ -174,8 +174,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleDiamondEntity(Entity entity, String id) {
         String type = "DIAMOND";
+        String name = String.join("<br>", entity.getDisplay().toString())
+                .replaceAll("^\\[|]$", "");
 
-        ClassEntity diamondEntity = new ClassEntity(0, 0, id, type);
+        ClassEntity diamondEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(diamondEntity);
     }
 
@@ -201,12 +203,18 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         String id = "link-" + model.links.size();
-        ClassEntity entity1 = model.getClassEntity(
-                String.join("<br>", linkEntity1.getDisplay().toString())
-                        .replaceAll("^\\[|]$", ""));
-        ClassEntity entity2 = model.getClassEntity(
-                String.join("<br>", linkEntity2.getDisplay().toString())
-                        .replaceAll("^\\[|]$", ""));
+        String name1 = String.join("<br>", linkEntity1.getDisplay().toString())
+                .replaceAll("^\\[|]$", "");
+        String name2 = String.join("<br>", linkEntity2.getDisplay().toString())
+                .replaceAll("^\\[|]$", "");
+
+        ClassEntity entity1 = model.getClassEntity(name1);
+        ClassEntity entity2 = model.getClassEntity(name2);
+
+        if (entity1 == null || entity2 == null) {
+            return;
+        }
+
         String type = link.getType().toString();
         String message = String.join("<br>", link.getLabel().toString());
         if (message.equals("NULL")) {
