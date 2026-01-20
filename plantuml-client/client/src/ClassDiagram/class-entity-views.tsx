@@ -237,3 +237,22 @@ export class CircleEntityView extends ShapeView {
         </g>;
     }
 }
+
+@injectable()
+export class AssociationPointView extends ShapeView {
+    override render(node: GNode, context: RenderingContext): VNode | undefined {
+        if (!this.isVisible(node, context)) {
+            return undefined;
+        }
+
+        return <g class-sprotty-node={true} class-association-point={true}>
+            <circle
+                cx={4}
+                cy={4}
+                r={4}
+                fill="#000"
+                stroke="none"
+            />
+        </g>;
+    }
+}
