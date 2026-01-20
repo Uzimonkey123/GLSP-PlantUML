@@ -84,5 +84,14 @@ public class EntityBuild {
 
         return nodeBuilder.build();
     }
+
+    public GModelElement buildAssociationPoint(ClassEntity entity) {
+        GNodeBuilder point = new GNodeBuilder("entity:association-point")
+                .id(entity.getId())
+                .position(entity.getX(), entity.getY())
+                .size(8, 8);
+
+        return point.build();
+    }
 }
 

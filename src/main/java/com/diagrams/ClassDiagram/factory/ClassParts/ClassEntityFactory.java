@@ -45,6 +45,10 @@ public class ClassEntityFactory {
                 width = 30;
                 height = 30;
 
+            } else if (entity.getType().equals("ASSOCIATION_POINT")) {
+                width = 8;
+                height = 8;
+
             } else {
                 double methodWidth = entityAttributesLength(entity.getMethods());
                 double fieldsWidth = entityAttributesLength(entity.getFields());
@@ -68,6 +72,11 @@ public class ClassEntityFactory {
 
             if (entity.getType().equals("DIAMOND")) {
                 createDiamondEntity(entity);
+                continue;
+            }
+
+            if (entity.getType().equals("ASSOCIATION_POINT")) {
+                createAssociationPoint(entity);
                 continue;
             }
 
@@ -98,17 +107,17 @@ public class ClassEntityFactory {
         double entityWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
         double entityHeight = entityLength(entity);
 
-        entity.setX(cursor);
-
         elements.add(entityBuild.buildCircleEntity(entity, entityWidth, entityHeight));
     }
 
     private void createDiamondEntity(ClassEntity entity) {
         double entityWidth = 30;
 
-        entity.setX(cursor);
-
         elements.add(entityBuild.buildDiamondEntity(entity, entityWidth));
+    }
+
+    private void createAssociationPoint(ClassEntity entity) {
+        elements.add(entityBuild.buildAssociationPoint(entity));
     }
 
     private double entityAttributesLength(List<EntityMethod> attribute) {

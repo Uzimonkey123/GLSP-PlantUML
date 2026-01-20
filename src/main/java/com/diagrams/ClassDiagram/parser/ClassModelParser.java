@@ -81,36 +81,68 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleEntity(Entity entity) {
         String id = "ent-" + model.entities.size();
-        String type = entity.getLeafType().toString();;
-        if (type.equals("CIRCLE") || type.equals("DESCRIPTION")) {
-            handleCircleEntity(entity, id);
-            return;
-        }
+        String type = entity.getLeafType().toString();
 
-        if (type.equals("STATE_CHOICE") || type.equals("ASSOCIATION")) {
-            handleDiamondEntity(entity, id);
-            return;
+        switch (type) {
+            case "POINT_FOR_ASSOCIATION" -> {
+                handleAssociationPoint(entity, id);
+                return;
+            }
+            case "CIRCLE", "DESCRIPTION" -> {
+                handleCircleEntity(entity, id);
+                return;
+            }
+            case "STATE_CHOICE", "ASSOCIATION" -> {
+                handleDiamondEntity(entity, id);
+                return;
+            }
         }
 
         String name = String.join("<br>", entity.getDisplay().toString())
-                        .replaceAll("^\\[|]$", "");
+                .replaceAll("^\\[|]$", "");
 
         List<EntityMethod> body = new ArrayList<>();
-        for (CharSequence item : entity.getBodier().getRawBody()) {
-            EntityMethod bodyItem = new EntityMethod(item.toString());
-            body.add(bodyItem);
-        }
-
         List<EntityMethod> methods = new ArrayList<>();
-        for (CharSequence method : entity.getBodier().getMethodsToDisplay()) {
-            EntityMethod entityMethod = new EntityMethod(method.toString());
-            methods.add(entityMethod);
+        List<EntityMethod> fields = new ArrayList<>();
+
+        try {
+            for (CharSequence item : entity.getBodier().getRawBody()) {
+                EntityMethod bodyItem = new EntityMethod(item.toString());
+                body.add(bodyItem);
+            }
+
+        } catch (Exception e) {
+            System.err.println("WARNING: Cannot get raw body for " + name);
         }
 
-        List<EntityMethod> fields = new ArrayList<>();
-        for (CharSequence field : entity.getBodier().getFieldsToDisplay()) {
-            EntityMethod entityMethod = new EntityMethod(field.toString());
-            fields.add(entityMethod);
+        try {
+            for (CharSequence method : entity.getBodier().getMethodsToDisplay()) {
+                EntityMethod entityMethod = new EntityMethod(method.toString());
+                methods.add(entityMethod);
+            }
+
+        } catch (UnsupportedOperationException e) {
+            for (EntityMethod item : body) {
+                String itemStr = item.getMethodName();
+                if (itemStr.contains("(") && itemStr.contains(")")) {
+                    methods.add(item);
+                }
+            }
+        }
+
+        try {
+            for (CharSequence field : entity.getBodier().getFieldsToDisplay()) {
+                EntityMethod entityMethod = new EntityMethod(field.toString());
+                fields.add(entityMethod);
+            }
+
+        } catch (UnsupportedOperationException e) {
+            for (EntityMethod item : body) {
+                String itemStr = item.getMethodName();
+                if (!itemStr.contains("(") || !itemStr.contains(")")) {
+                    fields.add(item);
+                }
+            }
         }
 
         ClassEntity newEntity = new ClassEntity(0, 0, id, name, type, methods, fields, body);
@@ -123,6 +155,14 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         System.err.println(newEntity);
     }
 
+    private void handleAssociationPoint(Entity entity, String id) {
+        String type = "ASSOCIATION_POINT";
+        String name = "";
+
+        ClassEntity pointEntity = new ClassEntity(0, 0, id, name, type);
+        model.entities.add(pointEntity);
+    }
+
     private void handleCircleEntity(Entity entity, String id) {
         String type = "CIRCLE";
         String name = String.join("<br>", entity.getDisplay().toString())
@@ -130,7 +170,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         ClassEntity circleEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(circleEntity);
-
     }
 
     private void handleDiamondEntity(Entity entity, String id) {
@@ -163,11 +202,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         String id = "link-" + model.links.size();
         ClassEntity entity1 = model.getClassEntity(
-                                String.join("<br>", linkEntity1.getDisplay().toString())
-                                        .replaceAll("^\\[|]$", ""));
+                String.join("<br>", linkEntity1.getDisplay().toString())
+                        .replaceAll("^\\[|]$", ""));
         ClassEntity entity2 = model.getClassEntity(
-                                String.join("<br>", linkEntity2.getDisplay().toString())
-                                        .replaceAll("^\\[|]$", ""));
+                String.join("<br>", linkEntity2.getDisplay().toString())
+                        .replaceAll("^\\[|]$", ""));
         String type = link.getType().toString();
         String message = String.join("<br>", link.getLabel().toString());
         if (message.equals("NULL")) {
@@ -181,7 +220,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         String quant2 = link.getQuantifier2();
 
         ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length,
-                                            decorator1, decorator2, quant1, quant2);
+                decorator1, decorator2, quant1, quant2);
         model.links.add(newLink);
         linkAttributes(newLink, link);
         System.err.println(newLink);
@@ -196,6 +235,5 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         UStroke stroke = link.getType().getStroke3(null);
         double thickness = stroke.getThickness();
         newLink.setThickness(thickness);
-
     }
 }
