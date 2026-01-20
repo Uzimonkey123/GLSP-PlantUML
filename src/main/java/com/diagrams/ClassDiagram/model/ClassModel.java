@@ -12,9 +12,9 @@ public class ClassModel {
 
     public ClassModel() {}
 
-    public ClassEntity getClassEntity(String className) {
-        return this.entities.stream()
-                .filter(c -> c.getName().equals(className))
+    public ClassEntity getClassEntity(String name) {
+        return entities.stream()
+                .filter(entity -> entity.getName() != null && entity.getName().equals(name))
                 .findFirst()
                 .orElse(null);
     }

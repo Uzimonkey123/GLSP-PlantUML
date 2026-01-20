@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ClassEntity extends NodePosition {
     private final String id;
-    private String name;
+    private String name = "";
     private String originalName;
     private final String type;
     private String visibility = "";
