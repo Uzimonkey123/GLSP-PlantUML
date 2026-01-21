@@ -149,6 +149,8 @@ public class ClassEntityFactory {
                 ? entity.getMethods().size() * lineHeight + verticalPadding * 2
                 : emptyHeight;
 
-        return headerHeight + fieldsHeight + methodsHeight;
+        int stereotypeHeight = !entity.getStereotypeName().isEmpty() ? lineHeight : 0;
+
+        return stereotypeHeight + headerHeight + fieldsHeight + methodsHeight;
     }
 }

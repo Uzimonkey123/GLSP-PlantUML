@@ -17,6 +17,7 @@ public class ClassEntity extends NodePosition {
     private boolean isStereotype = false;
     private char stereotypeChar = ' ';
     private String stereotypeName = "";
+    private String stereotypeColor = "";
 
     public ClassEntity(int x, int y, String id, String name, String type,
                         List<EntityMethod> methods, List<EntityMethod> fields, List<EntityMethod> rawBody) {
@@ -104,6 +105,14 @@ public class ClassEntity extends NodePosition {
 
     public String getStereotypeName() {
         return stereotypeName;
+    }
+
+    public String getStereotypeColor() {
+        return stereotypeColor;
+    }
+
+    public void setStereotypeColor(String stereotypeColor) {
+        this.stereotypeColor = stereotypeColor;
     }
 
     @Override

@@ -204,8 +204,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         newEntity.setStereotype(true);
         newEntity.setStereotypeName(entity.getStereotype().getLabel(Guillemet.DOUBLE_COMPARATOR));
         newEntity.setStereotype(entity.getStereotype().getCharacter());
-
-        System.err.println("Stereotype: " + newEntity.isStereotype() + " Stereo name: " + newEntity.getStereotypeName());
+        newEntity.setStereotypeColor(entity.getStereotype().getHtmlColor().asString());
     }
 
     private void handleLink(Link link) {

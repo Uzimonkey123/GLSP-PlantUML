@@ -23,6 +23,10 @@ public class EntityBuild {
                 .addArgument("type", entity.getType().toLowerCase())
                 .addArgument("width", width)
                 .addArgument("visibility", entity.getVisibility())
+                .addArgument("height", height)
+                .addArgument("stereotypeName", entity.getStereotypeName())
+                .addArgument("stereotypeChar", String.valueOf(entity.getStereotypeChar()))
+                .addArgument("stereotypeColor", entity.getStereotypeColor())
                 .build());
 
         for (int i = 0; i < fields.size(); i++) {
