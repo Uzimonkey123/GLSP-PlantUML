@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import static guru.nidi.graphviz.engine.Engine.DOT;
 import static guru.nidi.graphviz.model.Factory.*;
@@ -38,8 +39,8 @@ public class ClassLayout {
                 double heightInches = size.height / 72.0;
 
                 node = node.add(
-                        attr("width", String.format("%.2f", widthInches)),
-                        attr("height", String.format("%.2f", heightInches)),
+                        attr("width", String.format(Locale.US, "%.2f", widthInches)),
+                        attr("height", String.format(Locale.US, "%.2f", heightInches)),
                         attr("fixedsize", "true"),
                         attr("shape", "box")
                 );
