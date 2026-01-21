@@ -14,6 +14,9 @@ public class ClassEntity extends NodePosition {
     private final List<EntityMethod> methods = new ArrayList<>();
     private final List<EntityMethod> fields = new ArrayList<>();
     private final List<EntityMethod> rawBody = new ArrayList<>();
+    private boolean isStereotype = false;
+    private char stereotypeChar = ' ';
+    private String stereotypeName = "";
 
     public ClassEntity(int x, int y, String id, String name, String type,
                         List<EntityMethod> methods, List<EntityMethod> fields, List<EntityMethod> rawBody) {
@@ -77,6 +80,30 @@ public class ClassEntity extends NodePosition {
 
     public List<EntityMethod> getRawBody() {
         return rawBody;
+    }
+
+    public boolean isStereotype() {
+        return isStereotype;
+    }
+
+    public void setStereotype(boolean stereo) {
+        isStereotype = stereo;
+    }
+
+    public void setStereotype(char stereotypeChar) {
+        this.stereotypeChar = stereotypeChar;
+    }
+
+    public char getStereotypeChar() {
+        return stereotypeChar;
+    }
+
+    public void setStereotypeName(String stereotypeName) {
+        this.stereotypeName = stereotypeName;
+    }
+
+    public String getStereotypeName() {
+        return stereotypeName;
     }
 
     @Override

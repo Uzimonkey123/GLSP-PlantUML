@@ -17,6 +17,7 @@ import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.klimt.UStroke;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.skin.VisibilityModifier;
+import net.sourceforge.plantuml.text.Guillemet;
 
 import java.io.File;
 import java.io.IOException;
@@ -152,6 +153,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             handleEntityVisibility(newEntity, entity);
         }
 
+        if (entity.getStereotype() != null) {
+            handleEntityStereotype(newEntity, entity);
+        }
+
         System.err.println(newEntity);
     }
 
@@ -193,6 +198,14 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         if (!visibility.isEmpty()) {
             newEntity.setVisibility(Visibility.fromChar(visibility.charAt(0)));
         }
+    }
+
+    private void handleEntityStereotype(ClassEntity newEntity, Entity entity) {
+        newEntity.setStereotype(true);
+        newEntity.setStereotypeName(entity.getStereotype().getLabel(Guillemet.DOUBLE_COMPARATOR));
+        newEntity.setStereotype(entity.getStereotype().getCharacter());
+
+        System.err.println("Stereotype: " + newEntity.isStereotype() + " Stereo name: " + newEntity.getStereotypeName());
     }
 
     private void handleLink(Link link) {

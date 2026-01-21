@@ -53,9 +53,14 @@ public class ClassEntityFactory {
                 double methodWidth = entityAttributesLength(entity.getMethods());
                 double fieldsWidth = entityAttributesLength(entity.getFields());
                 double attributesWidth = Math.max(methodWidth, fieldsWidth);
-                width = Math.max(
-                        WidthCalculator.calculateWidth(entity.getName(), horizontalPadding),
-                        attributesWidth);
+
+                double textWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
+                if (!entity.getStereotypeName().isEmpty()) {
+                    double stereotypeWidth = WidthCalculator.calculateWidth(entity.getStereotypeName(), horizontalPadding);
+                    textWidth = Math.max(textWidth, stereotypeWidth);
+                }
+
+                width = Math.max(textWidth, attributesWidth);
                 height = entityLength(entity);
             }
 
