@@ -22,7 +22,9 @@ export class EntityView extends ShapeView {
         const lineHeight = 14;
         const padding = 5;
         const minSectionHeight = 10;
-        const headerH = 30;
+        const hasStereotype = nameLabel && (nameLabel as any).args?.stereotypeName &&
+            (nameLabel as any).args.stereotypeName.length > 0;
+        const headerH = hasStereotype ? 44 : 30;
 
         if (this.hasSeparator(bodyLabels)) {
             return this.renderAdvanced(context, w, h, background, nameLabel, bodyLabels, headerH, lineHeight);

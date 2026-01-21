@@ -24,7 +24,17 @@ export class EntityLabelView extends GLabelView {
 
         const width = (label as any).args?.width;
         const background = typeConfig.color;
-        const stereotypeChar = typeConfig.char;
+
+        // Check for stereotype
+        const stereotypeName = (label as any).args?.stereotypeName as string | undefined;
+        const stereotypeChar = (label as any).args?.stereotypeChar as string | undefined;
+        const stereotypeColor = (label as any).args?.stereotypeColor as string | undefined;
+        const hasStereotypeName = stereotypeName && stereotypeName.length > 0;
+        const hasStereotypeChar = stereotypeChar && stereotypeChar.trim().length > 0 && stereotypeChar !== ' ';
+        const hasStereotypeColor = stereotypeColor && stereotypeColor.length > 0;
+
+        const displayChar = hasStereotypeChar ? stereotypeChar : typeConfig.char;
+        const iconColor = hasStereotypeColor ? stereotypeColor : background;
 
         const isBold = text.startsWith('=');
         const content = isBold ? text.slice(1).trim() : text;
@@ -38,8 +48,24 @@ export class EntityLabelView extends GLabelView {
         const shapeOffset = width ? iconRightEdge + 3 : 0;
 
         return <g>
-            {createIcon(width, background, stereotypeChar)}
+            {createIcon(width, iconColor, displayChar)}
             {visibilityShape && <g transform={`translate(${shapeOffset}, 0)`}>{visibilityShape}</g>}
+
+            {hasStereotypeName && (
+                <text
+                    x={visibilityShape ? 15 : 5}
+                    y={-12}
+                    class-sprotty-label={true}
+                    text-anchor="start"
+                    style={{
+                        fontSize: '11px',
+                        fill: '#666'
+                    }}
+                >
+                    {stereotypeName}
+                </text>
+            )}
+
             <text
                 x={visibilityShape ? 15 : 5}
                 y={0}
