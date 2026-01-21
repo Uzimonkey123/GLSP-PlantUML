@@ -25,6 +25,14 @@ public class LinkBuild {
         edge.addArgument("style", link.getType());
         edge.addArgument("color", link.getColor());
         edge.addArgument("thickness", link.getThickness());
+
+        if (link.getSourceMember() != null && !link.getSourceMember().isEmpty()) {
+            edge.addArgument("sourceMember", link.getSourceMember());
+        }
+
+        if (link.getTargetMember() != null && !link.getTargetMember().isEmpty()) {
+            edge.addArgument("targetMember", link.getTargetMember());
+        }
     }
 
     private void addLinkLabels(ClassLink link, GEdgeBuilder edge, ClassEntity sourceNode, ClassEntity targetNode) {

@@ -17,6 +17,7 @@ import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.klimt.UStroke;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.skin.VisibilityModifier;
+import net.sourceforge.plantuml.svek.Bibliotekon;
 import net.sourceforge.plantuml.text.Guillemet;
 
 import java.io.File;
@@ -220,6 +221,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         String name2 = String.join("<br>", linkEntity2.getDisplay().toString())
                 .replaceAll("^\\[|]$", "");
 
+        String member1 = link.getPortName1();
+        String member2 = link.getPortName2();
+
         ClassEntity entity1 = model.getClassEntity(name1);
         ClassEntity entity2 = model.getClassEntity(name2);
 
@@ -241,6 +245,15 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length,
                 decorator1, decorator2, quant1, quant2);
+
+        if (member1 != null && !member1.isEmpty()) {
+            newLink.setSourceMember(member1);
+        }
+
+        if (member2 != null && !member2.isEmpty()) {
+            newLink.setTargetMember(member2);
+        }
+
         model.links.add(newLink);
         linkAttributes(newLink, link);
         System.err.println(newLink);

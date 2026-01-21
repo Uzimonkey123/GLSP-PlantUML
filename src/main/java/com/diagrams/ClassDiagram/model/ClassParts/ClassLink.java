@@ -11,6 +11,8 @@ public class ClassLink {
     private final String decorator2;
     private final String quantifier1;
     private final String quantifier2;
+    private String sourceMember = null;
+    private String targetMember = null;
 
     private String color = "#000000";
     private double thickness = 1.0;
@@ -118,6 +120,22 @@ public class ClassLink {
 
     public void setThickness(double thickness) {
         this.thickness = thickness;
+    }
+
+    public String getSourceMember() {
+        return sourceMember;
+    }
+
+    public void setSourceMember(String sourceMember) {
+        this.sourceMember = sourceMember;
+    }
+
+    public String getTargetMember() {
+        return targetMember;
+    }
+
+    public void setTargetMember(String targetMember) {
+        this.targetMember = targetMember;
     }
 
     @Override
