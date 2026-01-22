@@ -5,14 +5,36 @@ import {
     GLabelView, IView,
     IViewArgs, Point, PolylineEdgeView,
     RenderingContext,
-    svg
+    svg, GNode
 } from '@eclipse-glsp/client';
 import {VNode} from "snabbdom";
 import '../../css/diagram.css';
 import {createIcon, renderVisibilityShape} from "../utils";
 import {renderLine} from "../SequenceDiagram/sequence-views";
+import {CurvedEdgeRenderer} from "./curved-edge-view";
 
 /** @jsx svg */
+
+export function getTypeConfig(type: string): { color: string; char: string } {
+    const configs: Record<string, { color: string; char: string }> = {
+        'abstract': { color: '#6DBABA', char: 'A' },
+        'abstract class': { color: '#6DBABA', char: 'A' },
+        'annotation': { color: '#FF6B35', char: '@' },
+        'class': { color: '#ADD1B2', char: 'C' },
+        'dataclass': { color: '#9B59B6', char: 'D' },
+        'entity': { color: '#50C878', char: 'E' },
+        'enum': { color: '#B85450', char: 'E' },
+        'exception': { color: '#E74C3C', char: 'X' },
+        'interface': { color: '#6C7AC4', char: 'I' },
+        'metaclass': { color: '#7F8C8D', char: 'M' },
+        'protocol': { color: '#95A5A6', char: 'P' },
+        'record': { color: '#F39C12', char: 'R' },
+        'stereotype': { color: '#E91E63', char: 'S' },
+        'struct': { color: '#BDC3C7', char: 'S' },
+    };
+
+    return configs[type] || configs['class'];
+}
 
 @injectable()
 export class EntityLabelView extends GLabelView {
@@ -20,10 +42,12 @@ export class EntityLabelView extends GLabelView {
         const text = label.text ?? '';
 
         const type = (label as any).args?.type
-        const typeConfig = this.getTypeConfig(type);
+        const typeConfig = getTypeConfig(type);
 
         const width = (label as any).args?.width;
         const background = typeConfig.color;
+
+        const hasGeneric = (label as any).args?.hasGeneric as boolean | undefined;
 
         // Check for stereotype
         const stereotypeName = (label as any).args?.stereotypeName as string | undefined;
@@ -48,7 +72,7 @@ export class EntityLabelView extends GLabelView {
         const shapeOffset = width ? iconRightEdge + 3 : 0;
 
         return <g>
-            {createIcon(width, iconColor, displayChar)}
+            {!hasGeneric && createIcon(width, iconColor, displayChar)}
             {visibilityShape && <g transform={`translate(${shapeOffset}, 0)`}>{visibilityShape}</g>}
 
             {hasStereotypeName && (
@@ -80,27 +104,6 @@ export class EntityLabelView extends GLabelView {
             </text>
         </g>;
     }
-
-    private getTypeConfig(type: string): { color: string; char: string } {
-        const configs: Record<string, { color: string; char: string }> = {
-            'abstract': { color: '#6DBABA', char: 'A' },
-            'abstract class': { color: '#6DBABA', char: 'A' },
-            'annotation': { color: '#FF6B35', char: '@' },
-            'class': { color: '#ADD1B2', char: 'C' },
-            'dataclass': { color: '#9B59B6', char: 'D' },
-            'entity': { color: '#50C878', char: 'E' },
-            'enum': { color: '#B85450', char: 'E' },
-            'exception': { color: '#E74C3C', char: 'X' },
-            'interface': { color: '#6C7AC4', char: 'I' },
-            'metaclass': { color: '#7F8C8D', char: 'M' },
-            'protocol': { color: '#95A5A6', char: 'P' },
-            'record': { color: '#F39C12', char: 'R' },
-            'stereotype': { color: '#E91E63', char: 'S' },
-            'struct': { color: '#BDC3C7', char: 'S' },
-        };
-
-        return configs[type] || configs['class'];
-    }
 }
 
 @injectable()
@@ -120,6 +123,148 @@ export class ClassLinkView extends PolylineEdgeView {
     private headEnd! : string;
     private arrColor! : string;
     private thickness! : number;
+
+    public override render(edge: GEdge, context: RenderingContext, args?: IViewArgs): VNode | undefined {
+        const sourceMember = (edge.args as any)?.sourceMember;
+        const targetMember = (edge.args as any)?.targetMember;
+
+        this.style = (edge.args?.style as string) ?? 'normal';
+        this.headStart = (edge.args?.headStart as string) ?? 'none';
+        this.headEnd = (edge.args?.headEnd as string) ?? 'none';
+        this.thickness = (edge.args?.thickness as number) ?? 1.0;
+        this.arrColor = (edge.args?.color as string) ?? '#000000';
+
+        // If members specified, use curved rendering
+        if (sourceMember || targetMember) {
+            return this.renderMemberLink(edge, context, args);
+        }
+
+        // Otherwise use default rendering
+        return super.render(edge, context, args);
+    }
+
+    private renderMemberLink(edge: GEdge, context: RenderingContext, args?: IViewArgs): VNode | undefined {
+        const source = edge.source as GNode;
+        const target = edge.target as GNode;
+
+        if (!source || !target) {
+            return super.render(edge, context, args);
+        }
+
+        const sourceMember = (edge.args as any)?.sourceMember;
+        const targetMember = (edge.args as any)?.targetMember;
+
+        const additionals: VNode[] = [];
+
+        // Determine curve direction using CurvedEdgeRenderer
+        const { flipCurve, curveToRight } = CurvedEdgeRenderer.determineCurveDirection(
+            source,
+            target,
+            sourceMember,
+            targetMember
+        );
+
+        // Calculate anchor points at member positions with curve direction
+        const sourceAnchor = CurvedEdgeRenderer.calculateMemberAnchorPoint(
+            source,
+            sourceMember,
+            curveToRight
+        );
+        const targetAnchor = CurvedEdgeRenderer.calculateMemberAnchorPoint(
+            target,
+            targetMember,
+            curveToRight
+        );
+
+        this.start = sourceAnchor;
+        this.end = targetAnchor;
+
+        // Calculate control points and curve data using CurvedEdgeRenderer
+        const curveData = CurvedEdgeRenderer.calculateCurveWithTangents(
+            sourceAnchor,
+            targetAnchor,
+            flipCurve
+        );
+
+        // Draw curved path
+        additionals.push(
+            CurvedEdgeRenderer.renderCurvedPath(curveData, {
+                style: this.style,
+                headStart: this.headStart,
+                headEnd: this.headEnd,
+                thickness: this.thickness,
+                color: this.arrColor
+            })
+        );
+
+        // Calculate arrow head positions with proper offsets
+        const startHeadSize = this.getHeadSize(this.headStart) * this.thickness;
+        const endHeadSize = this.getHeadSize(this.headEnd) * this.thickness;
+
+        const arrowTransforms = CurvedEdgeRenderer.calculateArrowTransforms(
+            sourceAnchor,
+            targetAnchor,
+            curveData,
+            startHeadSize,
+            endHeadSize
+        );
+
+        // Draw arrow heads
+        this.drawHead(
+            this.headStart,
+            arrowTransforms.startArrowPos,
+            arrowTransforms.startAngle + 180,
+            false,
+            additionals,
+            this.thickness
+        );
+        this.drawHead(
+            this.headEnd,
+            arrowTransforms.endArrowPos,
+            arrowTransforms.endAngle,
+            false,
+            additionals,
+            this.thickness
+        );
+
+        // Render labels with curve data
+        this.renderCurvedLabels(edge, additionals, curveData);
+
+        return <g class-sprotty-edge={true}>{additionals}</g>;
+    }
+
+    private renderCurvedLabels(edge: GEdge, additionals: VNode[], curveData: any) {
+        const quant1 = edge.children?.find(c => c.id.startsWith('quant1-'));
+        const quant2 = edge.children?.find(c => c.id.startsWith('quant2-'));
+        const messageLabel = edge.children?.find(c => c.id.startsWith('label-'));
+
+        const {unitVector, perpVector} = this.calculateVectors(this.start, this.end);
+
+        if (quant1) {
+            this.renderQuantifierLabel(quant1, this.start, unitVector, perpVector, this.headStart, true, additionals);
+        }
+
+        if (quant2) {
+            this.renderQuantifierLabel(quant2, this.end, unitVector, perpVector, this.headEnd, false, additionals);
+        }
+
+        if (messageLabel && (messageLabel as any).text) {
+            // Position message label along the curve using CurvedEdgeRenderer
+            const labelPosition = CurvedEdgeRenderer.calculateCurvedLabelPosition(curveData, 15);
+
+            additionals.push(
+                <text
+                    x={labelPosition.x}
+                    y={labelPosition.y}
+                    class-sprotty-label={true}
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                >
+                    {(messageLabel as any).text}
+                </text>
+            );
+        }
+    }
 
     private headPath(kind: string): string | undefined {
         let offset = 8;
@@ -174,12 +319,6 @@ export class ClassLinkView extends PolylineEdgeView {
         this.start = segments[0];
         this.end = segments[segments.length - 1];
 
-        this.style = (edge.args?.style as string) ?? 'normal'
-        this.headStart = (edge.args?.headStart as string) ?? 'none';
-        this.headEnd = (edge.args?.headEnd as string) ?? 'none';
-        this.thickness = (edge.args?.thickness as number) ?? 1.0;
-        this.arrColor = (edge.args?.color as string) ?? '#000000';
-
         this.drawSimpleArrow(additionals);
         this.renderLabels(edge, additionals);
 
@@ -202,7 +341,7 @@ export class ClassLinkView extends PolylineEdgeView {
         }
 
         if (messageLabel) {
-            this.renderMessageLabel(messageLabel, unitVector, perpVector, additionals);
+            this.renderMessageLabel(messageLabel, perpVector, additionals);
         }
     }
 
@@ -249,7 +388,7 @@ export class ClassLinkView extends PolylineEdgeView {
         );
     }
 
-    private renderMessageLabel(label: any, unitVector: Point, perpVector: Point, additionals: VNode[]) {
+    private renderMessageLabel(label: any, perpVector: Point, additionals: VNode[]) {
         if (!label.text) return;
 
         const perpBaseOffset = 15;
@@ -333,11 +472,11 @@ export class ClassLinkView extends PolylineEdgeView {
             startArrowPos, endArrowPos, angle, strokeWidth
         } = this.drawMessageLine(this.start, this.end, additionals);
 
-        this.drawHead(this.headStart, startArrowPos, angle + 180, "start", false, additionals, strokeWidth);
-        this.drawHead(this.headEnd, endArrowPos, angle, "end", false, additionals, strokeWidth);
+        this.drawHead(this.headStart, startArrowPos, angle + 180, false, additionals, strokeWidth);
+        this.drawHead(this.headEnd, endArrowPos, angle, false, additionals, strokeWidth);
     }
 
-    private drawHead(kind: string, at: Point, ang: number, pos: string, circle: boolean, additionals: VNode[], strokeWidth: number) {
+    private drawHead(kind: string, at: Point, ang: number, circle: boolean, additionals: VNode[], strokeWidth: number) {
         if (kind == 'none') return;
 
         const d = this.headPath(kind);
