@@ -27,7 +27,15 @@ public class EntityBuild {
                 .addArgument("stereotypeName", entity.getStereotypeName())
                 .addArgument("stereotypeChar", String.valueOf(entity.getStereotypeChar()))
                 .addArgument("stereotypeColor", entity.getStereotypeColor())
+                .addArgument("hasGeneric", entity.isGeneric())
                 .build());
+
+        if (entity.isGeneric()) {
+            nodeBuilder.add(new GLabelBuilder("label:generic")
+                    .id(entity.getId() + "generic")
+                    .text(entity.getGeneric())
+                    .build());
+        }
 
         for (int i = 0; i < fields.size(); i++) {
             nodeBuilder.add(new GLabelBuilder("label:field")

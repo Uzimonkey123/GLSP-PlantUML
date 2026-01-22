@@ -18,6 +18,7 @@ public class ClassEntity extends NodePosition {
     private char stereotypeChar = ' ';
     private String stereotypeName = "";
     private String stereotypeColor = "";
+    private String generic = "";
 
     public ClassEntity(int x, int y, String id, String name, String type,
                         List<EntityMethod> methods, List<EntityMethod> fields, List<EntityMethod> rawBody) {
@@ -113,6 +114,18 @@ public class ClassEntity extends NodePosition {
 
     public void setStereotypeColor(String stereotypeColor) {
         this.stereotypeColor = stereotypeColor;
+    }
+
+    public String getGeneric() {
+        return generic;
+    }
+
+    public void setGeneric(String generic) {
+        this.generic = generic;
+    }
+
+    public boolean isGeneric() {
+        return !generic.isEmpty();
     }
 
     @Override

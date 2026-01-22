@@ -61,6 +61,10 @@ public class ClassEntityFactory {
                 }
 
                 width = Math.max(textWidth, attributesWidth);
+                if (entity.isGeneric()) {
+                    width += WidthCalculator.calculateWidth(entity.getGeneric(), horizontalPadding);
+                }
+
                 height = entityLength(entity);
             }
 

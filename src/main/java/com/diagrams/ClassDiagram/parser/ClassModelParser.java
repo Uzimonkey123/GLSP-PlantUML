@@ -158,6 +158,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             handleEntityStereotype(newEntity, entity);
         }
 
+        if (entity.getGeneric() != null) {
+            newEntity.setGeneric(entity.getGeneric());
+        }
+
         System.err.println(newEntity);
     }
 
