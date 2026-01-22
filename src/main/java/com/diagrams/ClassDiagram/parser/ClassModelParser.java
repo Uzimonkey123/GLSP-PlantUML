@@ -258,6 +258,17 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             newLink.setTargetMember(member2);
         }
 
+        String kal1 = link.getLinkArg().getKal1();
+        String kal2 = link.getLinkArg().getKal2();
+
+        if (kal1 != null && !kal1.isEmpty()) {
+            newLink.setSourceQualifier(kal1);
+        }
+
+        if (kal2 != null && !kal2.isEmpty()) {
+            newLink.setTargetQualifier(kal2);
+        }
+
         model.links.add(newLink);
         linkAttributes(newLink, link);
         System.err.println(newLink);

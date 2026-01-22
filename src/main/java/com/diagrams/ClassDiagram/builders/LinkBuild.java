@@ -33,6 +33,13 @@ public class LinkBuild {
         if (link.getTargetMember() != null && !link.getTargetMember().isEmpty()) {
             edge.addArgument("targetMember", link.getTargetMember());
         }
+
+        if (link.getSourceQualifier() != null && !link.getSourceQualifier().isEmpty()) {
+            edge.addArgument("sourceQualifier", link.getSourceQualifier());
+        }
+        if (link.getTargetQualifier() != null && !link.getTargetQualifier().isEmpty()) {
+            edge.addArgument("targetQualifier", link.getTargetQualifier());
+        }
     }
 
     private void addLinkLabels(ClassLink link, GEdgeBuilder edge, ClassEntity sourceNode, ClassEntity targetNode) {

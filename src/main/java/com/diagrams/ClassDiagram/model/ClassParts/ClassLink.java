@@ -11,11 +11,15 @@ public class ClassLink {
     private final String decorator2;
     private final String quantifier1;
     private final String quantifier2;
+
     private String sourceMember = null;
     private String targetMember = null;
 
     private String color = "#000000";
     private double thickness = 1.0;
+
+    private String sourceQualifier = null;
+    private String targetQualifier = null;
 
     public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2,
                      String type, String message, int length,
@@ -136,6 +140,22 @@ public class ClassLink {
 
     public void setTargetMember(String targetMember) {
         this.targetMember = targetMember;
+    }
+
+    public String getSourceQualifier() {
+        return sourceQualifier;
+    }
+
+    public void setSourceQualifier(String sourceQualifier) {
+        this.sourceQualifier = sourceQualifier;
+    }
+
+    public String getTargetQualifier() {
+        return targetQualifier;
+    }
+
+    public void setTargetQualifier(String targetQualifier) {
+        this.targetQualifier = targetQualifier;
     }
 
     @Override
