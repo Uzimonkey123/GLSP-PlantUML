@@ -1,6 +1,7 @@
 import {injectable} from "inversify";
 import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
+import {getTypeConfig} from "./class-views";
 
 /** @jsx svg */
 
@@ -15,6 +16,7 @@ export class EntityView extends ShapeView {
         const background = "#5d4949";
 
         const nameLabel = node.children.find(child => child.type === 'label:entityName');
+        const genericNameLabel = node.children.find(child => child.type === 'label:generic');
         const fieldLabels = node.children.filter(child => child.type === 'label:field');
         const methodLabels = node.children.filter(child => child.type === 'label:method');
         const bodyLabels = node.children.filter(child => child.type === 'label:body');
@@ -34,17 +36,52 @@ export class EntityView extends ShapeView {
             ? fieldLabels.length * lineHeight + padding * 2
             : minSectionHeight;
 
+        const genericText = genericNameLabel ? ((genericNameLabel as any).text || '') : '';
+        const charWidth = 7;
+        const boxPadding = 10;
+        const genericBoxW = genericNameLabel ? (genericText.length * charWidth + boxPadding) : 50;
+        const genericBoxH = 20;
+        const genericBoxY = 0;
+        const genericBoxX = w - genericBoxW;
+        const nameLabelX = genericNameLabel ? genericBoxX / 2 : w / 2;
+
+        console.log(genericNameLabel)
+
         return <g>
             <rect class-sprotty-node={true} x={0} y={0} width={w} height={h} fill={background} stroke="white" stroke-width="2"/>
 
             <g>
                 {nameLabel && (
-                    <g transform={`translate(${w/2}, ${headerH/2})`}>
+                    <g transform={`translate(${nameLabelX}, ${headerH/2})`}>
                         {context.renderElement(nameLabel)}
                     </g>
                 )}
                 <line x1={0} y1={headerH} x2={w} y2={headerH} class-simple-line={true}/>
             </g>
+
+            {genericNameLabel && nameLabel && (
+                <g transform={`translate(${padding + 10}, ${headerH/2})`}>
+                    {this.renderIcon(nameLabel)}
+                </g>
+            )}
+
+            {genericNameLabel && (
+                <g>
+                    <rect
+                        x={genericBoxX}
+                        y={genericBoxY - 1}
+                        width={genericBoxW + 1}
+                        height={genericBoxH}
+                        fill="white"
+                        stroke="black"
+                        stroke-width="1"
+                        stroke-dasharray="3,3"
+                    />
+                    <g transform={`translate(${genericBoxX + genericBoxW/2}, ${genericBoxY + genericBoxH/2})`}>
+                        {context.renderElement(genericNameLabel)}
+                    </g>
+                </g>
+            )}
 
             <g>
                 {fieldLabels.map((field, index) => (
@@ -62,6 +99,44 @@ export class EntityView extends ShapeView {
                     </g>
                 ))}
             </g>
+        </g>;
+    }
+
+    private renderIcon(nameLabel: any): VNode {
+        const type = (nameLabel as any).args?.type;
+        const stereotypeChar = (nameLabel as any).args?.stereotypeChar;
+        const stereotypeColor = (nameLabel as any).args?.stereotypeColor;
+
+        const typeConfig = getTypeConfig(type);
+        const displayChar = (stereotypeChar && stereotypeChar.trim().length > 0 && stereotypeChar !== ' ')
+            ? stereotypeChar
+            : typeConfig.char;
+        const iconColor = (stereotypeColor && stereotypeColor.length > 0)
+            ? stereotypeColor
+            : typeConfig.color;
+
+        const iconRadius = 8;
+
+        return <g>
+            <circle
+                cx={0}
+                cy={0}
+                r={iconRadius}
+                fill={iconColor}
+                stroke="black"
+                stroke-width={1}
+            />
+            <text
+                x={0}
+                y={0}
+                fill="white"
+                font-weight="bold"
+                font-size="12"
+                text-anchor="middle"
+                dominant-baseline="middle"
+            >
+                {displayChar}
+            </text>
         </g>;
     }
 
