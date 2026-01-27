@@ -28,7 +28,13 @@ import {BrEditLabelUI, HtmlLabelView} from "../utils";
 
 import {Container} from "inversify";
 import {defaultModule as clientDefaultModule} from "@eclipse-glsp/client/lib/base/default.module";
-import {CircleEntityView, DiamondEntityView, EntityView, AssociationPointView} from "./class-entity-views";
+import {
+    CircleEntityView,
+    DiamondEntityView,
+    EntityView,
+    AssociationPointView,
+    NoteEntityView
+} from "./class-entity-views";
 import {
     ClassLinkView,
     EntityLabelView,
@@ -52,6 +58,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "entity:circle", GNode, CircleEntityView);
         configureModelElement(context, "entity:diamond", GNode, DiamondEntityView);
         configureModelElement(context, 'entity:association-point', GNode, AssociationPointView);
+        configureModelElement(context, 'entity:note', GNode, NoteEntityView);
 
         configureModelElement(context, "link", GEdge, ClassLinkView);
 
@@ -60,6 +67,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "label:field", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:body", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:generic", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:note", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:invis", GLabel, HiddenLabelView);
     }
 );

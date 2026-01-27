@@ -333,3 +333,48 @@ export class AssociationPointView extends ShapeView {
         </g>;
     }
 }
+
+@injectable()
+export class NoteEntityView extends ShapeView {
+    override render(node: GNode, context: RenderingContext): VNode {
+        const width = node.size.width;
+        const height = node.size.height;
+        const foldSize = 12;
+
+        const color = '#FFFFCC';
+
+        return <g class-note-entity={true}>
+            <polygon
+                points={`0,0 ${width - foldSize},0 
+                         ${width},${foldSize} ${width},${height} 
+                         0,${height}`}
+                fill={color}
+                stroke="black"
+                stroke-width="1"
+                class-note-body={true}
+            />
+
+            <line
+                x1={width - foldSize}
+                y1={0}
+                x2={width - foldSize}
+                y2={foldSize}
+                stroke="black"
+                stroke-width="1"
+                class-note-fold={true}
+            />
+
+            <line
+                x1={width - foldSize}
+                y1={foldSize}
+                x2={width}
+                y2={foldSize}
+                stroke="black"
+                stroke-width="1"
+                class-note-fold={true}
+            />
+
+            {context.renderChildren(node)}
+        </g>;
+    }
+}
