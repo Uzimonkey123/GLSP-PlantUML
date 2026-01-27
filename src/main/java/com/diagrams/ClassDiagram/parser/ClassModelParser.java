@@ -98,6 +98,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 handleDiamondEntity(entity, id);
                 return;
             }
+            case "NOTE" -> {
+                handleNoteEntity(entity, id);
+                return;
+            }
         }
 
         String name = String.join("<br>", entity.getDisplay().toString())
@@ -191,6 +195,15 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         model.entities.add(diamondEntity);
     }
 
+    private void handleNoteEntity(Entity entity, String id) {
+        String type = "NOTE";
+        String name = String.join("<br>", entity.getDisplay().toString())
+                .replaceAll("^\\[|]$", "");
+
+        ClassEntity noteEntity = new ClassEntity(0, 0, id, name, type);
+        model.entities.add(noteEntity);
+    }
+
     private void handleEntityVisibility(ClassEntity newEntity, Entity entity) {
         String visibility = switch(entity.getVisibilityModifier()) {
             case VisibilityModifier.PRIVATE_METHOD -> "-";
@@ -209,7 +222,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         newEntity.setStereotype(true);
         newEntity.setStereotypeName(entity.getStereotype().getLabel(Guillemet.DOUBLE_COMPARATOR));
         newEntity.setStereotype(entity.getStereotype().getCharacter());
-        newEntity.setStereotypeColor(entity.getStereotype().getHtmlColor().asString());
     }
 
     private void handleLink(Link link) {

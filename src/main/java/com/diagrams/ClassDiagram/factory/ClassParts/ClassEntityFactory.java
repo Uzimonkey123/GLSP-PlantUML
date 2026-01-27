@@ -37,35 +37,45 @@ public class ClassEntityFactory {
         for (ClassEntity entity : model.entities) {
             double width, height;
 
-            if (entity.getType().equals("CIRCLE")) {
-                width = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
-                height = entityLength(entity);
-
-            } else if (entity.getType().equals("DIAMOND")) {
-                width = 30;
-                height = 30;
-
-            } else if (entity.getType().equals("ASSOCIATION_POINT")) {
-                width = 8;
-                height = 8;
-
-            } else {
-                double methodWidth = entityAttributesLength(entity.getMethods());
-                double fieldsWidth = entityAttributesLength(entity.getFields());
-                double attributesWidth = Math.max(methodWidth, fieldsWidth);
-
-                double textWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
-                if (!entity.getStereotypeName().isEmpty()) {
-                    double stereotypeWidth = WidthCalculator.calculateWidth(entity.getStereotypeName(), horizontalPadding);
-                    textWidth = Math.max(textWidth, stereotypeWidth);
+            switch (entity.getType()) {
+                case "CIRCLE" -> {
+                    width = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
+                    height = entityLength(entity);
                 }
 
-                width = Math.max(textWidth, attributesWidth);
-                if (entity.isGeneric()) {
-                    width += WidthCalculator.calculateWidth(entity.getGeneric(), horizontalPadding);
+                case "DIAMOND" -> {
+                    width = 30;
+                    height = 30;
                 }
 
-                height = entityLength(entity);
+                case "ASSOCIATION_POINT" -> {
+                    width = 8;
+                    height = 8;
+                }
+
+                case "NOTE" -> {
+                    width = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding) + 20;
+                    height = calculateNoteHeight(entity.getName());
+                }
+
+                default -> {
+                    double methodWidth = entityAttributesLength(entity.getMethods());
+                    double fieldsWidth = entityAttributesLength(entity.getFields());
+                    double attributesWidth = Math.max(methodWidth, fieldsWidth);
+
+                    double textWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
+                    if (!entity.getStereotypeName().isEmpty()) {
+                        double stereotypeWidth = WidthCalculator.calculateWidth(entity.getStereotypeName(), horizontalPadding);
+                        textWidth = Math.max(textWidth, stereotypeWidth);
+                    }
+
+                    width = Math.max(textWidth, attributesWidth);
+                    if (entity.isGeneric()) {
+                        width += WidthCalculator.calculateWidth(entity.getGeneric(), horizontalPadding);
+                    }
+
+                    height = entityLength(entity);
+                }
             }
 
             dimensions.put(entity.getId(), new ClassLayout.Size(width, height));
@@ -74,19 +84,23 @@ public class ClassEntityFactory {
         layoutEngine.layoutEntities(model.entities, model.links, dimensions);
 
         for (ClassEntity entity : model.entities) {
-            if (entity.getType().equals("CIRCLE")) {
-                createCircleEntity(entity);
-                continue;
-            }
-
-            if (entity.getType().equals("DIAMOND")) {
-                createDiamondEntity(entity);
-                continue;
-            }
-
-            if (entity.getType().equals("ASSOCIATION_POINT")) {
-                createAssociationPoint(entity);
-                continue;
+            switch (entity.getType()) {
+                case "CIRCLE" -> {
+                    createCircleEntity(entity);
+                    continue;
+                }
+                case "DIAMOND" -> {
+                    createDiamondEntity(entity);
+                    continue;
+                }
+                case "ASSOCIATION_POINT" -> {
+                    createAssociationPoint(entity);
+                    continue;
+                }
+                case "NOTE" -> {
+                    createNoteEntity(entity);
+                    continue;
+                }
             }
 
             ClassLayout.Size size = dimensions.get(entity.getId());
@@ -129,6 +143,13 @@ public class ClassEntityFactory {
         elements.add(entityBuild.buildAssociationPoint(entity));
     }
 
+    private void createNoteEntity(ClassEntity entity) {
+        double entityWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding) + 20;
+        double entityHeight = calculateNoteHeight(entity.getName());
+
+        elements.add(entityBuild.buildNoteEntity(entity, entityWidth, entityHeight));
+    }
+
     private double entityAttributesLength(List<EntityMethod> attribute) {
         double length = 0;
 
@@ -156,5 +177,12 @@ public class ClassEntityFactory {
         int stereotypeHeight = !entity.getStereotypeName().isEmpty() ? lineHeight : 0;
 
         return stereotypeHeight + headerHeight + fieldsHeight + methodsHeight;
+    }
+
+    private double calculateNoteHeight(String text) {
+        int lineHeight = 14;
+        int padding = 15;
+        int lines = text.split("<br>").length;
+        return lines * lineHeight + padding * 2;
     }
 }

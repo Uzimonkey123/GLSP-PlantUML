@@ -105,5 +105,23 @@ public class EntityBuild {
 
         return point.build();
     }
+
+    public GModelElement buildNoteEntity(ClassEntity entity, double width, double height) {
+        GNodeBuilder nodeBuilder = new GNodeBuilder("entity:note")
+                .id(entity.getId())
+                .layout("vbox")
+                .position(entity.getX(), entity.getY())
+                .size(width, height)
+                .addArgument("type", "note");
+
+        nodeBuilder.add(new GLabelBuilder("label:note")
+                .id(entity.getId() + "-label-name")
+                .text(entity.getName())
+                .addArgument("type", "note")
+                .addArgument("width", width)
+                .build());
+
+        return nodeBuilder.build();
+    }
 }
 
