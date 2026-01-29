@@ -334,12 +334,12 @@ export class AssociationPointView extends ShapeView {
     }
 }
 
-@injectable()
 export class NoteEntityView extends ShapeView {
     override render(node: GNode, context: RenderingContext): VNode {
         const width = node.size.width;
         const height = node.size.height;
         const foldSize = 12;
+        const padding = 10;
 
         const color = '#FFFFCC';
 
@@ -374,7 +374,9 @@ export class NoteEntityView extends ShapeView {
                 class-note-fold={true}
             />
 
-            {context.renderChildren(node)}
+            <g transform={`translate(${width / 2 - 5}, ${padding})`}>
+                {context.renderChildren(node)}
+            </g>
         </g>;
     }
 }

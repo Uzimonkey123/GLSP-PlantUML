@@ -104,8 +104,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             }
         }
 
-        String name = String.join("<br>", entity.getDisplay().toString())
-                .replaceAll("^\\[|]$", "");
+        String name = String.join("<br>", entity.getDisplay());
 
         List<EntityMethod> body = new ArrayList<>();
         List<EntityMethod> methods = new ArrayList<>();
@@ -179,8 +178,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleCircleEntity(Entity entity, String id) {
         String type = "CIRCLE";
-        String name = String.join("<br>", entity.getDisplay().toString())
-                .replaceAll("^\\[|]$", "");
+        String name = String.join("<br>", entity.getDisplay());
 
         ClassEntity circleEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(circleEntity);
@@ -188,8 +186,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleDiamondEntity(Entity entity, String id) {
         String type = "DIAMOND";
-        String name = String.join("<br>", entity.getDisplay().toString())
-                .replaceAll("^\\[|]$", "");
+        String name = String.join("<br>", entity.getDisplay());
 
         ClassEntity diamondEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(diamondEntity);
@@ -197,8 +194,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleNoteEntity(Entity entity, String id) {
         String type = "NOTE";
-        String name = String.join("<br>", entity.getDisplay().toString())
-                .replaceAll("^\\[|]$", "");
+        String rawDisplay = entity.getDisplay().toString();
+        System.err.println("RAW NOTE DISPLAY: '" + rawDisplay + "'");
+        System.err.println("RAW NOTE DISPLAY BYTES: " + java.util.Arrays.toString(rawDisplay.getBytes()));
+
+        String name = String.join("<br>", entity.getDisplay());
 
         ClassEntity noteEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(noteEntity);
@@ -232,10 +232,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         String id = "link-" + model.links.size();
-        String name1 = String.join("<br>", linkEntity1.getDisplay().toString())
-                .replaceAll("^\\[|]$", "");
-        String name2 = String.join("<br>", linkEntity2.getDisplay().toString())
-                .replaceAll("^\\[|]$", "");
+        String name1 = String.join("<br>", linkEntity1.getDisplay());
+        String name2 = String.join("<br>", linkEntity2.getDisplay());
 
         String member1 = link.getPortName1();
         String member2 = link.getPortName2();
