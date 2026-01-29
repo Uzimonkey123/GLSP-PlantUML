@@ -9,7 +9,9 @@ import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 public class LinkBuild {
 
     public GModelElement buildLink(ClassLink link) {
-        GEdgeBuilder edge = new GEdgeBuilder("link")
+        String edgeType = link.isNoteLink() ? "link:note" : "link";
+
+        GEdgeBuilder edge = new GEdgeBuilder(edgeType)
                 .id(link.getLinkId())
                 .sourceId(link.getEntity1().getId())
                 .targetId(link.getEntity2().getId());

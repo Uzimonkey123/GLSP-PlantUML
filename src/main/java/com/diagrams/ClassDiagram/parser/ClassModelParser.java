@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
@@ -61,6 +63,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 for (Link link : links) {
                     handleLink(link);
                 }
+
+                markNoteLinks();
             }
         }
 
@@ -293,5 +297,28 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         UStroke stroke = link.getType().getStroke3(null);
         double thickness = stroke.getThickness();
         newLink.setThickness(thickness);
+    }
+
+    private void markNoteLinks() {
+        Map<String, Integer> noteConnections = new HashMap<>();
+
+        for (ClassLink link : model.links) {
+            if (link.getEntity1().getType().equals("NOTE")) {
+                noteConnections.merge(link.getEntity1().getId(), 1, Integer::sum);
+            }
+            if (link.getEntity2().getType().equals("NOTE")) {
+                noteConnections.merge(link.getEntity2().getId(), 1, Integer::sum);
+            }
+        }
+
+        for (ClassLink link : model.links) {
+            boolean isNoteWithOneLink =
+                    (link.getEntity1().getType().equals("NOTE") && noteConnections.get(link.getEntity1().getId()) == 1) ||
+                            (link.getEntity2().getType().equals("NOTE") && noteConnections.get(link.getEntity2().getId()) == 1);
+
+            if (isNoteWithOneLink) {
+                link.setNoteLink(true);
+            }
+        }
     }
 }

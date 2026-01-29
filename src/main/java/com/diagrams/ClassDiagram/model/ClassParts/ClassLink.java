@@ -20,6 +20,7 @@ public class ClassLink {
 
     private String sourceQualifier = null;
     private String targetQualifier = null;
+    private boolean noteLink = false;
 
     public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2,
                      String type, String message, int length,
@@ -156,6 +157,14 @@ public class ClassLink {
 
     public void setTargetQualifier(String targetQualifier) {
         this.targetQualifier = targetQualifier;
+    }
+
+    public boolean isNoteLink() {
+        return noteLink;
+    }
+
+    public void setNoteLink(boolean setNoteLink) {
+        this.noteLink = setNoteLink;
     }
 
     @Override
