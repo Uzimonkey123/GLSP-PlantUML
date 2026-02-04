@@ -38,7 +38,7 @@ import {
 import {
     ClassLinkView,
     EntityLabelView,
-    HiddenLabelView
+    HiddenLabelView, SimpleNoteEdgeView
 } from "./class-views";
 
 export const ClassDiagramModule = new FeatureModule(
@@ -61,6 +61,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, 'entity:note', GNode, NoteEntityView);
 
         configureModelElement(context, "link", GEdge, ClassLinkView);
+        configureModelElement(context, "link:note", GEdge, SimpleNoteEdgeView);
 
         configureModelElement(context, "label:entityName", GLabel, EntityLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
         configureModelElement(context, "label:method", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });

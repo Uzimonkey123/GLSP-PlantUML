@@ -5,7 +5,7 @@ import {
     GLabelView, IView,
     IViewArgs, Point, PolylineEdgeView,
     RenderingContext,
-    svg, GNode
+    svg, GNode, GEdgeView
 } from '@eclipse-glsp/client';
 import {VNode} from "snabbdom";
 import '../../css/diagram.css';
@@ -316,13 +316,131 @@ export class ClassLinkView extends PolylineEdgeView {
         const additionals = super.renderAdditionals(edge, segments, context);
         if (segments.length < 2) return additionals;
 
-        this.start = segments[0];
-        this.end = segments[segments.length - 1];
+        let start = segments[0];
+        let end = segments[segments.length - 1];
+
+        const sourceQualifier = (edge.args as any)?.sourceQualifier;
+        const targetQualifier = (edge.args as any)?.targetQualifier;
+
+        // Get entity bounds to determine edge direction
+        const source = edge.source as GNode;
+        const target = edge.target as GNode;
+
+        // Render qualifier boxes if present
+        if (sourceQualifier && source) {
+            const { box, newAnchorPoint } = this.renderQualifierBoxSmart(
+                sourceQualifier,
+                start,
+                source
+            );
+
+            additionals.push(box);
+            start = newAnchorPoint;
+        }
+
+        if (targetQualifier && target) {
+            const { box, newAnchorPoint } = this.renderQualifierBoxSmart(
+                targetQualifier,
+                end,
+                target
+            );
+
+            additionals.push(box);
+            end = newAnchorPoint;
+        }
+
+        this.start = start;
+        this.end = end;
 
         this.drawSimpleArrow(additionals);
         this.renderLabels(edge, additionals);
 
         return additionals;
+    }
+
+    private renderQualifierBoxSmart(
+        text: string,
+        anchorPoint: Point,
+        entity: GNode
+    ): { box: VNode; newAnchorPoint: Point } {
+
+        const padding = 4;
+        const lineHeight = 14;
+        const charWidth = 6.5;
+        const gap = 0;
+
+        const boxWidth = text.length * charWidth + padding * 2;
+        const boxHeight = lineHeight + padding * 2;
+
+        const entityBounds = {
+            left: entity.position.x,
+            right: entity.position.x + entity.size.width,
+            top: entity.position.y,
+            bottom: entity.position.y + entity.size.height
+        };
+
+        const distToLeft = Math.abs(anchorPoint.x - entityBounds.left);
+        const distToRight = Math.abs(anchorPoint.x - entityBounds.right);
+        const distToTop = Math.abs(anchorPoint.y - entityBounds.top);
+        const distToBottom = Math.abs(anchorPoint.y - entityBounds.bottom);
+
+        const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom);
+
+        let boxX: number;
+        let boxY: number;
+        let newAnchorX: number;
+        let newAnchorY: number;
+
+        // TODO: REFACTOR
+        if (minDist === distToRight) {
+            boxX = anchorPoint.x + gap;
+            boxY = anchorPoint.y - boxHeight / 2;
+            newAnchorX = boxX + boxWidth;
+            newAnchorY = anchorPoint.y;
+        } else if (minDist === distToLeft) {
+            boxX = anchorPoint.x - boxWidth - gap;
+            boxY = anchorPoint.y - boxHeight / 2;
+            newAnchorX = boxX;
+            newAnchorY = anchorPoint.y;
+        } else if (minDist === distToBottom) {
+            boxX = anchorPoint.x - boxWidth / 2;
+            boxY = anchorPoint.y + gap;
+            newAnchorX = anchorPoint.x;
+            newAnchorY = boxY + boxHeight;
+        } else {
+            boxX = anchorPoint.x - boxWidth / 2;
+            boxY = anchorPoint.y - boxHeight - gap;
+            newAnchorX = anchorPoint.x;
+            newAnchorY = boxY;
+        }
+
+        const box = (
+            <g class-qualifier-box={true}>
+                <rect
+                    x={boxX}
+                    y={boxY}
+                    width={boxWidth}
+                    height={boxHeight}
+                    fill="white"
+                    stroke="black"
+                    stroke-width="1"
+                />
+                <text
+                    x={boxX + boxWidth / 2}
+                    y={boxY + boxHeight / 2}
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    font-size="10"
+                >
+                    {text}
+                </text>
+            </g>
+        );
+
+        return {
+            box,
+            newAnchorPoint: { x: newAnchorX, y: newAnchorY }
+        };
     }
 
     private renderLabels(edge: GEdge, additionals: VNode[]) {
@@ -494,5 +612,36 @@ export class ClassLinkView extends PolylineEdgeView {
                 />
             );
         }
+    }
+}
+
+@injectable()
+export class SimpleNoteEdgeView extends GEdgeView {
+    protected override renderLine(edge: GEdge, segments: Point[], context: RenderingContext): VNode {
+        if (segments.length >= 2) {
+            const first = segments[0];
+            const last = segments[segments.length - 1];
+
+            const noteColor = '#FFFFCC';
+            const baseWidth = 12;
+
+            const dx = last.x - first.x;
+            const dy = last.y - first.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const perpX = -dy / length * baseWidth / 2;
+            const perpY = dx / length * baseWidth / 2;
+
+            return <polygon
+                points={`${first.x - perpX},${first.y - perpY} 
+                         ${first.x + perpX},${first.y + perpY} 
+                         ${last.x},${last.y}`}
+                fill={noteColor}
+                stroke="#FFFFCC"
+                stroke-width="1"
+                class-note-link={true}
+            />;
+        }
+
+        return <g />;
     }
 }
