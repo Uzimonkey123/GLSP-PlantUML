@@ -13,7 +13,7 @@ export class EntityView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
-        const background = "#5d4949";
+        const background = "#C0C0C0";
 
         const nameLabel = node.children.find(child => child.type === 'label:entityName');
         const genericNameLabel = node.children.find(child => child.type === 'label:generic');

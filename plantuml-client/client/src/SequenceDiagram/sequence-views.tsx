@@ -137,7 +137,7 @@ export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersecti
 					y={centerY - labelHeight}
 					width={labelWidth + 2 * labelPadding}
 					height={labelHeight + labelPadding}
-					fill="#5d4949"
+					fill="#C0C0C0"
 					stroke="black"
 					stroke-width={2}
 				/>

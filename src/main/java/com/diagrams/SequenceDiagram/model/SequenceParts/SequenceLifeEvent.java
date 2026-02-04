@@ -32,6 +32,6 @@ public class SequenceLifeEvent extends SourceElement {
     }
 
     public String getBackground() {
-        return this.background != null ? this.background.asString() : "#5d4949";
+        return this.background != null ? this.background.asString() : "#C0C0C0";
     }
 }
