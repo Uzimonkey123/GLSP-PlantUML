@@ -2,6 +2,7 @@ import {injectable} from "inversify";
 import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
 import {getTypeConfig} from "./class-views";
+import {TspanConverter} from "../utils";
 
 /** @jsx svg */
 
@@ -45,7 +46,8 @@ export class EntityView extends ShapeView {
         const genericBoxX = w - genericBoxW;
         const nameLabelX = genericNameLabel ? genericBoxX / 2 : w / 2;
 
-        console.log(genericNameLabel)
+        let tipOffsetY = 0;
+        const tipGap = 15;
 
         return <g>
             <rect class-sprotty-node={true} x={0} y={0} width={w} height={h} fill={background} stroke="white" stroke-width="2"/>
@@ -84,22 +86,178 @@ export class EntityView extends ShapeView {
             )}
 
             <g>
-                {fieldLabels.map((field, index) => (
-                    <g transform={`translate(${w/2}, ${headerH + padding + (index * lineHeight) + 5})`}>
-                        {context.renderElement(field)}
-                    </g>
-                ))}
+                {fieldLabels.map((field, index) => {
+                    const fieldTip = node.children.find(child =>
+                        child.type === 'label:tip' &&
+                        child.id === field.id + '-tip'
+                    );
+
+                    const fieldY = headerH + padding + (index * lineHeight) + 5;
+                    const tipY = tipOffsetY;
+
+                    if (fieldTip) {
+                        const tipHeight = this.calculateTipHeight((fieldTip as any).text || '');
+                        tipOffsetY += tipHeight + tipGap;
+                    }
+
+                    return <g>
+                        <g transform={`translate(${w / 2}, ${fieldY})`}>
+                            {context.renderElement(field)}
+                        </g>
+
+                        {fieldTip && (
+                            <g>
+                                <g transform={`translate(${w + 10}, ${tipY})`}>
+                                    {this.renderTipAsNote(fieldTip)}
+                                </g>
+                                {this.renderTipLine(w, fieldY, w + 10, tipY + this.calculateTipHeight((fieldTip as any).text || '') / 2, (field as any).text)}
+                            </g>
+                        )}
+                    </g>;
+                })}
                 <line x1={0} y1={headerH + fieldH} x2={w} y2={headerH + fieldH} class-simple-line={true}/>
             </g>
 
             <g>
-                {methodLabels.map((method, index) => (
-                    <g transform={`translate(${w/2}, ${headerH + fieldH + padding + (index * lineHeight) + 5})`}>
-                        {context.renderElement(method)}
-                    </g>
-                ))}
+                {methodLabels.map((method, index) => {
+                    const methodTip = node.children.find(child =>
+                        child.type === 'label:tip' &&
+                        child.id === method.id + '-tip'
+                    );
+
+                    const methodY = headerH + fieldH + padding + (index * lineHeight) + 5;
+                    const tipY = tipOffsetY;
+
+                    if (methodTip) {
+                        const tipHeight = this.calculateTipHeight((methodTip as any).text || '');
+                        tipOffsetY += tipHeight + tipGap;
+                    }
+
+                    return <g>
+                        <g transform={`translate(${w / 2}, ${methodY})`}>
+                            {context.renderElement(method)}
+                        </g>
+
+                        {methodTip && (
+                            <g>
+                                <g transform={`translate(${w + 10}, ${tipY})`}>
+                                    {this.renderTipAsNote(methodTip)}
+                                </g>
+                                {this.renderTipLine(w, methodY, w + 10, tipY + this.calculateTipHeight((methodTip as any).text || '') / 2, (method as any).text)}                            </g>
+                        )}
+                    </g>;
+                })}
             </g>
         </g>;
+    }
+
+    private renderTipAsNote(tipLabel: any): VNode {
+        const text = tipLabel.text || '';
+        const boxWidth = tipLabel.args?.boxWidth || 200;
+
+        const textLines = TspanConverter(text);
+        const lineHeight = 14;
+        const padding = 10;
+        const foldSize = 10;
+
+        const maxLineLength = Math.max(...textLines.map((line: VNode[]) =>
+            line.reduce((sum, span) => sum + ((span as any).text?.length || 0), 0)
+        ));
+        const charWidth = 7;
+        const noteWidth = Math.min(Math.max(maxLineLength * charWidth + padding * 2, 100), boxWidth * 0.9);
+        const noteHeight = textLines.length * lineHeight + padding * 2;
+
+        const color = '#FFFFCC';
+
+        const lines: VNode[] = [];
+        const initialY = textLines.length > 1 ? "10" : "0";
+
+        for (let i = 0; i < textLines.length; i++) {
+            const textSpans = textLines[i] ?? [];
+            const dy = i === 0 ? initialY : "1.2em";
+
+            lines.push(
+                <tspan x="0" {...(i === 0 ? { y: dy } : { dy })}>
+                    {textSpans}
+                </tspan>
+            );
+        }
+
+        return <g class-tip-note={true}>
+            <polygon
+                points={`0,0 ${noteWidth - foldSize},0 
+                 ${noteWidth},${foldSize} ${noteWidth},${noteHeight} 
+                 0,${noteHeight}`}
+                fill={color}
+                stroke="black"
+                stroke-width="1"
+            />
+
+            <line
+                x1={noteWidth - foldSize}
+                y1={0}
+                x2={noteWidth - foldSize}
+                y2={foldSize}
+                stroke="black"
+                stroke-width="1"
+            />
+
+            <line
+                x1={noteWidth - foldSize}
+                y1={foldSize}
+                x2={noteWidth}
+                y2={foldSize}
+                stroke="black"
+                stroke-width="1"
+            />
+
+            <g transform={`translate(${noteWidth / 2 - 5}, ${padding})`}>
+                <text
+                    class-sprotty-label={true}
+                    text-anchor="start"
+                    x="0"
+                    y="0"
+                    font-size="11"
+                    fill="black"
+                >
+                    {lines}
+                </text>
+            </g>
+        </g>;
+    }
+
+    private renderTipLine(memberX: number, memberY: number, tipX: number, tipY: number, memberText?: string): VNode {
+        const noteColor = '#FFFFCC';
+        const baseWidth = 12;
+
+        const charWidth = 6.5;
+        const textWidth = memberText ? memberText.length * charWidth : 100;
+        const entityCenterX = memberX / 2;
+        const textEndX = entityCenterX + textWidth / 2;
+
+        const memberAnchorX = Math.min(textEndX, memberX - 10);
+
+        const dx = memberAnchorX - tipX;
+        const dy = memberY - tipY;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const perpX = -dy / length * baseWidth / 2;
+        const perpY = dx / length * baseWidth / 2;
+
+        return <polygon
+            points={`${tipX - perpX},${tipY - perpY} 
+                     ${tipX + perpX},${tipY + perpY} 
+                     ${memberAnchorX},${memberY}`}
+            fill={noteColor}
+            stroke="#FFFFCC"
+            stroke-width="1"
+        />;
+    }
+
+    private calculateTipHeight(text: string): number {
+        const lines = text.split('<br>').length;
+        const lineHeight = 14;
+        const padding = 10;
+        return lines * lineHeight + padding * 2;
     }
 
     private renderIcon(nameLabel: any): VNode {
