@@ -306,6 +306,12 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             newLink.setTargetQualifier(kal2);
         }
 
+        if (link.getNote() != null) {
+            String noteText = String.join("<br>", link.getNote().getDisplay());
+            newLink.setNoteOnLink(noteText);
+            newLink.setNotePosition(link.getNote().getPosition().toString());
+        }
+
         model.links.add(newLink);
         linkAttributes(newLink, link);
         System.err.println(newLink);

@@ -22,6 +22,9 @@ public class ClassLink {
     private String targetQualifier = null;
     private boolean noteLink = false;
 
+    private String noteOnLink = null;
+    private String notePosition = null;
+
     public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2,
                      String type, String message, int length,
                      String decorator1, String decorator2, String quantifier1, String quantifier2) {
@@ -165,6 +168,26 @@ public class ClassLink {
 
     public void setNoteLink(boolean setNoteLink) {
         this.noteLink = setNoteLink;
+    }
+
+    public String getNoteOnLink() {
+        return noteOnLink;
+    }
+
+    public void setNoteOnLink(String noteOnLink) {
+        this.noteOnLink = noteOnLink;
+    }
+
+    public boolean hasNoteOnLink() {
+        return noteOnLink != null && !noteOnLink.isEmpty();
+    }
+
+    public String getNotePosition() {
+        return notePosition;
+    }
+
+    public void setNotePosition(String notePosition) {
+        this.notePosition = notePosition;
     }
 
     @Override
