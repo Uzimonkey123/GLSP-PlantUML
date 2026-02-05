@@ -5,6 +5,7 @@ import com.diagrams.ClassDiagram.model.Visibility;
 public class EntityMethod {
     private String visibilityChar;
     private String methodName;
+    private String tip;
 
     public EntityMethod(String methodName) {
         String tempName;
@@ -27,6 +28,18 @@ public class EntityMethod {
         this.methodName = this.methodName
                 .replaceAll("\\{(?!static\\}|classifier\\}|abstract\\})[^}]*\\}", "")
                 .trim();
+    }
+
+    public void setTip(String tip) {
+        this.tip = tip;
+    }
+
+    public String getTip() {
+        return this.tip;
+    }
+
+    public boolean hasTip() {
+        return tip != null && !tip.isEmpty();
     }
 
     public String getVisibilityChar() {

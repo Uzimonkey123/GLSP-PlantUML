@@ -17,7 +17,6 @@ import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.klimt.UStroke;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.skin.VisibilityModifier;
-import net.sourceforge.plantuml.svek.Bibliotekon;
 import net.sourceforge.plantuml.text.Guillemet;
 
 import java.io.File;
@@ -35,6 +34,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     ClassModelState modelState;
 
     ClassModel model;
+    private final TipsHandler tipsHandler = new TipsHandler();
+
+    Map<String, Entity> tipsEntities = new HashMap<>();
+    Map<Entity, ClassEntity> entityMapping = new HashMap<>();
 
     @Override
     public ClassModel parse(File file) throws IOException {
@@ -88,6 +91,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     private void handleEntity(Entity entity) {
         String id = "ent-" + model.entities.size();
         String type = entity.getLeafType().toString();
+
+        if (type.equals("TIPS")) {
+            tipsEntities.put(id, entity);
+            return;
+        }
 
         switch (type) {
             case "POINT_FOR_ASSOCIATION" -> {
@@ -156,6 +164,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         ClassEntity newEntity = new ClassEntity(0, 0, id, name, type, methods, fields, body);
         model.entities.add(newEntity);
+        entityMapping.put(entity, newEntity);
 
         if (entity.getVisibilityModifier() != null) {
             handleEntityVisibility(newEntity, entity);
@@ -231,19 +240,24 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     private void handleLink(Link link) {
         Entity linkEntity1 = link.getEntity1();
         Entity linkEntity2 = link.getEntity2();
+
         if (linkEntity1.isRemoved() || linkEntity2.isRemoved() || linkEntity1.isHidden() || linkEntity2.isHidden()) {
             return;
         }
 
+        if (linkEntity1.getLeafType().toString().equals("TIPS")) {
+            tipsHandler.applyTipsToEntity(linkEntity1, entityMapping.get(linkEntity2));
+            return;
+        }
+
+        if (linkEntity2.getLeafType().toString().equals("TIPS")) {
+            tipsHandler.applyTipsToEntity(linkEntity2, entityMapping.get(linkEntity1));
+            return;
+        }
+
         String id = "link-" + model.links.size();
-        String name1 = String.join("<br>", linkEntity1.getDisplay());
-        String name2 = String.join("<br>", linkEntity2.getDisplay());
-
-        String member1 = link.getPortName1();
-        String member2 = link.getPortName2();
-
-        ClassEntity entity1 = model.getClassEntity(name1);
-        ClassEntity entity2 = model.getClassEntity(name2);
+        ClassEntity entity1 = entityMapping.get(linkEntity1);
+        ClassEntity entity2 = entityMapping.get(linkEntity2);
 
         if (entity1 == null || entity2 == null) {
             return;
@@ -260,6 +274,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         String decorator2 = link.getType().getDecor2().toString();
         String quant1 = link.getQuantifier1();
         String quant2 = link.getQuantifier2();
+        String member1 = link.getPortName1();
+        String member2 = link.getPortName2();
 
         ClassLink newLink = new ClassLink(id, entity1, entity2, type, message, length,
                 decorator1, decorator2, quant1, quant2);

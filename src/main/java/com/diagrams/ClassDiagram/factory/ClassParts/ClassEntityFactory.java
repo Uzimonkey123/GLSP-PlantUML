@@ -22,7 +22,6 @@ public class ClassEntityFactory {
     private final ClassLayout layoutEngine;
 
     private final int horizontalPadding = 20;
-    private double cursor = 40;
 
     public ClassEntityFactory(ClassModel model, EntityBuild entityBuild, List<GModelElement> elements) {
         this.model = model;
@@ -33,6 +32,7 @@ public class ClassEntityFactory {
 
     public void createEntities() {
         Map<String, ClassLayout.Size> dimensions = new HashMap<>();
+        Map<String, Double> originalWidths = new HashMap<>();
 
         for (ClassEntity entity : model.entities) {
             double width, height;
@@ -75,6 +75,13 @@ public class ClassEntityFactory {
                     }
 
                     height = entityLength(entity);
+
+                    originalWidths.put(entity.getId(), width);
+
+                    double maxTipWidth = calculateMaxTipWidth(entity);
+                    if (maxTipWidth > 0) {
+                        width += maxTipWidth + 20;
+                    }
                 }
             }
 
@@ -104,7 +111,8 @@ public class ClassEntityFactory {
             }
 
             ClassLayout.Size size = dimensions.get(entity.getId());
-            double entityWidth = size.width;
+            Double originalWidth = originalWidths.get(entity.getId());
+            double entityWidth = originalWidth != null ? originalWidth : size.width;
             double entityHeight = size.height;
 
             List<String> methodNames = new ArrayList<>();
@@ -184,5 +192,39 @@ public class ClassEntityFactory {
         int padding = 15;
         int lines = text.split("<br>").length;
         return lines * lineHeight + padding * 2;
+    }
+
+    private double calculateMaxTipWidth(ClassEntity entity) {
+        double maxWidth = 0;
+
+        for (EntityMethod field : entity.getFields()) {
+            if (field.hasTip()) {
+                double tipWidth = calculateTipWidth(field.getTip());
+                maxWidth = Math.max(maxWidth, tipWidth);
+            }
+        }
+
+        for (EntityMethod method : entity.getMethods()) {
+            if (method.hasTip()) {
+                double tipWidth = calculateTipWidth(method.getTip());
+                maxWidth = Math.max(maxWidth, tipWidth);
+            }
+        }
+
+        return maxWidth;
+    }
+
+    private double calculateTipWidth(String tipText) {
+        String[] lines = tipText.split("<br>");
+        int maxLineLength = 0;
+
+        for (String line : lines) {
+            maxLineLength = Math.max(maxLineLength, line.length());
+        }
+
+        int charWidth = 7;
+        int padding = 10;
+
+        return Math.max(maxLineLength * charWidth + padding * 2, 100);
     }
 }

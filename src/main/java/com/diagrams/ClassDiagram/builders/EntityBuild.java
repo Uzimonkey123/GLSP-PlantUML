@@ -44,6 +44,14 @@ public class EntityBuild {
                     .addArgument("visibility", entity.getFields().get(i).getVisibilityChar())
                     .addArgument("boxWidth", width)
                     .build());
+
+            if (entity.getFields().get(i).hasTip()) {
+                nodeBuilder.add(new GLabelBuilder("label:tip")
+                        .id(entity.getId() + "-field-" + i + "-tip")
+                        .text(entity.getFields().get(i).getTip())
+                        .addArgument("boxWidth", width)
+                        .build());
+            }
         }
 
         for (int i = 0; i < methods.size(); i++) {
@@ -53,6 +61,14 @@ public class EntityBuild {
                     .addArgument("visibility", entity.getMethods().get(i).getVisibilityChar())
                     .addArgument("boxWidth", width)
                     .build());
+
+            if (entity.getMethods().get(i).hasTip()) {
+                nodeBuilder.add(new GLabelBuilder("label:tip")
+                        .id(entity.getId() + "-method-" + i + "-tip")
+                        .text(entity.getMethods().get(i).getTip())
+                        .addArgument("boxWidth", width)
+                        .build());
+            }
         }
 
         for (int i = 0; i < bodyLines.size(); i++) {

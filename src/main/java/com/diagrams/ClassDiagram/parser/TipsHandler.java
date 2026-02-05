@@ -1,0 +1,90 @@
+package com.diagrams.ClassDiagram.parser;
+
+import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
+import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
+import net.sourceforge.plantuml.abel.Entity;
+
+import java.util.List;
+import java.util.Map;
+
+public class TipsHandler {
+
+    public void applyTipsToEntity(Entity tipsEntity, ClassEntity targetEntity) {
+        Map<String, net.sourceforge.plantuml.klimt.creole.Display> tips = tipsEntity.getTips();
+
+        for (Map.Entry<String, net.sourceforge.plantuml.klimt.creole.Display> entry : tips.entrySet()) {
+            String memberName = entry.getKey();
+            String tipContent = String.join("<br>", entry.getValue());
+
+            attachTipToMember(targetEntity.getMethods(), memberName, tipContent);
+            attachTipToMember(targetEntity.getFields(), memberName, tipContent);
+            attachTipToMember(targetEntity.getRawBody(), memberName, tipContent);
+        }
+    }
+
+    private void attachTipToMember(List<EntityMethod> members, String memberName, String tipContent) {
+        for (EntityMethod member : members) {
+            if (matchesMemberSignature(member.getMethodName(), memberName)) {
+                member.setTip(tipContent);
+                return;
+            }
+        }
+    }
+
+    private boolean matchesMemberSignature(String memberSignature, String tipKey) {
+        String cleanedMember = cleanSignature(memberSignature);
+        String cleanedTip = cleanSignature(tipKey);
+
+        if (!tipKey.contains("(") && cleanedMember.contains("(")) {
+            String methodNameOnly = cleanedMember.substring(0, cleanedMember.indexOf("("));
+            return methodNameOnly.equals(cleanedTip);
+        }
+
+        return cleanedMember.equals(cleanedTip);
+    }
+
+    private String cleanSignature(String signature) {
+        String cleaned = signature.trim()
+                .replaceFirst("^[+\\-#~]\\s*", "")
+                .replaceAll("\\{[^}]+\\}\\s*", "");
+
+        if (!cleaned.contains("(")) {
+            String[] parts = cleaned.split("\\s+");
+            return parts[parts.length - 1];
+        }
+
+        int parenStart = cleaned.indexOf("(");
+        int parenEnd = cleaned.lastIndexOf(")");
+
+        if (parenStart == -1 || parenEnd == -1) {
+            return cleaned;
+        }
+
+        String beforeParen = cleaned.substring(0, parenStart).trim();
+        String params = cleaned.substring(parenStart + 1, parenEnd).trim();
+
+        String[] beforeParts = beforeParen.split("\\s+");
+        String methodName = beforeParts[beforeParts.length - 1];
+
+        if (params.isEmpty()) {
+            return methodName + "()";
+        }
+
+        StringBuilder normalized = new StringBuilder();
+        String[] paramList = params.split(",");
+        for (int i = 0; i < paramList.length; i++) {
+            String param = paramList[i].trim();
+            String[] parts = param.split("\\s+");
+
+            if (parts.length > 0) {
+                normalized.append(parts[0]);
+
+                if (i < paramList.length - 1) {
+                    normalized.append(" ");
+                }
+            }
+        }
+
+        return methodName + "(" + normalized + ")";
+    }
+}
