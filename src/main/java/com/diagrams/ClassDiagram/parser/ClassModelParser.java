@@ -187,6 +187,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         ClassEntity pointEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(pointEntity);
+        entityMapping.put(entity, pointEntity);
     }
 
     private void handleCircleEntity(Entity entity, String id) {
@@ -195,6 +196,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         ClassEntity circleEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(circleEntity);
+        entityMapping.put(entity, circleEntity);
     }
 
     private void handleDiamondEntity(Entity entity, String id) {
@@ -203,6 +205,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         ClassEntity diamondEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(diamondEntity);
+        entityMapping.put(entity, diamondEntity);
     }
 
     private void handleNoteEntity(Entity entity, String id) {
@@ -215,6 +218,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         ClassEntity noteEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(noteEntity);
+        entityMapping.put(entity, noteEntity);
     }
 
     private void handleEntityVisibility(ClassEntity newEntity, Entity entity) {
@@ -235,6 +239,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         newEntity.setStereotype(true);
         newEntity.setStereotypeName(entity.getStereotype().getLabel(Guillemet.DOUBLE_COMPARATOR));
         newEntity.setStereotype(entity.getStereotype().getCharacter());
+        if (entity.getStereotype().getHtmlColor() != null) {
+            newEntity.setStereotypeColor(entity.getStereotype().getHtmlColor().asString());
+        }
     }
 
     private void handleLink(Link link) {
