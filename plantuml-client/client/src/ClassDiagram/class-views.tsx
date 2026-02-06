@@ -1,11 +1,16 @@
 import {injectable} from 'inversify';
 import {
     GEdge,
+    GEdgeView,
     GLabel,
-    GLabelView, IView,
-    IViewArgs, Point, PolylineEdgeView,
+    GLabelView,
+    GNode,
+    IView,
+    IViewArgs,
+    Point,
+    PolylineEdgeView,
     RenderingContext,
-    svg, GNode, GEdgeView
+    svg
 } from '@eclipse-glsp/client';
 import {VNode} from "snabbdom";
 import '../../css/diagram.css';
@@ -619,29 +624,80 @@ export class ClassLinkView extends PolylineEdgeView {
 export class SimpleNoteEdgeView extends GEdgeView {
     protected override renderLine(edge: GEdge, segments: Point[], context: RenderingContext): VNode {
         if (segments.length >= 2) {
-            const first = segments[0];
-            const last = segments[segments.length - 1];
+            const source = edge.source as GNode;
+            const target = edge.target as GNode;
+            const memberName = (edge.args as any)?.memberName;
+            const isMemberTip = memberName && typeof memberName === 'string' && memberName.trim().length > 0 && source;
 
-            const noteColor = '#FFFFCC';
-            const baseWidth = 12;
+            if (isMemberTip) {
+                return this.renderMemberTipLink(source, target, segments, memberName);
 
-            const dx = last.x - first.x;
-            const dy = last.y - first.y;
-            const length = Math.sqrt(dx * dx + dy * dy);
-            const perpX = -dy / length * baseWidth / 2;
-            const perpY = dx / length * baseWidth / 2;
-
-            return <polygon
-                points={`${first.x - perpX},${first.y - perpY} 
-                         ${first.x + perpX},${first.y + perpY} 
-                         ${last.x},${last.y}`}
-                fill={noteColor}
-                stroke="#FFFFCC"
-                stroke-width="1"
-                class-note-link={true}
-            />;
+            } else {
+                return this.renderRegularNoteLink(segments);
+            }
         }
 
         return <g />;
+    }
+
+    private renderMemberTipLink(source: GNode, target: GNode, segments: Point[], memberName: string): VNode {
+        const memberYOffset = CurvedEdgeRenderer.getMemberYOffset(source, memberName);
+        const first = {
+            x: source.position.x + source.size.width,
+            y: source.position.y + memberYOffset
+        };
+
+        const last = segments[segments.length - 1];
+
+        const noteColor = '#FFFFCC';
+        const baseWidth = 12;
+
+        const charWidth = 6.5;
+        const textWidth = memberName.length * charWidth;
+        const entityCenterX = source.position.x + source.size.width / 2;
+        const textEndX = entityCenterX + textWidth / 2;
+
+        const tipAnchorX = Math.min(textEndX, source.position.x + source.size.width - 10);
+        const tipAnchorY = first.y;
+
+        const dx = last.x - tipAnchorX;
+        const dy = last.y - tipAnchorY;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const perpX = -dy / length * baseWidth / 2;
+        const perpY = dx / length * baseWidth / 2;
+
+        return <polygon
+            points={`${last.x - perpX},${last.y - perpY} 
+                     ${last.x + perpX},${last.y + perpY} 
+                     ${tipAnchorX},${tipAnchorY}`}
+            fill={noteColor}
+            stroke="#FFFFCC"
+            stroke-width="1"
+            class-note-link={true}
+        />;
+    }
+
+    private renderRegularNoteLink(segments: Point[]): VNode {
+        const first = segments[0];
+        const last = segments[segments.length - 1];
+
+        const noteColor = '#FFFFCC';
+        const baseWidth = 12;
+
+        const dx = last.x - first.x;
+        const dy = last.y - first.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const perpX = -dy / length * baseWidth / 2;
+        const perpY = dx / length * baseWidth / 2;
+
+        return <polygon
+            points={`${first.x - perpX},${first.y - perpY} 
+                     ${first.x + perpX},${first.y + perpY} 
+                     ${last.x},${last.y}`}
+            fill={noteColor}
+            stroke="#FFFFCC"
+            stroke-width="1"
+            class-note-link={true}
+        />;
     }
 }
