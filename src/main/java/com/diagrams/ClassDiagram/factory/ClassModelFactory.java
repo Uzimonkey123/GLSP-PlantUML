@@ -32,7 +32,7 @@ public class ClassModelFactory implements GModelFactory {
         ClassEntityFactory entityFactory = new ClassEntityFactory(model, entityBuild, elements);
         entityFactory.createEntities();
 
-        ClassLinkFactory linkFactory = new ClassLinkFactory(model, elements);
+        ClassLinkFactory linkFactory = new ClassLinkFactory(model, elements, entityFactory);
         linkFactory.createLinks();
 
         GGraph newGModel = new GGraphBuilder()

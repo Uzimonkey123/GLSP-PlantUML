@@ -23,6 +23,29 @@ public class ClassEntityFactory {
 
     private final int horizontalPadding = 20;
 
+    public static class TipInfo {
+        public String tipId;
+        public String parentEntityId;
+        public String memberName;
+        public double tipX;
+        public double tipY;
+        public double tipWidth;
+        public double tipHeight;
+
+        public TipInfo(String tipId, String parentEntityId, String memberName,
+                       double tipX, double tipY, double tipWidth, double tipHeight) {
+            this.tipId = tipId;
+            this.parentEntityId = parentEntityId;
+            this.memberName = memberName;
+            this.tipX = tipX;
+            this.tipY = tipY;
+            this.tipWidth = tipWidth;
+            this.tipHeight = tipHeight;
+        }
+    }
+
+    public List<TipInfo> tipInfoList = new ArrayList<>();
+
     public ClassEntityFactory(ClassModel model, EntityBuild entityBuild, List<GModelElement> elements) {
         this.model = model;
         this.entityBuild = entityBuild;
@@ -32,7 +55,6 @@ public class ClassEntityFactory {
 
     public void createEntities() {
         Map<String, ClassLayout.Size> dimensions = new HashMap<>();
-        Map<String, Double> originalWidths = new HashMap<>();
 
         for (ClassEntity entity : model.entities) {
             double width, height;
@@ -75,13 +97,6 @@ public class ClassEntityFactory {
                     }
 
                     height = entityLength(entity);
-
-                    originalWidths.put(entity.getId(), width);
-
-                    double maxTipWidth = calculateMaxTipWidth(entity);
-                    if (maxTipWidth > 0) {
-                        width += maxTipWidth + 20;
-                    }
                 }
             }
 
@@ -111,8 +126,7 @@ public class ClassEntityFactory {
             }
 
             ClassLayout.Size size = dimensions.get(entity.getId());
-            Double originalWidth = originalWidths.get(entity.getId());
-            double entityWidth = originalWidth != null ? originalWidth : size.width;
+            double entityWidth = size.width;
             double entityHeight = size.height;
 
             List<String> methodNames = new ArrayList<>();
@@ -131,6 +145,59 @@ public class ClassEntityFactory {
             }
 
             elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames, bodyLines));
+
+            createTipNotes(entity, entityWidth, entityHeight);
+        }
+    }
+
+    private void createTipNotes(ClassEntity entity, double entityWidth, double entityHeight) {
+        double tipX = entity.getX() + entityWidth + 20;
+        double currentTipY = entity.getY();
+
+        int tipSpacing = 15;
+
+        for (int i = 0; i < entity.getFields().size(); i++) {
+            EntityMethod field = entity.getFields().get(i);
+            if (field.hasTip()) {
+                String tipId = entity.getId() + "-field-" + i + "-tip";
+                String memberName = field.getMethodName();
+
+                double tipWidth = calculateTipWidth(field.getTip());
+                double tipHeight = calculateNoteHeight(field.getTip());
+
+                ClassEntity tipEntity = new ClassEntity((int) tipX, (int) currentTipY, tipId, field.getTip(), "NOTE");
+
+                elements.add(entityBuild.buildNoteEntity(tipEntity, tipWidth, tipHeight));
+
+                // Store tip info for edge creation
+                tipInfoList.add(new TipInfo(tipId, entity.getId(), memberName,
+                        tipEntity.getX(), tipEntity.getY(), tipWidth, tipHeight));
+
+                // Move currentTipY down for next tip
+                currentTipY += tipHeight + tipSpacing;
+            }
+        }
+
+        for (int i = 0; i < entity.getMethods().size(); i++) {
+            EntityMethod method = entity.getMethods().get(i);
+            if (method.hasTip()) {
+                String tipId = entity.getId() + "-method-" + i + "-tip";
+                String memberName = method.getMethodName();
+
+                double tipWidth = calculateTipWidth(method.getTip());
+                double tipHeight = calculateNoteHeight(method.getTip());
+
+                ClassEntity tipEntity = new ClassEntity((int) tipX, (int) currentTipY, tipId, method.getTip(), "NOTE");
+
+                elements.add(entityBuild.buildNoteEntity(tipEntity, tipWidth, tipHeight));
+
+                // Store tip info for edge creation
+                tipInfoList.add(new TipInfo(tipId, entity.getId(), memberName,
+                        tipEntity.getX(), tipEntity.getY(), tipWidth, tipHeight));
+
+                // Move currentTipY down for next tip
+                currentTipY += tipHeight + tipSpacing;
+            }
         }
     }
 
@@ -192,26 +259,6 @@ public class ClassEntityFactory {
         int padding = 15;
         int lines = text.split("<br>").length;
         return lines * lineHeight + padding * 2;
-    }
-
-    private double calculateMaxTipWidth(ClassEntity entity) {
-        double maxWidth = 0;
-
-        for (EntityMethod field : entity.getFields()) {
-            if (field.hasTip()) {
-                double tipWidth = calculateTipWidth(field.getTip());
-                maxWidth = Math.max(maxWidth, tipWidth);
-            }
-        }
-
-        for (EntityMethod method : entity.getMethods()) {
-            if (method.hasTip()) {
-                double tipWidth = calculateTipWidth(method.getTip());
-                maxWidth = Math.max(maxWidth, tipWidth);
-            }
-        }
-
-        return maxWidth;
     }
 
     private double calculateTipWidth(String tipText) {
