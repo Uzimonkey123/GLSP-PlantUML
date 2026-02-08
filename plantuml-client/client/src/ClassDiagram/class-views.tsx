@@ -358,7 +358,6 @@ export class ClassLinkView extends PolylineEdgeView {
         this.end = end;
 
         this.drawSimpleArrow(additionals);
-        this.renderLabels(edge, additionals);
 
         return additionals;
     }
@@ -448,28 +447,6 @@ export class ClassLinkView extends PolylineEdgeView {
         };
     }
 
-    private renderLabels(edge: GEdge, additionals: VNode[]) {
-        const quant1 = edge.children?.find(c => c.id.startsWith('quant1-'));
-        const quant2 = edge.children?.find(c => c.id.startsWith('quant2-'));
-        const messageLabel = edge.children?.find(c => c.id.startsWith('label-'));
-
-        const {unitVector, perpVector} = this.calculateVectors(this.start, this.end);
-
-        if (quant1) {
-            this.renderQuantifierLabel(quant1, this.start, unitVector, perpVector, this.headStart, true, additionals);
-        }
-
-        if (quant2) {
-            this.renderQuantifierLabel(quant2, this.end, unitVector, perpVector, this.headEnd, false, additionals);
-        }
-
-        if (messageLabel) {
-            const noteText = (edge.args as any)?.noteText;
-            const notePosition = (edge.args as any)?.notePosition;
-            this.renderMessageLabel(messageLabel, perpVector, additionals, noteText, notePosition);
-        }
-    }
-
     private calculateVectors(start: Point, end: Point) {
         const dx = end.x - start.x;
         const dy = end.y - start.y;
@@ -511,97 +488,6 @@ export class ClassLinkView extends PolylineEdgeView {
                 {quantifier.text}
             </text>
         );
-    }
-
-    private renderMessageLabel(label: any, perpVector: Point, additionals: VNode[], noteText?: string, notePosition?: string) {
-        if (!label.text && !noteText) return;
-
-        const perpBaseOffset = 15;
-        const char = 5;
-
-        const midX = (this.start.x + this.end.x) / 2;
-        const midY = (this.start.y + this.end.y) / 2;
-
-        const dx = this.end.x - this.start.x;
-        const dy = this.end.y - this.start.y;
-        const isVertical = Math.abs(dy) > Math.abs(dx);
-
-        const textWidth = label.text ? label.text.length * char : 0;
-        const perpOffset = isVertical ? perpBaseOffset + (textWidth / 2) : perpBaseOffset;
-
-        let labelX = midX - perpVector.x * perpOffset;
-        let labelY = midY - perpVector.y * perpOffset;
-
-        const labelWidth = label.text ? label.text.length * 8 : 0;
-
-        if (noteText && notePosition) {
-            const lines = noteText.split('<br>');
-            const maxLineLength = Math.max(...lines.map(line => line.length));
-            const charWidth = 7;
-            const lineHeight = 14;
-            const padding = 10;
-
-            const noteWidth = Math.max(maxLineLength * charWidth + padding * 2, 100);
-            const noteHeight = lines.length * lineHeight + padding * 2;
-
-            const horizontalOffsetDistance = 20; // Gap between label and note for LEFT/RIGHT
-            const verticalOffsetDistance = 10;   // Gap between label and note for TOP/BOTTOM
-
-            // Calculate where the link line is at the label's Y position
-            let linkXAtLabelY = midX;
-            if (Math.abs(dy) > 0.01) {
-                const t = (labelY - this.start.y) / dy;
-                linkXAtLabelY = this.start.x + dx * t;
-            }
-
-            // Position note and label
-            let noteX = labelX;
-            const safetyMargin = 30; // Gap between link line and note/label
-
-            switch (notePosition) {
-                case 'TOP':
-                    labelY += (noteHeight / 2 + verticalOffsetDistance);
-                    break;
-
-                case 'BOTTOM':
-                    labelY -= (noteHeight / 2 + verticalOffsetDistance);
-                    break;
-
-                case 'LEFT':
-                    noteX = labelX - labelWidth / 2 - horizontalOffsetDistance - noteWidth;
-
-                    if (noteX < linkXAtLabelY) {
-                        const shift = linkXAtLabelY - noteX + safetyMargin;
-                        labelX += shift;
-                    }
-                    break;
-
-                case 'RIGHT':
-                default:
-                    noteX = labelX + labelWidth / 2 + horizontalOffsetDistance;
-
-                    const labelLeftEdge = labelX - labelWidth / 2;
-                    if (labelLeftEdge < linkXAtLabelY) {
-                        const shift = linkXAtLabelY - labelLeftEdge + safetyMargin;
-                        noteX += shift;
-                    }
-                    break;
-            }
-        }
-
-        if (label.text) {
-            additionals.push(
-                <text
-                    x={labelX}
-                    y={labelY}
-                    class-sprotty-label={true}
-                    text-anchor="middle"
-                    dominant-baseline="middle"
-                >
-                    {label.text}
-                </text>
-            );
-        }
     }
 
     private drawMessageLine(start: {x: number, y:number}, end: {x: number, y: number}, additionals: VNode[]): renderLine {
