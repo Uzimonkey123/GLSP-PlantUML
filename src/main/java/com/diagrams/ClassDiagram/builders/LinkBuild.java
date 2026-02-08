@@ -42,6 +42,11 @@ public class LinkBuild {
         if (link.getTargetQualifier() != null && !link.getTargetQualifier().isEmpty()) {
             edge.addArgument("targetQualifier", link.getTargetQualifier());
         }
+
+        if (link.getNoteOnLink() != null && !link.getNoteOnLink().isEmpty()) {
+            edge.addArgument("noteText", link.getNoteOnLink());
+            edge.addArgument("notePosition", link.getNotePosition());
+        }
     }
 
     private void addLinkLabels(ClassLink link, GEdgeBuilder edge, ClassEntity sourceNode, ClassEntity targetNode) {

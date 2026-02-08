@@ -23,6 +23,9 @@ public class ClassEntityFactory {
 
     private final int horizontalPadding = 20;
 
+    public List<TipInfo> tipInfoList = new ArrayList<>();
+    private final Map<String, ClassLayout.Size> dimensions = new HashMap<>();
+
     public static class TipInfo {
         public String tipId;
         public String parentEntityId;
@@ -44,8 +47,6 @@ public class ClassEntityFactory {
         }
     }
 
-    public List<TipInfo> tipInfoList = new ArrayList<>();
-
     public ClassEntityFactory(ClassModel model, EntityBuild entityBuild, List<GModelElement> elements) {
         this.model = model;
         this.entityBuild = entityBuild;
@@ -53,8 +54,12 @@ public class ClassEntityFactory {
         this.layoutEngine = new ClassLayout();
     }
 
+    public Map<String, ClassLayout.Size> getDimensions() {
+        return dimensions;
+    }
+
     public void createEntities() {
-        Map<String, ClassLayout.Size> dimensions = new HashMap<>();
+        dimensions.clear();
 
         for (ClassEntity entity : model.entities) {
             double width, height;
