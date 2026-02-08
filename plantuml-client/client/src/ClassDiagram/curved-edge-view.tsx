@@ -262,18 +262,4 @@ export class CurvedEdgeRenderer {
             endAngle
         };
     }
-
-    public static calculateCurvedLabelPosition(
-        curveData: CurveData,
-        perpOffset: number = 15
-    ): Point {
-        // Calculate perpendicular direction to the tangent at midpoint
-        const perpX = -curveData.midTangent.y;
-        const perpY = curveData.midTangent.x;
-
-        return {
-            x: curveData.midPoint.x + perpX * perpOffset,
-            y: curveData.midPoint.y + perpY * perpOffset
-        };
-    }
 }

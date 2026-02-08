@@ -17,7 +17,6 @@ public class LinkBuild {
                 .targetId(link.getEntity2().getId());
 
         addLinkArguments(link, edge);
-        addLinkLabels(link, edge, link.getEntity1(), link.getEntity2());
         return edge.build();
     }
 
@@ -49,26 +48,23 @@ public class LinkBuild {
         }
     }
 
-    private void addLinkLabels(ClassLink link, GEdgeBuilder edge, ClassEntity sourceNode, ClassEntity targetNode) {
-        GLabel quantifier1 = new GLabelBuilder("label:invis")
-                .id("quant1-" + link.getLinkId())
-                .text(link.getQuantifier1())
-                .build();
+    public GModelElement buildLinkLabel(String linkId, String text, double x, double y) {
+        GLabelBuilder label = new GLabelBuilder("label:link")
+                .id("link-label-" + linkId)
+                .position(x, y)
+                .size(0, 0)
+                .text(text);
 
-        edge.add(quantifier1);
+        return label.build();
+    }
 
-        GLabel quantifier2 = new GLabelBuilder("label:invis")
-                .id("quant2-" + link.getLinkId())
-                .text(link.getQuantifier2())
-                .build();
+    public GModelElement buildLinkQuantifier(String linkId, String quantifierType, String text, double x, double y) {
+        GLabelBuilder label = new GLabelBuilder("label:link")
+                .id("link-label-" + quantifierType + "-" + linkId)
+                .position(x, y)
+                .size(0, 0)
+                .text(text);
 
-        edge.add(quantifier2);
-
-        GLabel label = new GLabelBuilder("label:invis")
-                .id("label-" + link.getLinkId())
-                .text(link.getMessage())
-                .build();
-
-        edge.add(label);
+        return label.build();
     }
 }

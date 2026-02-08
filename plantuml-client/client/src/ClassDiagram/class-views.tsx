@@ -129,6 +129,8 @@ export class ClassLinkView extends PolylineEdgeView {
     private arrColor! : string;
     private thickness! : number;
 
+    private context!: RenderingContext;
+
     public override render(edge: GEdge, context: RenderingContext, args?: IViewArgs): VNode | undefined {
         const sourceMember = (edge.args as any)?.sourceMember;
         const targetMember = (edge.args as any)?.targetMember;
@@ -138,6 +140,8 @@ export class ClassLinkView extends PolylineEdgeView {
         this.headEnd = (edge.args?.headEnd as string) ?? 'none';
         this.thickness = (edge.args?.thickness as number) ?? 1.0;
         this.arrColor = (edge.args?.color as string) ?? '#000000';
+
+        this.context = context;
 
         // If members specified, use curved rendering
         if (sourceMember || targetMember) {
@@ -232,43 +236,7 @@ export class ClassLinkView extends PolylineEdgeView {
             this.thickness
         );
 
-        // Render labels with curve data
-        this.renderCurvedLabels(edge, additionals, curveData);
-
         return <g class-sprotty-edge={true}>{additionals}</g>;
-    }
-
-    private renderCurvedLabels(edge: GEdge, additionals: VNode[], curveData: any) {
-        const quant1 = edge.children?.find(c => c.id.startsWith('quant1-'));
-        const quant2 = edge.children?.find(c => c.id.startsWith('quant2-'));
-        const messageLabel = edge.children?.find(c => c.id.startsWith('label-'));
-
-        const {unitVector, perpVector} = this.calculateVectors(this.start, this.end);
-
-        if (quant1) {
-            this.renderQuantifierLabel(quant1, this.start, unitVector, perpVector, this.headStart, true, additionals);
-        }
-
-        if (quant2) {
-            this.renderQuantifierLabel(quant2, this.end, unitVector, perpVector, this.headEnd, false, additionals);
-        }
-
-        if (messageLabel && (messageLabel as any).text) {
-            // Position message label along the curve using CurvedEdgeRenderer
-            const labelPosition = CurvedEdgeRenderer.calculateCurvedLabelPosition(curveData, 15);
-
-            additionals.push(
-                <text
-                    x={labelPosition.x}
-                    y={labelPosition.y}
-                    class-sprotty-label={true}
-                    text-anchor="middle"
-                    dominant-baseline="middle"
-                >
-                    {(messageLabel as any).text}
-                </text>
-            );
-        }
     }
 
     private headPath(kind: string): string | undefined {
@@ -445,49 +413,6 @@ export class ClassLinkView extends PolylineEdgeView {
             box,
             newAnchorPoint: { x: newAnchorX, y: newAnchorY }
         };
-    }
-
-    private calculateVectors(start: Point, end: Point) {
-        const dx = end.x - start.x;
-        const dy = end.y - start.y;
-        const length = Math.sqrt(dx * dx + dy * dy);
-
-        return {
-            unitVector: { x: dx / length, y: dy / length },
-            perpVector: { x: -dy / length, y: dx / length }
-        };
-    }
-
-    private renderQuantifierLabel(
-        quantifier: any,
-        position: Point,
-        unitVector: Point,
-        perpVector: Point,
-        arrowHead: string,
-        isStart: boolean,
-        additionals: VNode[]
-    ) {
-        if (!quantifier.text) return;
-
-        const lineOffset = 15;
-        const perpOffset = 15; // kolmica
-        const headSize = this.getHeadSize(arrowHead);
-        const direction = isStart ? 1 : -1;
-
-        const x = position.x + unitVector.x * direction * (headSize + lineOffset) + perpVector.x * perpOffset;
-        const y = position.y + unitVector.y * direction * (headSize + lineOffset) + perpVector.y * perpOffset;
-
-        additionals.push(
-            <text
-                x={x}
-                y={y}
-                class-sprotty-label={true}
-                text-anchor="middle"
-                dominant-baseline="middle"
-            >
-                {quantifier.text}
-            </text>
-        );
     }
 
     private drawMessageLine(start: {x: number, y:number}, end: {x: number, y: number}, additionals: VNode[]): renderLine {

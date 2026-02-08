@@ -6,7 +6,7 @@ import {
     debugModule,
     DeleteElementContextMenuItemProvider, editLabelFeature,
     EditLabelUI,
-    FeatureModule, GEdge, GLabel, GNode,
+    FeatureModule, GEdge, GLabel, GLabelView, GNode,
     gridModule,
     helperLineModule,
     initializeDiagramContainer,
@@ -70,7 +70,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "label:generic", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:note", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:invis", GLabel, HiddenLabelView);
-        configureModelElement(context, "label:link", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:link", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature]});
     }
 );
 
