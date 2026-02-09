@@ -3,6 +3,10 @@ package com.diagrams.ClassDiagram.factory.ClassParts;
 import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.builders.LinkBuild;
 import com.diagrams.ClassDiagram.factory.ClassLayout;
+import com.diagrams.ClassDiagram.utils.GeometryUtils.*;
+import com.diagrams.ClassDiagram.utils.LinkGeometry;
+import com.diagrams.ClassDiagram.utils.LinkGeometry.EdgeGeometry;
+import com.diagrams.ClassDiagram.utils.NoteCalculator;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
@@ -19,25 +23,32 @@ public class ClassLinkFactory {
     private final List<GModelElement> elements;
     private final ClassEntityFactory entityFactory;
     private final EntityBuild entityBuild;
+    private final Map<String, ClassLayout.Size> dimensions;
+    private final LinkGeometry linkGeometry;
+    private final NoteCalculator noteCalculator;
 
-    public ClassLinkFactory(ClassModel model, List<GModelElement> elements, ClassEntityFactory entityFactory, EntityBuild entityBuild) {
+    public ClassLinkFactory(ClassModel model, List<GModelElement> elements,
+                            ClassEntityFactory entityFactory, EntityBuild entityBuild) {
         this.model = model;
         this.elements = elements;
         this.linkBuild = new LinkBuild();
         this.entityFactory = entityFactory;
         this.entityBuild = entityBuild;
+        this.dimensions = entityFactory.getDimensions();
+        this.linkGeometry = new LinkGeometry();
+        this.noteCalculator = new NoteCalculator();
     }
 
     public void createLinks() {
         for (ClassLink link : model.links) {
-            if(link.getType().equals("INVISIBLE")) {
-                continue;
+            if (!link.getType().equals("INVISIBLE")) {
+                elements.add(linkBuild.buildLink(link));
             }
-
-            elements.add(linkBuild.buildLink(link));
         }
 
         createTipLinks();
+        createQuantifierLabels();
+        createMessageLabels();
         createLinkNotes();
     }
 
@@ -53,127 +64,100 @@ public class ClassLinkFactory {
         }
     }
 
-    private void createLinkNotes() {
-        Map<String, ClassLayout.Size> dimensions = entityFactory.getDimensions();
-
+    private void createQuantifierLabels() {
         for (ClassLink link : model.links) {
-            if (link.getNoteOnLink() == null || link.getNoteOnLink().isEmpty()) {
+            if (isEmpty(link.getQuantifier1()) && isEmpty(link.getQuantifier2())) {
                 continue;
             }
 
-            // Calculate note dimensions
-            String noteText = link.getNoteOnLink();
-            String notePosition = link.getNotePosition() != null ? link.getNotePosition() : "RIGHT";
+            EdgeGeometry geometry = createEdgeGeometry(link);
+            if (geometry == null) continue;
 
-            String[] lines = noteText.split("<br>");
-            int maxLineLength = 0;
-            for (String line : lines) {
-                maxLineLength = Math.max(maxLineLength, line.length());
+            if (!isEmpty(link.getQuantifier1())) {
+                double headSize = getHeadSize(link.getDecorator2());
+                Point pos = geometry.getQuantifierPosition(true, headSize);
+                elements.add(linkBuild.buildLinkQuantifier(
+                        link.getLinkId(), "1", link.getQuantifier1(), pos.x(), pos.y()));
             }
 
-            double charWidth = 6.5;
-            double lineHeight = 14;
-            double padding = 10;
-
-            double noteWidth = Math.max(maxLineLength * charWidth + padding * 2, 100);
-            double noteHeight = lines.length * lineHeight + padding * 2;
-
-            // Get actual entity dimensions
-            ClassLayout.Size entity1Size = dimensions.get(link.getEntity1().getId());
-            ClassLayout.Size entity2Size = dimensions.get(link.getEntity2().getId());
-
-            if (entity1Size == null || entity2Size == null) {
-                continue;
+            if (!isEmpty(link.getQuantifier2())) {
+                double headSize = getHeadSize(link.getDecorator1());
+                Point pos = geometry.getQuantifierPosition(false, headSize);
+                elements.add(linkBuild.buildLinkQuantifier(
+                        link.getLinkId(), "2", link.getQuantifier2(), pos.x(), pos.y()));
             }
-
-            // Calculate entity centers
-            double entity1CenterX = link.getEntity1().getX() + entity1Size.width / 2;
-            double entity1CenterY = link.getEntity1().getY() + entity1Size.height / 2;
-            double entity2CenterX = link.getEntity2().getX() + entity2Size.width / 2;
-            double entity2CenterY = link.getEntity2().getY() + entity2Size.height / 2;
-
-            double midX = (entity1CenterX + entity2CenterX) / 2;
-            double midY = (entity1CenterY + entity2CenterY) / 2;
-
-            double dx = entity2CenterX - entity1CenterX;
-            double dy = entity2CenterY - entity1CenterY;
-            double length = Math.sqrt(dx * dx + dy * dy);
-
-            double perpX = -dy / length;
-            double perpY = dx / length;
-
-            double perpOffset = 15;
-            double labelX = midX - perpX * perpOffset;
-            double labelY = midY - perpY * perpOffset;
-
-            String message = link.getMessage() != null ? link.getMessage() : "";
-            double labelWidth = message.length() * charWidth;
-
-            // Calculate note position based on notePosition
-            double noteX, noteY;
-            double horizontalOffset = 20;
-            double verticalOffset = 10;
-            double safetyMargin = 30;
-
-            // Calculate where the link line is at the label's Y position
-            double linkXAtLabelY = midX;
-            if (Math.abs(dy) > 0.01) {
-                double t = (labelY - entity1CenterY) / dy;
-                linkXAtLabelY = entity1CenterX + dx * t;
-            }
-
-            switch (notePosition) {
-                case "TOP":
-                    noteX = labelX - noteWidth / 2;
-                    noteY = labelY - noteHeight - verticalOffset;
-
-                    if (noteX < linkXAtLabelY) {
-                        double shift = linkXAtLabelY - noteX + safetyMargin;
-                        noteX += shift;
-                    }
-                    break;
-
-                case "BOTTOM":
-                    noteX = labelX - noteWidth / 2;
-                    noteY = labelY + verticalOffset;
-
-                    if (noteX < linkXAtLabelY) {
-                        double shift = linkXAtLabelY - noteX + safetyMargin;
-                        noteX += shift;
-                    }
-                    break;
-
-                case "LEFT":
-                    noteX = labelX - labelWidth / 2 - horizontalOffset - noteWidth;
-                    noteY = labelY - noteHeight / 2;
-
-                    // Ensure note doesn't cross link line
-                    if (noteX < linkXAtLabelY) {
-                        double shift = linkXAtLabelY - noteX + safetyMargin;
-                        noteX += shift;
-                    }
-                    break;
-
-                case "RIGHT":
-                default:
-                    noteX = labelX + labelWidth / 2 + horizontalOffset;
-                    noteY = labelY - noteHeight / 2;
-
-                    // Ensure label left edge doesn't cross link line
-                    double labelLeftEdge = labelX - labelWidth / 2;
-                    if (labelLeftEdge < linkXAtLabelY) {
-                        double shift = linkXAtLabelY - labelLeftEdge + safetyMargin;
-                        noteX += shift;
-                    }
-                    break;
-            }
-
-            noteY -= 15;
-
-            // Create note entity
-            String noteId = link.getLinkId() + "-note";
-            ClassEntity noteEntity = new ClassEntity((int) noteX, (int) noteY, noteId, noteText, "NOTE");
-            elements.add(entityBuild.buildNoteEntity(noteEntity, noteWidth, noteHeight));
         }
+    }
+
+    private void createMessageLabels() {
+        for (ClassLink link : model.links) {
+            if (isEmpty(link.getMessage())) continue;
+
+            EdgeGeometry geometry = createEdgeGeometry(link);
+            if (geometry == null) continue;
+
+            Point labelPos = geometry.getLabelPosition(link.getMessage().length());
+
+            if (link.hasNoteOnLink()) {
+                Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink());
+                double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());  // CALCULATE THIS
+                labelPos = noteCalculator.adjustLabelForNote(
+                        labelPos, link.getMessage(), noteDim,
+                        link.getNotePosition(), linkXAtLabelY  // PASS IT
+                );
+            }
+
+            elements.add(linkBuild.buildLinkLabel(
+                    link.getLinkId(), link.getMessage(), labelPos.x(), labelPos.y()));
+        }
+    }
+
+    private void createLinkNotes() {
+        for (ClassLink link : model.links) {
+            if (!link.hasNoteOnLink()) continue;
+
+            EdgeGeometry geometry = createEdgeGeometry(link);
+            if (geometry == null) continue;
+
+            Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink());
+            Point labelPos = geometry.getLabelPosition(
+                    link.getMessage() != null ? link.getMessage().length() : 0);
+
+            double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());  // CALCULATE THIS
+            Point notePos = noteCalculator.calculateNotePosition(
+                    labelPos, link.getMessage(), noteDim,
+                    link.getNotePosition(), linkXAtLabelY  // PASS IT
+            );
+
+            String noteId = link.getLinkId() + "-note";
+            ClassEntity noteEntity = new ClassEntity(
+                    (int) notePos.x(), (int) notePos.y(), noteId, link.getNoteOnLink(), "NOTE");
+            elements.add(entityBuild.buildNoteEntity(noteEntity, noteDim.width(), noteDim.height()));
+        }
+    }
+
+    private EdgeGeometry createEdgeGeometry(ClassLink link) {
+        ClassLayout.Size srcSize = dimensions.get(link.getEntity1().getId());
+        ClassLayout.Size tgtSize = dimensions.get(link.getEntity2().getId());
+
+        if (srcSize == null || tgtSize == null) {
+            return null;
+        }
+
+        return linkGeometry.create(link, srcSize, tgtSize);
+    }
+
+    private boolean isEmpty(String s) {
+        return s == null || s.isEmpty();
+    }
+
+    private double getHeadSize(String decorator) {
+        if (decorator == null) return 0;
+        return switch (decorator) {
+            case "EXTENDS", "COMPOSITION", "AGREGATION", "ARROW", "CROWFOOT" -> 8.0;
+            case "SQUARE", "PLUS" -> 4.0;
+            case "NOT_NAVIGABLE" -> 10.0;
+            default -> 0.0;
+        };
     }
 }
