@@ -166,6 +166,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         model.entities.add(newEntity);
         entityMapping.put(entity, newEntity);
 
+        if (entity.getColors().getColor(ColorType.BACK) != null) {
+            newEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
+        }
+
         if (entity.getVisibilityModifier() != null) {
             handleEntityVisibility(newEntity, entity);
         }
@@ -197,6 +201,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         ClassEntity circleEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(circleEntity);
         entityMapping.put(entity, circleEntity);
+
+        if (entity.getColors().getColor(ColorType.BACK) != null) {
+            circleEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
+        }
     }
 
     private void handleDiamondEntity(Entity entity, String id) {
@@ -206,19 +214,23 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         ClassEntity diamondEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(diamondEntity);
         entityMapping.put(entity, diamondEntity);
+
+        if (entity.getColors().getColor(ColorType.BACK) != null) {
+            diamondEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
+        }
     }
 
     private void handleNoteEntity(Entity entity, String id) {
         String type = "NOTE";
-        String rawDisplay = entity.getDisplay().toString();
-        System.err.println("RAW NOTE DISPLAY: '" + rawDisplay + "'");
-        System.err.println("RAW NOTE DISPLAY BYTES: " + java.util.Arrays.toString(rawDisplay.getBytes()));
-
         String name = String.join("<br>", entity.getDisplay());
 
         ClassEntity noteEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(noteEntity);
         entityMapping.put(entity, noteEntity);
+
+        if (entity.getColors().getColor(ColorType.BACK) != null) {
+            noteEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
+        }
     }
 
     private void handleEntityVisibility(ClassEntity newEntity, Entity entity) {

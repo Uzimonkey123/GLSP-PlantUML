@@ -19,6 +19,7 @@ public class ClassEntity extends NodePosition {
     private String stereotypeName = "";
     private String stereotypeColor = "";
     private String generic = "";
+    private String background = null;
 
     public ClassEntity(int x, int y, String id, String name, String type,
                         List<EntityMethod> methods, List<EntityMethod> fields, List<EntityMethod> rawBody) {
@@ -126,6 +127,21 @@ public class ClassEntity extends NodePosition {
 
     public boolean isGeneric() {
         return !generic.isEmpty();
+    }
+
+    public void setBackground(String background) {
+        this.background = background;
+    }
+
+    public String getBackground() {
+        if (background == null) {
+            return switch (this.type) {
+                case "NOTE" -> "#FFFFCC";
+                default -> "#C0C0C0";
+            };
+        }
+
+        return background;
     }
 
     @Override

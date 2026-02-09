@@ -171,6 +171,7 @@ public class ClassEntityFactory {
                 double tipHeight = calculateNoteHeight(field.getTip());
 
                 ClassEntity tipEntity = new ClassEntity((int) tipX, (int) currentTipY, tipId, field.getTip(), "NOTE");
+                tipEntity.setBackground(field.getTipBackground());
 
                 elements.add(entityBuild.buildNoteEntity(tipEntity, tipWidth, tipHeight));
 
@@ -193,6 +194,7 @@ public class ClassEntityFactory {
                 double tipHeight = calculateNoteHeight(method.getTip());
 
                 ClassEntity tipEntity = new ClassEntity((int) tipX, (int) currentTipY, tipId, method.getTip(), "NOTE");
+                tipEntity.setBackground(method.getTipBackground());
 
                 elements.add(entityBuild.buildNoteEntity(tipEntity, tipWidth, tipHeight));
 

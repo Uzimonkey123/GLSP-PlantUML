@@ -13,7 +13,7 @@ export class EntityView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
-        const background = "#C0C0C0";
+        const background = (node as any).args.background;
 
         const nameLabel = node.children.find(child => child.type === 'label:entityName');
         const genericNameLabel = node.children.find(child => child.type === 'label:generic');
@@ -270,7 +270,7 @@ export class DiamondEntityView extends ShapeView {
     ): VNode {
         const w = node.size.width;
         const h = node.size.height;
-        const background = "#FFFFFF";
+        const background = (node as any).args.background;
 
         const cx = w/2;
         const cy = h/2;
@@ -293,8 +293,7 @@ export class CircleEntityView extends ShapeView {
         context: RenderingContext
     ): VNode {
         const w = node.size.width;
-        const h = node.size.height;
-        const background = "#FFFFFF";
+        const background = (node as any).args.background;
 
         const radius = 15;
         const cx = w / 2;
@@ -343,7 +342,7 @@ export class NoteEntityView extends ShapeView {
         const foldSize = 12;
         const padding = 10;
 
-        const color = '#FFFFCC';
+        const color = (node as any).args.background;
 
         return <g class-note-entity={true}>
             <polygon

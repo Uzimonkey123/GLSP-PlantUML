@@ -505,7 +505,7 @@ export class SimpleNoteEdgeView extends GEdgeView {
                 return this.renderMemberTipLink(source, target, segments, memberName);
 
             } else {
-                return this.renderRegularNoteLink(segments);
+                return this.renderRegularNoteLink(source, segments);
             }
         }
 
@@ -520,8 +520,8 @@ export class SimpleNoteEdgeView extends GEdgeView {
         };
 
         const last = segments[segments.length - 1];
+        const noteColor = (target as any).args.background;
 
-        const noteColor = '#FFFFCC';
         const baseWidth = 12;
 
         const charWidth = 6.5;
@@ -543,17 +543,17 @@ export class SimpleNoteEdgeView extends GEdgeView {
                      ${last.x + perpX},${last.y + perpY} 
                      ${tipAnchorX},${tipAnchorY}`}
             fill={noteColor}
-            stroke="#FFFFCC"
+            stroke={noteColor}
             stroke-width="1"
             class-note-link={true}
         />;
     }
 
-    private renderRegularNoteLink(segments: Point[]): VNode {
+    private renderRegularNoteLink(source: GNode, segments: Point[]): VNode {
         const first = segments[0];
         const last = segments[segments.length - 1];
 
-        const noteColor = '#FFFFCC';
+        const noteColor = (source as any).args.background;
         const baseWidth = 12;
 
         const dx = last.x - first.x;
@@ -567,7 +567,7 @@ export class SimpleNoteEdgeView extends GEdgeView {
                      ${first.x + perpX},${first.y + perpY} 
                      ${last.x},${last.y}`}
             fill={noteColor}
-            stroke="#FFFFCC"
+            stroke={noteColor}
             stroke-width="1"
             class-note-link={true}
         />;

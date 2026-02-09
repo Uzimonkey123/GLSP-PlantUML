@@ -6,6 +6,7 @@ public class EntityMethod {
     private String visibilityChar;
     private String methodName;
     private String tip;
+    private String tipBackground = "#FFFFCC";
 
     public EntityMethod(String methodName) {
         String tempName;
@@ -40,6 +41,14 @@ public class EntityMethod {
 
     public boolean hasTip() {
         return tip != null && !tip.isEmpty();
+    }
+
+    public void setTipBackground(String tipBackground) {
+        this.tipBackground = tipBackground;
+    }
+
+    public String getTipBackground() {
+        return this.tipBackground;
     }
 
     public String getVisibilityChar() {

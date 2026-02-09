@@ -15,7 +15,8 @@ public class EntityBuild {
                 .layout("vbox")
                 .position(entity.getX(), entity.getY())
                 .size(width, height)
-                .addArgument("type", entity.getType());
+                .addArgument("type", entity.getType())
+                .addArgument("background", entity.getBackground());
 
         nodeBuilder.add(new GLabelBuilder("label:entityName")
                 .id(entity.getId() + "-label-name")
@@ -73,7 +74,8 @@ public class EntityBuild {
                 .layout("vbox")
                 .position(entity.getX(), entity.getY())
                 .size(width, height)
-                .addArgument("type", entity.getType().toLowerCase());
+                .addArgument("type", entity.getType().toLowerCase())
+                .addArgument("background", entity.getBackground());
 
         nodeBuilder.add(new GLabelBuilder("label:method")
                 .id(entity.getId() + "-label-name")
@@ -92,7 +94,8 @@ public class EntityBuild {
                 .layout("vbox")
                 .position(entity.getX(), entity.getY())
                 .size(width, width)
-                .addArgument("type", entity.getType().toLowerCase());
+                .addArgument("type", entity.getType().toLowerCase())
+                .addArgument("background", entity.getBackground());
 
         return nodeBuilder.build();
     }
@@ -112,7 +115,8 @@ public class EntityBuild {
                 .layout("vbox")
                 .position(entity.getX(), entity.getY())
                 .size(width, height)
-                .addArgument("type", "note");
+                .addArgument("type", "note")
+                .addArgument("background", entity.getBackground());
 
         nodeBuilder.add(new GLabelBuilder("label:note")
                 .id(entity.getId() + "-label-name")
