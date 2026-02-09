@@ -100,10 +100,10 @@ public class ClassLinkFactory {
 
             if (link.hasNoteOnLink()) {
                 Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink());
-                double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());  // CALCULATE THIS
+                double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());
                 labelPos = noteCalculator.adjustLabelForNote(
                         labelPos, link.getMessage(), noteDim,
-                        link.getNotePosition(), linkXAtLabelY  // PASS IT
+                        link.getNotePosition(), linkXAtLabelY
                 );
             }
 
@@ -123,15 +123,16 @@ public class ClassLinkFactory {
             Point labelPos = geometry.getLabelPosition(
                     link.getMessage() != null ? link.getMessage().length() : 0);
 
-            double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());  // CALCULATE THIS
+            double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());
             Point notePos = noteCalculator.calculateNotePosition(
                     labelPos, link.getMessage(), noteDim,
-                    link.getNotePosition(), linkXAtLabelY  // PASS IT
+                    link.getNotePosition(), linkXAtLabelY
             );
 
             String noteId = link.getLinkId() + "-note";
             ClassEntity noteEntity = new ClassEntity(
                     (int) notePos.x(), (int) notePos.y(), noteId, link.getNoteOnLink(), "NOTE");
+            noteEntity.setBackground(link.getNoteColor());
             elements.add(entityBuild.buildNoteEntity(noteEntity, noteDim.width(), noteDim.height()));
         }
     }

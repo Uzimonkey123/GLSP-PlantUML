@@ -36,7 +36,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     ClassModel model;
     private final TipsHandler tipsHandler = new TipsHandler();
 
-    Map<String, Entity> tipsEntities = new HashMap<>();
     Map<Entity, ClassEntity> entityMapping = new HashMap<>();
 
     @Override
@@ -93,7 +92,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         String type = entity.getLeafType().toString();
 
         if (type.equals("TIPS")) {
-            tipsEntities.put(id, entity);
             return;
         }
 
@@ -322,6 +320,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             String noteText = String.join("<br>", link.getNote().getDisplay());
             newLink.setNoteOnLink(noteText);
             newLink.setNotePosition(link.getNote().getPosition().toString());
+
+            if (link.getNote().getColors().getColor(ColorType.BACK) != null) {
+                newLink.setNoteColor(link.getNote().getColors().getColor(ColorType.BACK).asString());
+            }
         }
 
         model.links.add(newLink);
