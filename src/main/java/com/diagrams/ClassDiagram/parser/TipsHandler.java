@@ -3,6 +3,9 @@ package com.diagrams.ClassDiagram.parser;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
 import net.sourceforge.plantuml.abel.Entity;
+import net.sourceforge.plantuml.klimt.color.ColorType;
+import net.sourceforge.plantuml.klimt.color.HColor;
+import net.sourceforge.plantuml.klimt.creole.Display;
 
 import java.util.List;
 import java.util.Map;
@@ -10,22 +13,27 @@ import java.util.Map;
 public class TipsHandler {
 
     public void applyTipsToEntity(Entity tipsEntity, ClassEntity targetEntity) {
-        Map<String, net.sourceforge.plantuml.klimt.creole.Display> tips = tipsEntity.getTips();
+        Map<String, Display> tips = tipsEntity.getTips();
 
-        for (Map.Entry<String, net.sourceforge.plantuml.klimt.creole.Display> entry : tips.entrySet()) {
+        for (Map.Entry<String, Display> entry : tips.entrySet()) {
             String memberName = entry.getKey();
             String tipContent = String.join("<br>", entry.getValue());
 
-            attachTipToMember(targetEntity.getMethods(), memberName, tipContent);
-            attachTipToMember(targetEntity.getFields(), memberName, tipContent);
-            attachTipToMember(targetEntity.getRawBody(), memberName, tipContent);
+            attachTipToMember(targetEntity.getMethods(), memberName, tipContent, tipsEntity);
+            attachTipToMember(targetEntity.getFields(), memberName, tipContent, tipsEntity);
+            attachTipToMember(targetEntity.getRawBody(), memberName, tipContent, tipsEntity);
         }
     }
 
-    private void attachTipToMember(List<EntityMethod> members, String memberName, String tipContent) {
+    private void attachTipToMember(List<EntityMethod> members, String memberName, String tipContent, Entity tipsEntity) {
         for (EntityMethod member : members) {
             if (matchesMemberSignature(member.getMethodName(), memberName)) {
                 member.setTip(tipContent);
+
+                if (tipsEntity.getColors().getColor(ColorType.BACK) != null) {
+                    member.setTipBackground(tipsEntity.getColors().getColor(ColorType.BACK).asString());
+                }
+
                 return;
             }
         }
