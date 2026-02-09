@@ -25,6 +25,7 @@ public class ClassModelFactory implements GModelFactory {
 
     @Override
     public void createGModel() {
+        elements.clear();
 
         model = modelState.getModel();
         EntityBuild entityBuild = new EntityBuild();

@@ -108,7 +108,12 @@ public class ClassEntityFactory {
             dimensions.put(entity.getId(), new ClassLayout.Size(width, height));
         }
 
-        layoutEngine.layoutEntities(model.entities, model.links, dimensions);
+        boolean needsLayout = model.entities.stream()
+                .anyMatch(e -> e.getX() == 0 && e.getY() == 0);
+
+        if (needsLayout) {
+            layoutEngine.layoutEntities(model.entities, model.links, dimensions);
+        }
 
         for (ClassEntity entity : model.entities) {
             switch (entity.getType()) {

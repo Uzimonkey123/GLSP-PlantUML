@@ -18,4 +18,11 @@ public class ClassModel {
                 .findFirst()
                 .orElse(null);
     }
+
+    public ClassEntity getClassEntityById(String id) {
+        return entities.stream()
+                .filter(entity -> entity.getId() != null && entity.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
 }
