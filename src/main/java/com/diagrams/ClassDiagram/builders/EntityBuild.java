@@ -141,12 +141,14 @@ public class EntityBuild {
         // Add package header with name
         GCompartmentBuilder header = new GCompartmentBuilder("comp:header")
                 .id(pkg.getId() + "-header")
-                .layout("hbox");
+                .layout("hbox")
+                .position(50, 20);
 
         // Package name label
         GLabelBuilder nameLabel = new GLabelBuilder("label:heading")
                 .id(pkg.getId() + "-name")
-                .text(pkg.getName());
+                .text(pkg.getName())
+                .position(0, 0);
 
         header.add(nameLabel.build());
         packageContainer.add(header.build());
@@ -154,6 +156,8 @@ public class EntityBuild {
         packageContainer.addArgument("background", pkg.getBackground());
         packageContainer.addArgument("depth", String.valueOf(pkg.getDepth()));
         packageContainer.addArgument("isTopLevel", String.valueOf(pkg.isTopLevel()));
+        packageContainer.addArgument("headerHeight", String.valueOf(pkg.getHeaderHeight()));
+        packageContainer.addArgument("labelWidth", String.valueOf((int) pkg.estimateLabelWidth()));
 
         return packageContainer.build();
     }

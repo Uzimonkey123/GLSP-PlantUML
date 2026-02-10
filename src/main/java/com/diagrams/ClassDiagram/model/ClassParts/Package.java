@@ -16,7 +16,6 @@ public class Package extends NodePosition {
     private double width = 0;
     private double height = 0;
     private final int padding = 20;
-    private final int headerHeight = 30;
 
     public Package(String id, String name, String type) {
         super(0, 0);
@@ -95,7 +94,23 @@ public class Package extends NodePosition {
     }
 
     public int getHeaderHeight() {
-        return headerHeight;
+        int baseHeaderHeight = 30;
+        int extraLineHeight = 16;
+
+        return baseHeaderHeight + (getNameLines() - 1) * extraLineHeight;
+    }
+
+    public int getNameLines() {
+        return name.split("\\\\n|\n").length;
+    }
+
+    public double estimateLabelWidth() {
+        String[] lines = name.split("\\\\n|\n");
+        int maxLen = 0;
+        for (String line : lines) {
+            maxLen = Math.max(maxLen, line.length());
+        }
+        return maxLen * 8.0 + (padding * 2);
     }
 
     public List<ClassEntity> getAllEntities() {
@@ -113,16 +128,19 @@ public class Package extends NodePosition {
             child.calculateDimensions(entityWidths, entityHeights);
         }
 
+        int headerHeight = getHeaderHeight();
+
         if (entities.isEmpty() && childPackages.isEmpty()) {
-            width = 150;
-            height = 100;
+            width = Math.max(150, estimateLabelWidth());
+            height = 100 + headerHeight;
+
             return;
         }
 
         double minX = Double.MAX_VALUE;
         double minY = Double.MAX_VALUE;
-        double maxX = Double.MIN_VALUE;
-        double maxY = Double.MIN_VALUE;
+        double maxX = -Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
 
         for (ClassEntity entity : entities) {
             double entityWidth = entityWidths.getOrDefault(entity.getId(), 200.0);
@@ -147,9 +165,21 @@ public class Package extends NodePosition {
             setY(minY - padding - headerHeight);
         }
 
-        // Calculate dimensions
-        width = (maxX - minX) + (2 * padding);
+        double contentWidth = (maxX - minX) + (2 * padding);
+        width  = Math.max(contentWidth, estimateLabelWidth());
         height = (maxY - minY) + (2 * padding) + headerHeight;
+    }
+
+    public void shiftX(double dx) {
+        setX(getX() + dx);
+
+        for (ClassEntity entity : entities) {
+            entity.setX((int) (entity.getX() + dx));
+        }
+
+        for (Package child : childPackages) {
+            child.shiftX(dx);
+        }
     }
 
     public boolean isTopLevel() {

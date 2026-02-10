@@ -118,6 +118,7 @@ public class ClassEntityFactory {
         // Calculate package dimensions if packages exist
         if (!model.packages.isEmpty()) {
             calculatePackageDimensions();
+            separateOverlappingPackages();
             createPackages();
         }
 
@@ -309,6 +310,28 @@ public class ClassEntityFactory {
         int padding = 10;
 
         return Math.max(maxLineLength * charWidth + padding * 2, 100);
+    }
+
+    private void separateOverlappingPackages() {
+        // Sort top-level packages left-to-right, then push any that overlap to the right
+        List<Package> topLevel = model.packages.stream()
+                .filter(Package::isTopLevel)
+                .sorted(Comparator.comparingDouble(Package::getX))
+                .toList();
+
+        int gap = 40;
+
+        for (int i = 1; i < topLevel.size(); i++) {
+            Package prev = topLevel.get(i - 1);
+            Package curr = topLevel.get(i);
+
+            double prevRight = prev.getX() + prev.getWidth();
+
+            if (curr.getX() < prevRight + gap) {
+                double shift = prevRight + gap - curr.getX();
+                curr.shiftX(shift);
+            }
+        }
     }
 
     private void createPackages() {
