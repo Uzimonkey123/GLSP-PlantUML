@@ -223,7 +223,13 @@ export class CurvedEdgeRenderer {
                 d={curveData.path}
                 stroke={style.color}
                 stroke-width={style.thickness}
-                stroke-dasharray={style.style === "DASHED" ? "5,5" : "none"}
+                stroke-dasharray={
+                    style.style === "DASHED"
+                        ? "5,5"
+                        : style.style === "DOTTED"
+                            ? "1,5"
+                            : "none"
+                }
                 fill="none"
                 class-sprotty-edge={true}
             />

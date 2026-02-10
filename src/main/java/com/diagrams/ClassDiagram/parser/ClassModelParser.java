@@ -354,6 +354,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             message = "";
         }
 
+        if (link.isHidden()) {
+            type = "INVISIBLE";
+            message = "";
+        }
+
         int length = link.getLength();
         String decorator1 = link.getType().getDecor1().toString();
         String decorator2 = link.getType().getDecor2().toString();
