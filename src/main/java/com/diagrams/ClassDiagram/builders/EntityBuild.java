@@ -1,7 +1,10 @@
 package com.diagrams.ClassDiagram.builders;
 
-import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
+import com.diagrams.ClassDiagram.model.ClassParts.*;
+import com.diagrams.ClassDiagram.model.ClassParts.Package;
+import org.eclipse.glsp.graph.GCompartment;
 import org.eclipse.glsp.graph.GModelElement;
+import org.eclipse.glsp.graph.builder.impl.GCompartmentBuilder;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
 
@@ -126,6 +129,33 @@ public class EntityBuild {
                 .build());
 
         return nodeBuilder.build();
+    }
+
+    public GCompartment buildPackage(Package pkg, double width, double height) {
+        GCompartmentBuilder packageContainer = new GCompartmentBuilder("package-" + pkg.getType().toLowerCase())
+                .id(pkg.getId())
+                .layout("freeform")
+                .position(pkg.getX(), pkg.getY())
+                .size(width, height);
+
+        // Add package header with name
+        GCompartmentBuilder header = new GCompartmentBuilder("comp:header")
+                .id(pkg.getId() + "-header")
+                .layout("hbox");
+
+        // Package name label
+        GLabelBuilder nameLabel = new GLabelBuilder("label:heading")
+                .id(pkg.getId() + "-name")
+                .text(pkg.getName());
+
+        header.add(nameLabel.build());
+        packageContainer.add(header.build());
+
+        packageContainer.addArgument("background", pkg.getBackground());
+        packageContainer.addArgument("depth", String.valueOf(pkg.getDepth()));
+        packageContainer.addArgument("isTopLevel", String.valueOf(pkg.isTopLevel()));
+
+        return packageContainer.build();
     }
 }
 

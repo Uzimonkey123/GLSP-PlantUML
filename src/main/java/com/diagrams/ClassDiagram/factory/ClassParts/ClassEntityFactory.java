@@ -5,13 +5,12 @@ import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
+import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.factory.ClassLayout;
+import org.eclipse.glsp.graph.GCompartment;
 import org.eclipse.glsp.graph.GModelElement;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ClassEntityFactory {
 
@@ -108,11 +107,18 @@ public class ClassEntityFactory {
             dimensions.put(entity.getId(), new ClassLayout.Size(width, height));
         }
 
+        // Check if layout is needed
         boolean needsLayout = model.entities.stream()
                 .anyMatch(e -> e.getX() == 0 && e.getY() == 0);
 
         if (needsLayout) {
-            layoutEngine.layoutEntities(model.entities, model.links, dimensions);
+            layoutEngine.layoutEntities(model.entities, model.links, dimensions, model.packages);
+        }
+
+        // Calculate package dimensions if packages exist
+        if (!model.packages.isEmpty()) {
+            calculatePackageDimensions();
+            createPackages();
         }
 
         for (ClassEntity entity : model.entities) {
@@ -157,6 +163,24 @@ public class ClassEntityFactory {
             elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames, bodyLines));
 
             createTipNotes(entity, entityWidth, entityHeight);
+        }
+    }
+
+    private void calculatePackageDimensions() {
+        // Create maps for entity dimensions
+        Map<String, Double> entityWidths = new HashMap<>();
+        Map<String, Double> entityHeights = new HashMap<>();
+
+        for (Map.Entry<String, ClassLayout.Size> entry : dimensions.entrySet()) {
+            entityWidths.put(entry.getKey(), entry.getValue().width);
+            entityHeights.put(entry.getKey(), entry.getValue().height);
+        }
+
+        // Calculate dimensions for all packages
+        for (Package pkg : model.packages) {
+            if (pkg.isTopLevel()) {
+                pkg.calculateDimensions(entityWidths, entityHeights);
+            }
         }
     }
 
@@ -285,5 +309,20 @@ public class ClassEntityFactory {
         int padding = 10;
 
         return Math.max(maxLineLength * charWidth + padding * 2, 100);
+    }
+
+    private void createPackages() {
+        List<Package> sortedPackages = new ArrayList<>(model.packages);
+        sortedPackages.sort(Comparator.comparingInt(Package::getDepth).reversed());
+
+        for (Package pkg : sortedPackages) {
+            GCompartment packageElement = entityBuild.buildPackage(
+                    pkg,
+                    pkg.getWidth(),
+                    pkg.getHeight()
+            );
+
+            elements.add(packageElement);
+        }
     }
 }

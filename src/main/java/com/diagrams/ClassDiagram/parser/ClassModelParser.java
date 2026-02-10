@@ -5,6 +5,7 @@ import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
+import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.model.Visibility;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import com.google.inject.Inject;
@@ -37,11 +38,19 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     private final TipsHandler tipsHandler = new TipsHandler();
 
     Map<Entity, ClassEntity> entityMapping = new HashMap<>();
+    Map<Entity, Package> packageMapping = new HashMap<>();
+    private int packageCounter = 0;
+    private int entityCounter = 0;
 
     @Override
     public ClassModel parse(File file) throws IOException {
         String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
         this.model = new ClassModel();
+
+        entityMapping.clear();
+        packageMapping.clear();
+        packageCounter = 0;
+        entityCounter = 0;
 
         // Prepare text for PlantUML
         String text = originalText;
@@ -58,7 +67,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
             if (d instanceof ClassDiagram cd) {
                 Entity root = cd.getRootGroup();
-                processEntityRecursively(root);
+                processEntityRecursively(root, null);
 
                 List<Link> links = cd.getLinks();
 
@@ -73,22 +82,45 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         return model;
     }
 
-    private void processEntityRecursively(Entity entity) {
-        for (Entity leaf : entity.leafs()) {
-            if (!leaf.isHidden() && !leaf.isRemoved()) {
-                handleEntity(leaf);
+    private void processEntityRecursively(Entity entity, Package parentPackage) {
+        for (Entity group : entity.groups()) {
+            if (!group.isHidden() && !group.isRemoved()) {
+                Package pkg = handlePackage(group, parentPackage);
+                processEntityRecursively(group, pkg);
             }
         }
 
-        for (Entity group : entity.groups()) {
-            if (!group.isHidden() && !group.isRemoved()) {
-                processEntityRecursively(group);
+        for (Entity leaf : entity.leafs()) {
+            if (!leaf.isHidden() && !leaf.isRemoved()) {
+                handleEntity(leaf, parentPackage);
             }
         }
     }
 
-    private void handleEntity(Entity entity) {
-        String id = "ent-" + model.entities.size();
+    private Package handlePackage(Entity entity, Package parentPackage) {
+        String id = "pkg-" + packageCounter++;
+        String name = String.join(" ", entity.getDisplay());
+        String type = entity.getPackageStyle().name();
+
+        Package pkg = new Package(id, name, type);
+
+        if (entity.getColors().getColor(ColorType.BACK) != null) {
+            pkg.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
+        }
+
+        // Add to parent if exists
+        if (parentPackage != null) {
+            parentPackage.addChildPackage(pkg);
+        }
+
+        model.packages.add(pkg);
+        packageMapping.put(entity, pkg);
+
+        return pkg;
+    }
+
+    private void handleEntity(Entity entity, Package parentPackage) {
+        String id = "ent-" + entityCounter++;
         String type = entity.getLeafType().toString();
 
         if (type.equals("TIPS")) {
@@ -97,19 +129,19 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         switch (type) {
             case "POINT_FOR_ASSOCIATION" -> {
-                handleAssociationPoint(entity, id);
+                handleAssociationPoint(entity, id, parentPackage);
                 return;
             }
             case "CIRCLE", "DESCRIPTION" -> {
-                handleCircleEntity(entity, id);
+                handleCircleEntity(entity, id, parentPackage);
                 return;
             }
             case "STATE_CHOICE", "ASSOCIATION" -> {
-                handleDiamondEntity(entity, id);
+                handleDiamondEntity(entity, id, parentPackage);
                 return;
             }
             case "NOTE" -> {
-                handleNoteEntity(entity, id);
+                handleNoteEntity(entity, id, parentPackage);
                 return;
             }
         }
@@ -164,6 +196,14 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         model.entities.add(newEntity);
         entityMapping.put(entity, newEntity);
 
+        if (parentPackage != null) {
+            System.err.println("  -> Adding entity '" + name + "' to package: " + parentPackage.getName());
+            parentPackage.addEntity(newEntity);
+            System.err.println("  -> Package now has " + parentPackage.getEntities().size() + " entities");
+        } else {
+            System.err.println("  -> Entity '" + name + "' has no parent package");
+        }
+
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             newEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
@@ -183,16 +223,20 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         System.err.println(newEntity);
     }
 
-    private void handleAssociationPoint(Entity entity, String id) {
+    private void handleAssociationPoint(Entity entity, String id, Package parentPackage) {
         String type = "ASSOCIATION_POINT";
         String name = "";
 
         ClassEntity pointEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(pointEntity);
         entityMapping.put(entity, pointEntity);
+
+        if (parentPackage != null) {
+            parentPackage.addEntity(pointEntity);
+        }
     }
 
-    private void handleCircleEntity(Entity entity, String id) {
+    private void handleCircleEntity(Entity entity, String id, Package parentPackage) {
         String type = "CIRCLE";
         String name = String.join("<br>", entity.getDisplay());
 
@@ -203,9 +247,13 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             circleEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
+
+        if (parentPackage != null) {
+            parentPackage.addEntity(circleEntity);
+        }
     }
 
-    private void handleDiamondEntity(Entity entity, String id) {
+    private void handleDiamondEntity(Entity entity, String id, Package parentPackage) {
         String type = "DIAMOND";
         String name = String.join("<br>", entity.getDisplay());
 
@@ -216,9 +264,13 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             diamondEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
+
+        if (parentPackage != null) {
+            parentPackage.addEntity(diamondEntity);
+        }
     }
 
-    private void handleNoteEntity(Entity entity, String id) {
+    private void handleNoteEntity(Entity entity, String id, Package parentPackage) {
         String type = "NOTE";
         String name = String.join("<br>", entity.getDisplay());
 
@@ -228,6 +280,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             noteEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
+        }
+
+        if (parentPackage != null) {
+            parentPackage.addEntity(noteEntity);
         }
     }
 

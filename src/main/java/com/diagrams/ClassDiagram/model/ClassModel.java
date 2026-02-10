@@ -2,6 +2,7 @@ package com.diagrams.ClassDiagram.model;
 
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
+import com.diagrams.ClassDiagram.model.ClassParts.Package;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 public class ClassModel {
     public List<ClassEntity> entities = new ArrayList<>();
     public List<ClassLink> links = new ArrayList<>();
+    public List<Package> packages = new ArrayList<>();
 
     public ClassModel() {}
 
