@@ -156,6 +156,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 handleDiamondEntity(entity, id, parentPackage);
                 return;
             }
+            case "LOLLIPOP_FULL" -> {
+                handleLollipop(entity, id, parentPackage);
+                return;
+            }
             case "NOTE" -> {
                 handleNoteEntity(entity, id, parentPackage);
                 return;
@@ -233,6 +237,23 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         System.err.println(newEntity);
+    }
+
+    private void handleLollipop(Entity entity, String id, Package parentPackage) {
+        String type = "LOLLIPOP";
+        String name = String.join("<br>", entity.getDisplay());
+
+        ClassEntity lollipop = new ClassEntity(0, 0, id, name, type);
+        model.entities.add(lollipop);
+        entityMapping.put(entity, lollipop);
+
+        if (entity.getColors().getColor(ColorType.BACK) != null) {
+            lollipop.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
+        }
+
+        if (parentPackage != null) {
+            parentPackage.addEntity(lollipop);
+        }
     }
 
     private void handleAssociationPoint(Entity entity, String id, Package parentPackage) {

@@ -74,6 +74,11 @@ public class ClassEntityFactory {
                     height = 30;
                 }
 
+                case "LOLLIPOP" -> {
+                    width = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
+                    height = 26;
+                }
+
                 case "ASSOCIATION_POINT" -> {
                     width = 8;
                     height = 8;
@@ -135,6 +140,10 @@ public class ClassEntityFactory {
                 case "ASSOCIATION_POINT" -> {
                     createAssociationPoint(entity);
                     continue;
+                }
+                case "LOLLIPOP" -> {
+                    createLollipop(entity);
+                    return;
                 }
                 case "NOTE" -> {
                     createNoteEntity(entity);
@@ -249,6 +258,13 @@ public class ClassEntityFactory {
         double entityWidth = 30;
 
         elements.add(entityBuild.buildDiamondEntity(entity, entityWidth));
+    }
+
+    private void createLollipop(ClassEntity entity) {
+        double entityWidth = 15;
+        double entityHeight = 15;
+
+        elements.add(entityBuild.buildLollipopEntity(entity, entityWidth, entityHeight));
     }
 
     private void createAssociationPoint(ClassEntity entity) {

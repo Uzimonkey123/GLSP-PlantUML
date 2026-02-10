@@ -317,6 +317,36 @@ export class CircleEntityView extends ShapeView {
 }
 
 @injectable()
+export class LollipopEntityView extends ShapeView {
+    override render(
+        node: Readonly<GNode>,
+        context: RenderingContext
+    ): VNode {
+        const w = node.size.width;
+        const background = (node as any).args.background;
+
+        const radius = 6;
+        const cx = w / 2;
+        const cy = w / 2;
+
+        return <g>
+            <circle
+                cx={cx}
+                cy={cy}
+                r={radius}
+                fill={background}
+                stroke="black"
+                stroke-width="2"
+            />
+
+            <g transform={`translate(${cx}, ${cy + radius + 10})`}>
+                {context.renderChildren(node)}
+            </g>
+        </g>;
+    }
+}
+
+@injectable()
 export class AssociationPointView extends ShapeView {
     override render(node: GNode, context: RenderingContext): VNode | undefined {
         if (!this.isVisible(node, context)) {

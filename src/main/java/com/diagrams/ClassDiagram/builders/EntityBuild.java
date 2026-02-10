@@ -91,6 +91,26 @@ public class EntityBuild {
         return nodeBuilder.build();
     }
 
+    public GModelElement buildLollipopEntity(ClassEntity entity, double width, double height) {
+        GNodeBuilder nodeBuilder = new GNodeBuilder("entity:lollipop")
+                .id(entity.getId())
+                .layout("vbox")
+                .position(entity.getX(), entity.getY())
+                .size(width, height)
+                .addArgument("type", entity.getType().toLowerCase())
+                .addArgument("background", entity.getBackground());
+
+        nodeBuilder.add(new GLabelBuilder("label:method")
+                .id(entity.getId() + "-label-name")
+                .text(entity.getName())
+                .addArgument("type", entity.getType().toLowerCase())
+                .addArgument("width", width)
+                .addArgument("visibility", entity.getVisibility())
+                .build());
+
+        return nodeBuilder.build();
+    }
+
     public GModelElement buildDiamondEntity(ClassEntity entity, double width) {
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity:diamond")
                 .id(entity.getId())
