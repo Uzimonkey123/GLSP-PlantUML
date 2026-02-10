@@ -15,6 +15,8 @@ import net.sourceforge.plantuml.abel.Entity;
 import net.sourceforge.plantuml.abel.Link;
 import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.core.Diagram;
+import net.sourceforge.plantuml.decoration.symbol.USymbol;
+import net.sourceforge.plantuml.decoration.symbol.USymbols;
 import net.sourceforge.plantuml.klimt.UStroke;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.skin.VisibilityModifier;
@@ -100,7 +102,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     private Package handlePackage(Entity entity, Package parentPackage) {
         String id = "pkg-" + packageCounter++;
         String name = String.join(" ", entity.getDisplay());
-        String type = entity.getPackageStyle().name();
+        String type = getPackageType(entity);
 
         Package pkg = new Package(id, name, type);
 
@@ -117,6 +119,20 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         packageMapping.put(entity, pkg);
 
         return pkg;
+    }
+
+    private String getPackageType(Entity entity) {
+        USymbol symbol = entity.getUSymbol();
+
+        if (symbol == null) return "folder";
+        if (symbol == USymbols.PACKAGE) return "folder";
+        if (symbol == USymbols.NODE) return "node";
+        if (symbol == USymbols.DATABASE) return "database";
+        if (symbol == USymbols.CLOUD) return "cloud";
+        if (symbol == USymbols.FRAME) return "frame";
+        if (symbol == USymbols.RECTANGLE) return "rectangle";
+
+        return "folder";
     }
 
     private void handleEntity(Entity entity, Package parentPackage) {
@@ -196,14 +212,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         model.entities.add(newEntity);
         entityMapping.put(entity, newEntity);
 
-        if (parentPackage != null) {
-            System.err.println("  -> Adding entity '" + name + "' to package: " + parentPackage.getName());
-            parentPackage.addEntity(newEntity);
-            System.err.println("  -> Package now has " + parentPackage.getEntities().size() + " entities");
-        } else {
-            System.err.println("  -> Entity '" + name + "' has no parent package");
-        }
-
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             newEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
@@ -218,6 +226,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         if (entity.getGeneric() != null) {
             newEntity.setGeneric(entity.getGeneric());
+        }
+
+        if (parentPackage != null) {
+            parentPackage.addEntity(newEntity);
         }
 
         System.err.println(newEntity);

@@ -6,7 +6,7 @@ import {
     debugModule,
     DeleteElementContextMenuItemProvider, editLabelFeature,
     EditLabelUI,
-    FeatureModule, GEdge, GLabel, GLabelView, GNode,
+    FeatureModule, GCompartment, GEdge, GLabel, GLabelView, GNode,
     gridModule,
     helperLineModule,
     initializeDiagramContainer,
@@ -41,6 +41,16 @@ import {
     HiddenLabelView, SimpleNoteEdgeView
 } from "./class-views";
 
+import {
+    PackageCloudView,
+    PackageDatabaseView,
+    PackageFolderView,
+    PackageFrameView,
+    PackageNodeView,
+    PackageRectangleView,
+    PackageHeaderView
+} from "./class-package-view";
+
 export const ClassDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
         const context = { bind, unbind, isBound, rebind };
@@ -71,6 +81,16 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "label:note", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:invis", GLabel, HiddenLabelView);
         configureModelElement(context, "label:link", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature]});
+
+        configureModelElement(context, 'package-folder', GCompartment, PackageFolderView);
+        configureModelElement(context, 'package-rectangle', GCompartment, PackageRectangleView);
+        configureModelElement(context, 'package-frame', GCompartment, PackageFrameView);
+        configureModelElement(context, 'package-node', GCompartment, PackageNodeView);
+        configureModelElement(context, 'package-database', GCompartment, PackageDatabaseView);
+        configureModelElement(context, 'package-cloud', GCompartment, PackageCloudView);
+
+        configureModelElement(context, 'comp:header', GCompartment, PackageHeaderView);
+        configureModelElement(context, "label:heading", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
     }
 );
 
