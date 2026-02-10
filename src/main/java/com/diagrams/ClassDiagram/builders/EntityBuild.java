@@ -1,5 +1,8 @@
 package com.diagrams.ClassDiagram.builders;
 
+import com.GLSPPlantUML.utils.WidthCalculator;
+import com.diagrams.ClassDiagram.factory.ClassLayout;
+import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.*;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import org.eclipse.glsp.graph.GCompartment;
@@ -9,6 +12,7 @@ import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 public class EntityBuild {
     public GModelElement buildEntity(ClassEntity entity, double width, double height,
@@ -190,6 +194,60 @@ public class EntityBuild {
         packageContainer.addArgument("labelWidth", String.valueOf((int) pkg.estimateLabelWidth()));
 
         return packageContainer.build();
+    }
+
+    public void buildPageDetails(List<GModelElement> elements, ClassModel model,
+                                 Map<String, ClassLayout.Size> dimensions,
+                                 List<ClassEntity> entities) {
+
+        if (entities.isEmpty()) return;
+
+        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE;
+        double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE;
+
+        for (ClassEntity entity : entities) {
+            ClassLayout.Size size = dimensions.get(entity.getId());
+            if (size == null) continue;
+
+            minX = Math.min(minX, entity.getX());
+            minY = Math.min(minY, entity.getY());
+            maxX = Math.max(maxX, entity.getX() + size.width);
+            maxY = Math.max(maxY, entity.getY() + size.height);
+        }
+
+        double centerX = (minX + maxX) / 2;
+        int padding = 30;
+
+        elements.add(new GLabelBuilder("label:body")
+                .id("header")
+                .size(WidthCalculator.calculateWidth(model.header, 0), yOffset(model.header))
+                .position(maxX, minY - padding - yOffset(model.header))
+                .text(model.header)
+                .build());
+
+        elements.add(new GLabelBuilder("label:body")
+                .id("title")
+                .size(WidthCalculator.calculateWidth(model.title, 0), yOffset(model.title))
+                .position(centerX, minY - padding - yOffset(model.title))
+                .text(model.title)
+                .build());
+
+        elements.add(new GLabelBuilder("label:body")
+                .id("footer")
+                .size(WidthCalculator.calculateWidth(model.footer, 0), yOffset(model.footer))
+                .position(centerX, maxY + padding)
+                .text(model.footer)
+                .build());
+    }
+
+    private double yOffset(String lines) {
+        if (lines == null) {
+            return 0;
+        }
+
+        int labelHeight = 14;
+        int lineCount = lines.split("<br>").length;
+        return lineCount > 1 ? lineCount * labelHeight : 6;
     }
 }
 

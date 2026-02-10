@@ -17,6 +17,10 @@ public class WidthCalculator {
     }
 
     public static double calculateWidth(String lines, int padding) {
+        if (lines == null) {
+            return 0;
+        }
+
         return calculateMaxLength(lines) * 7 + padding;
     }
 }

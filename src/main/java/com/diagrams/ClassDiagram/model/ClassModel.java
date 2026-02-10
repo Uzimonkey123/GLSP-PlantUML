@@ -12,6 +12,10 @@ public class ClassModel {
     public List<ClassLink> links = new ArrayList<>();
     public List<Package> packages = new ArrayList<>();
 
+    public String footer;
+    public String header;
+    public String title;
+
     public ClassModel() {}
 
     public ClassEntity getClassEntity(String name) {

@@ -37,6 +37,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     ClassModelState modelState;
 
     ClassModel model;
+    ClassDiagram classDiagram;
     private final TipsHandler tipsHandler = new TipsHandler();
 
     Map<Entity, ClassEntity> entityMapping = new HashMap<>();
@@ -68,6 +69,12 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             Diagram d = block.getDiagram();
 
             if (d instanceof ClassDiagram cd) {
+                classDiagram = cd;
+
+                handleTitle();
+                handleHeader();
+                handleFooter();
+
                 Entity root = cd.getRootGroup();
                 processEntityRecursively(root, null);
 
@@ -456,6 +463,36 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             if (isNoteWithOneLink) {
                 link.setNoteLink(true);
             }
+        }
+    }
+
+    private void handleTitle() {
+        model.title = "";
+
+        if (classDiagram.getTitle() != null
+                && classDiagram.getTitle().getDisplay() != null
+                && classDiagram.getTitle().getDisplay().size() > 0) {
+            model.title = String.join("<br>", classDiagram.getTitle().getDisplay());
+        }
+    }
+
+    private void handleHeader() {
+        model.header = "";
+
+        if (classDiagram.getHeader() != null
+                && classDiagram.getHeader().getDisplay() != null
+                && classDiagram.getHeader().getDisplay().size() > 0) {
+            model.header = String.join("<br>", classDiagram.getHeader().getDisplay());
+        }
+    }
+
+    private void handleFooter() {
+        model.footer = "";
+
+        if (classDiagram.getFooter() != null
+                && classDiagram.getFooter().getDisplay() != null
+                && classDiagram.getFooter().getDisplay().size() > 0) {
+            model.footer = String.join("<br>", classDiagram.getFooter().getDisplay());
         }
     }
 }

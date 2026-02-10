@@ -174,6 +174,8 @@ public class ClassEntityFactory {
 
             createTipNotes(entity, entityWidth, entityHeight);
         }
+
+        entityBuild.buildPageDetails(elements, model, dimensions, model.entities);
     }
 
     private void calculatePackageDimensions() {
