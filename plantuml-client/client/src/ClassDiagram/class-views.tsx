@@ -135,20 +135,24 @@ export class ClassLinkView extends PolylineEdgeView {
         const sourceMember = (edge.args as any)?.sourceMember;
         const targetMember = (edge.args as any)?.targetMember;
 
+        const source= edge.source as GNode;
+        const target= edge.target as GNode;
+
         this.style = (edge.args?.style as string) ?? 'normal';
         this.headStart = (edge.args?.headStart as string) ?? 'none';
         this.headEnd = (edge.args?.headEnd as string) ?? 'none';
         this.thickness = (edge.args?.thickness as number) ?? 1.0;
         this.arrColor = (edge.args?.color as string) ?? '#000000';
-
         this.context = context;
 
-        // If members specified, use curved rendering
+        if (source && target && source.id === target.id) {
+            return this.renderSelfLoop(edge, source, context);
+        }
+
         if (sourceMember || targetMember) {
             return this.renderMemberLink(edge, context, args);
         }
 
-        // Use default rendering (notes are handled in renderMessageLabel)
         return super.render(edge, context, args);
     }
 
@@ -237,6 +241,79 @@ export class ClassLinkView extends PolylineEdgeView {
         );
 
         return <g class-sprotty-edge={true}>{additionals}</g>;
+    }
+
+    private renderSelfLoop(edge: GEdge, entity: GNode, context: RenderingContext): VNode {
+        const additionals: VNode[] = [];
+
+        const sourceMember = (edge.args as any)?.sourceMember;
+        const targetMember = (edge.args as any)?.targetMember;
+
+        const x= entity.position.x;
+        const y= entity.position.y;
+        const w= entity.size.width;
+        const h= entity.size.height;
+
+        const spread= Math.min(h * 0.25, 20);
+        const anchorY1= y + (sourceMember
+            ? CurvedEdgeRenderer.getMemberYOffset(entity, sourceMember)
+            : h / 2 - spread);
+        const anchorY2= y + (targetMember
+            ? CurvedEdgeRenderer.getMemberYOffset(entity, targetMember)
+            : h / 2 + spread);
+
+        const anchorX= x + w;
+        const start: Point = { x: anchorX, y: anchorY1 };
+        const end: Point = { x: anchorX, y: anchorY2 };
+
+        const bulge= Math.max(w * 0.8, 60);
+        const cp1: Point = { x: anchorX + bulge, y: anchorY1 };
+        const cp2: Point = { x: anchorX + bulge, y: anchorY2 };
+
+        // Tangents
+        const startTx= cp1.x - start.x;
+        const startTy= cp1.y - start.y;
+        const startLen= Math.sqrt(startTx ** 2 + startTy ** 2);
+        const startAngle= Math.atan2(startTy, startTx) * 180 / Math.PI;
+
+        const endTx= end.x - cp2.x;
+        const endTy= end.y - cp2.y;
+        const endLen= Math.sqrt(endTx ** 2 + endTy ** 2);
+        const endAngle= Math.atan2(endTy, endTx) * 180 / Math.PI;
+
+        const startHeadSize= this.getHeadSize(this.headStart) * this.thickness;
+        const endHeadSize= this.getHeadSize(this.headEnd)   * this.thickness;
+
+        const pathStart: Point = {
+            x: start.x + (startTx / startLen) * startHeadSize,
+            y: start.y + (startTy / startLen) * startHeadSize,
+        };
+        const pathEnd: Point = {
+            x: end.x - (endTx / endLen) * endHeadSize,
+            y: end.y - (endTy / endLen) * endHeadSize,
+        };
+
+        const dashArray= this.style === 'DASHED' ? '5,5'
+            : this.style === 'DOTTED' ? '1,5'
+                : 'none';
+
+        additionals.push(
+            <path
+                d={`M ${pathStart.x},${pathStart.y} C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${pathEnd.x},${pathEnd.y}`}
+                stroke={this.arrColor}
+                stroke-width={this.thickness}
+                stroke-dasharray={dashArray}
+                fill="none"
+                class-sprotty-edge={true}
+            />
+        );
+
+        this.drawHead(this.headStart, pathStart, startAngle + 180, false, additionals, this.thickness);
+        this.drawHead(this.headEnd, pathEnd, endAngle, false, additionals, this.thickness);
+
+        return <g class-sprotty-edge={true}>
+                    {additionals}
+                </g>;
     }
 
     private headPath(kind: string): string | undefined {
