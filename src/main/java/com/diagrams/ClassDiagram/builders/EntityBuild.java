@@ -138,11 +138,21 @@ public class EntityBuild {
                 .position(pkg.getX(), pkg.getY())
                 .size(width, height);
 
+        double headerX = 50;
+        double headerY = 20;
+
+        switch (pkg.getType().toLowerCase()) {
+            case "node" -> { headerY = 25;}
+            case "folder", "frame" -> { headerX = 40;}
+            case "database" -> { headerY = 14;}
+            case "cloud" -> { headerX = 55; headerY = 25;}
+        }
+
         // Add package header with name
         GCompartmentBuilder header = new GCompartmentBuilder("comp:header")
                 .id(pkg.getId() + "-header")
                 .layout("hbox")
-                .position(50, 20);
+                .position(headerX, headerY);
 
         // Package name label
         GLabelBuilder nameLabel = new GLabelBuilder("label:heading")

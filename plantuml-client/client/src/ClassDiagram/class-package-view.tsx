@@ -49,7 +49,6 @@ export class PackageRectangleView extends ShapeView {
         const height= model.size?.height ?? 150;
         const background = (model as any).args?.background ?? 'none';
         const isTopLevel= (model as any).args?.isTopLevel === 'true';
-        const headerH= parseInt((model as any).args?.headerHeight ?? '24');
 
         const stroke= "black";
         const strokeWidth= isTopLevel ? '2' : '1.5';
@@ -60,10 +59,7 @@ export class PackageRectangleView extends ShapeView {
                     x={0} y={0} width={width} height={height}
                     style={{ fill: background, stroke: stroke, strokeWidth: strokeWidth }}
                 />
-                <line
-                    x1={0} y1={headerH} x2={width} y2={headerH}
-                    style={{ stroke: stroke, strokeWidth: '1' }}
-                />
+
                 {context.renderChildren(model)}
             </g>
         ) as any;
