@@ -350,6 +350,30 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
     }
 
+    private ClassEntity resolveEntity(Entity entity) {
+        ClassEntity classEntity = entityMapping.get(entity);
+        if (classEntity != null) return classEntity;
+
+        Package pkg = packageMapping.get(entity);
+        if (pkg != null) {
+            return new ClassEntity(
+                    (int) pkg.getX(), (int) pkg.getY(),
+                    pkg.getAnchorId(), pkg.getName(), "PACKAGE"
+            );
+        }
+
+        return null;
+    }
+
+    private boolean isLeafType(Entity entity, String type) {
+        try {
+            return entity.getLeafType().toString().equals(type);
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private void handleLink(Link link) {
         Entity linkEntity1 = link.getEntity1();
         Entity linkEntity2 = link.getEntity2();
@@ -358,19 +382,19 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             return;
         }
 
-        if (linkEntity1.getLeafType().toString().equals("TIPS")) {
+        if (isLeafType(linkEntity1, "TIPS")) {
             tipsHandler.applyTipsToEntity(linkEntity1, entityMapping.get(linkEntity2));
             return;
         }
 
-        if (linkEntity2.getLeafType().toString().equals("TIPS")) {
+        if (isLeafType(linkEntity2, "TIPS")) {
             tipsHandler.applyTipsToEntity(linkEntity2, entityMapping.get(linkEntity1));
             return;
         }
 
         String id = "link-" + model.links.size();
-        ClassEntity entity1 = entityMapping.get(linkEntity1);
-        ClassEntity entity2 = entityMapping.get(linkEntity2);
+        ClassEntity entity1 = resolveEntity(linkEntity1);
+        ClassEntity entity2 = resolveEntity(linkEntity2);
 
         if (entity1 == null || entity2 == null) {
             return;

@@ -4,6 +4,7 @@ import com.GLSPPlantUML.utils.WidthCalculator;
 import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
+import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.factory.ClassLayout;
@@ -123,6 +124,7 @@ public class ClassEntityFactory {
         // Calculate package dimensions if packages exist
         if (!model.packages.isEmpty()) {
             calculatePackageDimensions();
+            calculatePackageAnchorPositions();
             separateOverlappingPackages();
             createPackages();
         }
@@ -328,6 +330,36 @@ public class ClassEntityFactory {
         int padding = 10;
 
         return Math.max(maxLineLength * charWidth + padding * 2, 100);
+    }
+
+    private void calculatePackageAnchorPositions() {
+        Map<String, Package> anchorToPackage = new HashMap<>();
+        for (Package pkg : model.packages) {
+            anchorToPackage.put(pkg.getAnchorId(), pkg);
+        }
+
+        // For each link between two package anchors, tell each side where the other is
+        for (ClassLink link : model.links) {
+            String id1 = link.getEntity1().getId();
+            String id2 = link.getEntity2().getId();
+
+            Package pkg1 = anchorToPackage.get(id1);
+            Package pkg2 = anchorToPackage.get(id2);
+
+            if (pkg1 == null || pkg2 == null) continue;
+
+            double cx1 = pkg1.getX() + pkg1.getWidth() / 2;
+            double cy1 = pkg1.getY() + pkg1.getHeight() / 2;
+            double cx2 = pkg2.getX() + pkg2.getWidth() / 2;
+            double cy2 = pkg2.getY() + pkg2.getHeight() / 2;
+
+            pkg1.addAnchorTarget(cx2, cy2);
+            pkg2.addAnchorTarget(cx1, cy1);
+        }
+
+        for (Package pkg : model.packages) {
+            pkg.finalizeAnchor();
+        }
     }
 
     private void separateOverlappingPackages() {

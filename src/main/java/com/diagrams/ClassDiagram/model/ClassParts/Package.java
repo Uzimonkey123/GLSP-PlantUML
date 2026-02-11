@@ -16,6 +16,10 @@ public class Package extends NodePosition {
     private double width = 0;
     private double height = 0;
     private final int padding = 20;
+    private double anchorX = -1;
+    private double anchorY = -1;
+    private double anchorSumX = 0, anchorSumY = 0;
+    private int anchorCount = 0;
 
     public Package(String id, String name, String type) {
         super(0, 0);
@@ -179,6 +183,58 @@ public class Package extends NodePosition {
 
         for (Package child : childPackages) {
             child.shiftX(dx);
+        }
+    }
+
+    public double getAnchorX() {
+        return anchorX;
+    }
+
+    public double getAnchorY() {
+        return anchorY;
+    }
+
+    public String getAnchorId() {
+        return id + "-anchor";
+    }
+
+    public void addAnchorTarget(double targetCX, double targetCY) {
+        anchorSumX += targetCX;
+        anchorSumY += targetCY;
+        anchorCount++;
+    }
+
+    public void finalizeAnchor() {
+        double cx = getX() + width / 2;
+        double cy = getY() + height / 2;
+        double tx, ty;
+
+        if (anchorCount == 0) {
+            tx = cx; ty = cy + 1;
+
+        } else {
+            tx = anchorSumX / anchorCount;
+            ty = anchorSumY / anchorCount;
+        }
+
+        double dx = tx - cx;
+        double dy = ty - cy;
+        int margin = 6;
+        int headerH = getHeaderHeight();
+
+        if (Math.abs(dx) >= Math.abs(dy)) {
+            anchorX = dx > 0 ? width - margin : margin;
+            anchorY = headerH + (height - headerH) / 2.0;
+
+        } else if (dy > 0) {
+            // target is below
+            anchorX = width / 2;
+            anchorY = height - margin;
+
+        } else {
+            // target is above
+            anchorX = width / 2;
+            anchorY = headerH + margin;
         }
     }
 

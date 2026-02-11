@@ -187,6 +187,15 @@ public class EntityBuild {
         header.add(nameLabel.build());
         packageContainer.add(header.build());
 
+        if (pkg.getAnchorX() >= 0) {
+            GNodeBuilder anchor = new GNodeBuilder("entity:invis")
+                    .id(pkg.getAnchorId())
+                    .position(pkg.getAnchorX(), pkg.getAnchorY())
+                    .size(1, 1);
+
+            packageContainer.add(anchor.build());
+        }
+
         packageContainer.addArgument("background", pkg.getBackground());
         packageContainer.addArgument("depth", String.valueOf(pkg.getDepth()));
         packageContainer.addArgument("isTopLevel", String.valueOf(pkg.isTopLevel()));
