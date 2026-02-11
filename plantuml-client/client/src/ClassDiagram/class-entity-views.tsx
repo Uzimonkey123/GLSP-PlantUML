@@ -411,3 +411,11 @@ export class NoteEntityView extends ShapeView {
         </g>;
     }
 }
+
+@injectable()
+export class InvisibleEntityView extends ShapeView {
+    override render(node: GNode, context: RenderingContext): VNode | undefined {
+
+        return <g/>;
+    }
+}

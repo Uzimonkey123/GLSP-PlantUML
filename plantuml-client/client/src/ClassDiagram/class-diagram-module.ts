@@ -33,7 +33,7 @@ import {
     DiamondEntityView,
     EntityView,
     AssociationPointView,
-    NoteEntityView, LollipopEntityView
+    NoteEntityView, LollipopEntityView, InvisibleEntityView
 } from "./class-entity-views";
 import {
     ClassLinkView,
@@ -70,6 +70,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, 'entity:association-point', GNode, AssociationPointView);
         configureModelElement(context, 'entity:note', GNode, NoteEntityView);
         configureModelElement(context, "entity:lollipop", GNode, LollipopEntityView);
+        configureModelElement(context, "entity:invis", GNode, InvisibleEntityView);
 
         configureModelElement(context, "link", GEdge, ClassLinkView);
         configureModelElement(context, "link:note", GEdge, SimpleNoteEdgeView);
