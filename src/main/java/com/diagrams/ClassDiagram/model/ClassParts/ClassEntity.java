@@ -26,6 +26,7 @@ public class ClassEntity extends NodePosition {
         super(x, y);
         this.id = id;
         this.name = name;
+        this.originalName = name;
         this.type = type;
         this.methods.addAll(methods);
         this.fields.addAll(fields);
@@ -54,10 +55,6 @@ public class ClassEntity extends NodePosition {
     }
 
     public void setName(String name) {
-        if (!this.name.equals(name)) {
-            //setModified();
-        }
-
         this.name = name;
     }
 

@@ -210,11 +210,25 @@ public class ClassEntityFactory {
                 String tipId = entity.getId() + "-field-" + i + "-tip";
                 String memberName = field.getMethodName();
 
-                double tipWidth = calculateTipWidth(field.getTip());
-                double tipHeight = calculateNoteHeight(field.getTip());
+                double finalCurrentTipY = currentTipY;
+                ClassEntity tipEntity = model.notes.stream()
+                        .filter(n -> n.getId().equals(tipId))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            ClassEntity newTip = new ClassEntity(
+                                    (int) tipX,
+                                    (int) finalCurrentTipY,
+                                    tipId,
+                                    field.getTip(),
+                                    "NOTE"
+                            );
+                            newTip.setBackground(field.getTipBackground());
+                            model.notes.add(newTip);
+                            return newTip;
+                        });
 
-                ClassEntity tipEntity = new ClassEntity((int) tipX, (int) currentTipY, tipId, field.getTip(), "NOTE");
-                tipEntity.setBackground(field.getTipBackground());
+                double tipWidth = calculateTipWidth(tipEntity.getName());
+                double tipHeight = calculateNoteHeight(tipEntity.getName());
 
                 elements.add(entityBuild.buildNoteEntity(tipEntity, tipWidth, tipHeight));
 
@@ -233,11 +247,26 @@ public class ClassEntityFactory {
                 String tipId = entity.getId() + "-method-" + i + "-tip";
                 String memberName = method.getMethodName();
 
-                double tipWidth = calculateTipWidth(method.getTip());
-                double tipHeight = calculateNoteHeight(method.getTip());
 
-                ClassEntity tipEntity = new ClassEntity((int) tipX, (int) currentTipY, tipId, method.getTip(), "NOTE");
-                tipEntity.setBackground(method.getTipBackground());
+                double finalCurrentTipY = currentTipY;
+                ClassEntity tipEntity = model.notes.stream()
+                        .filter(n -> n.getId().equals(tipId))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            ClassEntity newTip = new ClassEntity(
+                                    (int) tipX,
+                                    (int) finalCurrentTipY,
+                                    tipId,
+                                    method.getTip(),
+                                    "NOTE"
+                            );
+                            newTip.setBackground(method.getTipBackground());
+                            model.notes.add(newTip);
+                            return newTip;
+                        });
+
+                double tipWidth = calculateTipWidth(tipEntity.getName());
+                double tipHeight = calculateNoteHeight(tipEntity.getName());
 
                 elements.add(entityBuild.buildNoteEntity(tipEntity, tipWidth, tipHeight));
 
@@ -279,6 +308,7 @@ public class ClassEntityFactory {
         double entityWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding) + 20;
         double entityHeight = calculateNoteHeight(entity.getName());
 
+        model.notes.add(entity);
         elements.add(entityBuild.buildNoteEntity(entity, entityWidth, entityHeight));
     }
 

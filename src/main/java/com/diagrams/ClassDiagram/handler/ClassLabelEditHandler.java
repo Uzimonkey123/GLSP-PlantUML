@@ -1,6 +1,7 @@
 package com.diagrams.ClassDiagram.handler;
 
 import com.diagrams.ClassDiagram.model.ClassModel;
+import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import org.eclipse.emf.common.command.Command;
@@ -27,9 +28,8 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
         if (modelState instanceof ClassModelState sequenceState) {
             model = sequenceState.getModel();
 
-
             updateLinkLabels(operation);
-
+            updateNoteLabels(operation);
         }
 
         return Objects.equals(label.getText(), operation.getText())
@@ -39,6 +39,16 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
     protected Optional<GLabel> findLabel(final ApplyLabelEditOperation operation) {
         return modelState.getIndex().getByClass(operation.getLabelId(), GLabel.class);
+    }
+
+    private void updateNoteLabels(final ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("note-") || label.getId().startsWith("ent-")) {
+            for (ClassEntity note : model.notes) {
+                if (label.getId().startsWith(note.getId())) {
+                    note.setName(operation.getText());
+                }
+            }
+        }
     }
 
     private void updateLinkLabels(final ApplyLabelEditOperation operation) {

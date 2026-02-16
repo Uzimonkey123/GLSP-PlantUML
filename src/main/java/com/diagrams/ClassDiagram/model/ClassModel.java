@@ -13,6 +13,7 @@ public class ClassModel {
     public List<ClassLink> links = new ArrayList<>();
     public List<Package> packages = new ArrayList<>();
     public List<ClassLabel> labels = new ArrayList<>();
+    public List<ClassEntity> notes = new ArrayList<>();
 
     public String footer;
     public String header;
