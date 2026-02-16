@@ -3,6 +3,7 @@ package com.diagrams.ClassDiagram.handler;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
+import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.glsp.graph.GLabel;
@@ -30,6 +31,8 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
             updateLinkLabels(operation);
             updateNoteLabels(operation);
+            updatePackageLabels(operation);
+            updatePageDetails(operation);
         }
 
         return Objects.equals(label.getText(), operation.getText())
@@ -46,6 +49,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             for (ClassEntity note : model.notes) {
                 if (label.getId().startsWith(note.getId())) {
                     note.setName(operation.getText());
+                    return;
                 }
             }
         }
@@ -56,8 +60,36 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             for (ClassLabel classLabel : model.labels) {
                 if (classLabel.getLabelId().equals(label.getId())) {
                     classLabel.setLabel(operation.getText());
+                    return;
                 }
             }
+        }
+    }
+
+    private void updatePackageLabels(final ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("pkg-")) {
+            for (Package pkg : model.packages) {
+                if (label.getId().startsWith(pkg.getId())) {
+                    pkg.setName(operation.getText());
+                    return;
+                }
+            }
+        }
+    }
+
+    private void updatePageDetails(final ApplyLabelEditOperation operation) {
+        if (label.getId().startsWith("header")) {
+            model.header = operation.getText();
+            return;
+        }
+
+        if (label.getId().startsWith("footer")) {
+            model.footer = operation.getText();
+            return;
+        }
+
+        if (label.getId().startsWith("title")) {
+            model.title = operation.getText();
         }
     }
 }
