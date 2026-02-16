@@ -5,7 +5,7 @@ public class ClassLink {
     private final ClassEntity entity1;
     private final ClassEntity entity2;
     private final String type;
-    private String message;
+    private ClassLabel message;
     private int length;
     private final String decorator1;
     private final String decorator2;
@@ -42,17 +42,21 @@ public class ClassLink {
     }
 
     private void cleanMessage(String message) {
+        if (this.message == null) {
+            this.message = new ClassLabel(0, 0, "link-label-" + this.linkId, "");
+        }
+
         if (message.equals("NULL")) {
-            this.message = "";
+            this.message.setLabel("");
             return;
         }
 
 
         if (message.startsWith("[") && message.endsWith("]")) {
-            this.message = message.substring(1, message.length() - 1);
+            this.message.setLabel( message.substring(1, message.length() - 1));
 
         } else {
-            this.message = message;
+            this.message.setLabel(message);
         }
     }
 
@@ -79,7 +83,7 @@ public class ClassLink {
         return this.type;
     }
 
-    public String getMessage() {
+    public ClassLabel getMessage() {
         return message;
     }
 

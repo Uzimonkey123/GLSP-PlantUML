@@ -1,6 +1,7 @@
 package com.diagrams.ClassDiagram.builders;
 
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
+import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import org.eclipse.glsp.graph.*;
 import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
@@ -48,12 +49,12 @@ public class LinkBuild {
         }
     }
 
-    public GModelElement buildLinkLabel(String linkId, String text, double x, double y) {
+    public GModelElement buildLinkLabel(ClassLabel linkLabel) {
         GLabelBuilder label = new GLabelBuilder("label:link")
-                .id("link-label-" + linkId)
-                .position(x, y)
+                .id(linkLabel.getLabelId())
+                .position(linkLabel.getX(), linkLabel.getY())
                 .size(0, 0)
-                .text(text);
+                .text(linkLabel.getLabel());
 
         return label.build();
     }

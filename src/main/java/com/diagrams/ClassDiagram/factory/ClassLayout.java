@@ -196,7 +196,7 @@ public class ClassLayout {
     private int calculateMinLen(ClassLink link) {
         int baseLength = link.getLength();
 
-        String message = link.getMessage();
+        String message = link.getMessage().getLabel();
         int messageSpace = 0;
 
         if (message != null && !message.isEmpty()) {
