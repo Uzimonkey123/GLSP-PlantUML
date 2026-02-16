@@ -59,12 +59,12 @@ public class LinkBuild {
         return label.build();
     }
 
-    public GModelElement buildLinkQuantifier(String linkId, String quantifierType, String text, double x, double y) {
+    public GModelElement buildLinkQuantifier(ClassLabel quantifierLabel) {
         GLabelBuilder label = new GLabelBuilder("label:link")
-                .id("link-label-" + quantifierType + "-" + linkId)
-                .position(x, y)
+                .id(quantifierLabel.getLabelId())
+                .position(quantifierLabel.getX(), quantifierLabel.getY())
                 .size(0, 0)
-                .text(text);
+                .text(quantifierLabel.getLabel());
 
         return label.build();
     }

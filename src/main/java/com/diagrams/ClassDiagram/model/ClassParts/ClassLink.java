@@ -9,8 +9,8 @@ public class ClassLink {
     private int length;
     private final String decorator1;
     private final String decorator2;
-    private final String quantifier1;
-    private final String quantifier2;
+    private ClassLabel quantifier1;
+    private ClassLabel quantifier2;
 
     private String sourceMember = null;
     private String targetMember = null;
@@ -37,8 +37,8 @@ public class ClassLink {
         this.length = length;
         this.decorator1 = decorator1;
         this.decorator2 = decorator2;
-        this.quantifier1 = quantifier1;
-        this.quantifier2 = quantifier2;
+        this.quantifier1 = new ClassLabel(0, 0, "link-quant1-" + linkId, quantifier1);
+        this.quantifier2 = new ClassLabel(0, 0, "link-quant2-" + linkId, quantifier2);
     }
 
     private void cleanMessage(String message) {
@@ -107,15 +107,11 @@ public class ClassLink {
         return decorator2;
     }
 
-    public String getQuantifier1() {
-        if (quantifier1 == null) return "";
-
+    public ClassLabel getQuantifier1() {
         return quantifier1;
     }
 
-    public String getQuantifier2() {
-        if (quantifier2 == null) return "";
-
+    public ClassLabel getQuantifier2() {
         return quantifier2;
     }
 
@@ -201,6 +197,14 @@ public class ClassLink {
 
     public String getNoteColor() {
         return noteColor;
+    }
+
+    public void setQuantifier1(String quantifier1) {
+        this.quantifier1.setLabel(quantifier1);
+    }
+
+    public void setQuantifier2(String quantifier2) {
+        this.quantifier2.setLabel(quantifier2);
     }
 
     @Override
