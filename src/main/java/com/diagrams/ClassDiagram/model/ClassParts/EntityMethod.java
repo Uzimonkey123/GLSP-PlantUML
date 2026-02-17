@@ -9,16 +9,19 @@ public class EntityMethod {
     private String tipBackground = "#FFFFCC";
 
     public EntityMethod(String methodName) {
-        String tempName;
-        tempName = methodName;
+        parse(methodName);
+    }
+
+    private void parse(String raw) {
+        String tempName = raw;
         this.visibilityChar = "";
 
-        if (tempName.charAt(0) != tempName.charAt(1)) {
+        if (tempName.length() >= 2 && tempName.charAt(0) != tempName.charAt(1)) {
             this.visibilityChar = Visibility.fromChar(tempName.charAt(0));
         }
 
-        if (methodName.charAt(0) == '\\' || !this.visibilityChar.isEmpty()) {
-            tempName = methodName.substring(1).trim();
+        if (raw.charAt(0) == '\\' || !this.visibilityChar.isEmpty()) {
+            tempName = raw.substring(1).trim();
         }
 
         this.methodName = tempName;
@@ -57,5 +60,9 @@ public class EntityMethod {
 
     public String getMethodName() {
         return methodName;
+    }
+
+    public void setMethodName(String methodName) {
+        parse(methodName);
     }
 }

@@ -3,6 +3,7 @@ package com.diagrams.ClassDiagram.handler;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
+import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import org.eclipse.emf.common.command.Command;
@@ -10,6 +11,7 @@ import org.eclipse.glsp.graph.GLabel;
 import org.eclipse.glsp.server.features.directediting.ApplyLabelEditOperation;
 import org.eclipse.glsp.server.operations.GModelOperationHandler;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,6 +31,15 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
         if (modelState instanceof ClassModelState sequenceState) {
             model = sequenceState.getModel();
 
+            if (label.getId().startsWith("ent-")) {
+                for (ClassEntity entity : model.entities) {
+                    if (label.getId().startsWith(entity.getId())) {
+                        updateEntityLabel(entity, label.getId(), operation.getText());
+                        break;
+                    }
+                }
+            }
+
             updateLinkLabels(operation);
             updateNoteLabels(operation);
             updatePackageLabels(operation);
@@ -42,6 +53,41 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
     protected Optional<GLabel> findLabel(final ApplyLabelEditOperation operation) {
         return modelState.getIndex().getByClass(operation.getLabelId(), GLabel.class);
+    }
+
+    private void updateEntityLabel(ClassEntity entity, String labelId, String newText) {
+        String suffix = labelId.substring(entity.getId().length());
+
+        if (suffix.equals("-label-name")) {
+            entity.setName(newText);
+            return;
+        }
+
+        if (suffix.startsWith("-field-")) {
+            updateListItem(entity.getFields(), suffix, "-field-", newText);
+            return;
+        }
+
+        if (suffix.startsWith("-method-")) {
+            updateListItem(entity.getMethods(), suffix, "-method-", newText);
+            return;
+        }
+
+        if (suffix.startsWith("-body-")) {
+            updateListItem(entity.getRawBody(), suffix, "-body-", newText);
+        }
+    }
+
+    private void updateListItem(List<?> list, String suffix, String prefix, String newText) {
+        try {
+            int index = Integer.parseInt(suffix.substring(prefix.length()));
+            if (index >= 0 && index < list.size()) {
+                ((EntityMethod) list.get(index)).setMethodName(newText);
+            }
+
+        } catch (NumberFormatException e) {
+            System.err.println("[ApplyLabelEdit] No index: " + suffix);
+        }
     }
 
     private void updateNoteLabels(final ApplyLabelEditOperation operation) {
