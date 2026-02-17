@@ -15,11 +15,41 @@ import java.util.List;
 import java.util.Map;
 
 public class EntityBuild {
+    private final int lineHeight = 14;
+    private final int padding = 5;
+
+    private int computeHeaderH(ClassEntity entity) {
+        String stereoName = entity.getStereotypeName();
+        return (stereoName != null && !stereoName.isEmpty()) ? 44 : 30;
+    }
+
+    private int computeFieldH(List<String> fields) {
+        int minSectionHeight = 10;
+
+        return !fields.isEmpty()
+                ? fields.size() * lineHeight + padding * 2
+                : minSectionHeight;
+    }
+
     public GModelElement buildEntity(ClassEntity entity, double width, double height,
                                      List<String> methods, List<String> fields, List<String> bodyLines) {
+
+        int headerH = computeHeaderH(entity);
+        int fieldH  = computeFieldH(fields);
+
+        String genericText = entity.isGeneric() ? entity.getGeneric() : "";
+        int charWidth   = 7;
+        int boxPadding  = 10;
+        int genericBoxW = entity.isGeneric()
+                ? (genericText.length() * charWidth + boxPadding)
+                : 50;
+        int genericBoxH = 20;
+        double genericBoxX = width - genericBoxW;
+        double nameLabelX  = entity.isGeneric() ? genericBoxX / 2.0 : width / 2.0;
+
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity")
                 .id(entity.getId())
-                .layout("vbox")
+                .layout("freeform")
                 .position(entity.getX(), entity.getY())
                 .size(width, height)
                 .addArgument("type", entity.getType())
@@ -28,6 +58,8 @@ public class EntityBuild {
         nodeBuilder.add(new GLabelBuilder("label:entityName")
                 .id(entity.getId() + "-label-name")
                 .text(entity.getName())
+                .position(nameLabelX, headerH / 2.0)
+                .size(width - nameLabelX, headerH)
                 .addArgument("type", entity.getType().toLowerCase())
                 .addArgument("width", width)
                 .addArgument("visibility", entity.getVisibility())
@@ -42,31 +74,44 @@ public class EntityBuild {
             nodeBuilder.add(new GLabelBuilder("label:generic")
                     .id(entity.getId() + "generic")
                     .text(entity.getGeneric())
+                    .position(genericBoxX + genericBoxW / 2.0, genericBoxH / 2.0)
+                    .size(genericBoxW, genericBoxH)
                     .build());
         }
 
         for (int i = 0; i < fields.size(); i++) {
+            double fieldY = headerH + padding + (i * lineHeight) + 5;
+
             nodeBuilder.add(new GLabelBuilder("label:field")
                     .id(entity.getId() + "-field-" + i)
                     .text(fields.get(i))
+                    .position(width / 2.0, fieldY)
+                    .size(width / 2.0, lineHeight)
                     .addArgument("visibility", entity.getFields().get(i).getVisibilityChar())
                     .addArgument("boxWidth", width)
                     .build());
         }
 
         for (int i = 0; i < methods.size(); i++) {
+            double methodY = headerH + fieldH + padding + (i * lineHeight) + 5;
+
             nodeBuilder.add(new GLabelBuilder("label:method")
                     .id(entity.getId() + "-method-" + i)
                     .text(methods.get(i))
+                    .position(width / 2.0, methodY)
+                    .size(width / 2.0, lineHeight)
                     .addArgument("visibility", entity.getMethods().get(i).getVisibilityChar())
                     .addArgument("boxWidth", width)
                     .build());
         }
 
         for (int i = 0; i < bodyLines.size(); i++) {
+            double bodyY = headerH + 10 + (i * lineHeight);
             nodeBuilder.add(new GLabelBuilder("label:body")
                     .id(entity.getId() + "-body-" + i)
                     .text(bodyLines.get(i))
+                    .position(width / 2.0, bodyY)
+                    .size(width / 2.0, lineHeight)
                     .addArgument("visibility", entity.getRawBody().get(i).getVisibilityChar())
                     .addArgument("boxWidth", width)
                     .build());

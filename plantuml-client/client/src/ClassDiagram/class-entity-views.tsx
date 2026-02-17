@@ -43,17 +43,12 @@ export class EntityView extends ShapeView {
         const genericBoxH = 20;
         const genericBoxY = 0;
         const genericBoxX = w - genericBoxW;
-        const nameLabelX = genericNameLabel ? genericBoxX / 2 : w / 2;
 
         return <g>
             <rect class-sprotty-node={true} x={0} y={0} width={w} height={h} fill={background} stroke="white" stroke-width="2"/>
 
             <g>
-                {nameLabel && (
-                    <g transform={`translate(${nameLabelX}, ${headerH/2})`}>
-                        {context.renderElement(nameLabel)}
-                    </g>
-                )}
+                {nameLabel && context.renderElement(nameLabel)}
                 <line x1={0} y1={headerH} x2={w} y2={headerH} class-simple-line={true}/>
             </g>
 
@@ -75,31 +70,19 @@ export class EntityView extends ShapeView {
                         stroke-width="1"
                         stroke-dasharray="3,3"
                     />
-                    <g transform={`translate(${genericBoxX + genericBoxW/2}, ${genericBoxY + genericBoxH/2})`}>
-                        {context.renderElement(genericNameLabel)}
-                    </g>
+
+                    {context.renderElement(genericNameLabel)}
                 </g>
             )}
 
             <g>
-                {fieldLabels.map((field, index) => {
-                    const fieldY = headerH + padding + (index * lineHeight) + 5;
+                {fieldLabels.map(field => context.renderElement(field))}
 
-                    return <g transform={`translate(${w / 2}, ${fieldY})`}>
-                        {context.renderElement(field)}
-                    </g>;
-                })}
                 <line x1={0} y1={headerH + fieldH} x2={w} y2={headerH + fieldH} class-simple-line={true}/>
             </g>
 
             <g>
-                {methodLabels.map((method, index) => {
-                    const methodY = headerH + fieldH + padding + (index * lineHeight) + 5;
-
-                    return <g transform={`translate(${w / 2}, ${methodY})`}>
-                        {context.renderElement(method)}
-                    </g>;
-                })}
+                {methodLabels.map(method => context.renderElement(method))}
             </g>
         </g>;
     }
@@ -157,24 +140,23 @@ export class EntityView extends ShapeView {
     private renderAdvanced(context: RenderingContext, w: number, h: number,
                            background: string, nameLabel: any, bodyLabels: any[],
                            headerH: number, lineHeight: number): VNode {
-        let currentY = headerH + 10;
         const elements: VNode[] = [];
 
         for (const label of bodyLabels) {
             const text = (label as any).text || '';
-            const separator = this.renderSeparator(text, currentY, w);
+            const labelY: number = (label as any).position?.y ?? (headerH + 10);
+
+            const separator = this.renderSeparator(text, labelY, w);
 
             if (separator) {
-                elements.push(separator);
-                currentY += lineHeight;
+                elements.push(<g key={`sep-${label.id}`}>{separator}</g>);
 
             } else {
                 elements.push(
-                    <g transform={`translate(${w/2}, ${currentY})`}>
-                        {context.renderElement(label)}
+                    <g key={label.id}>
+                        {context.renderElement(label) as VNode}
                     </g>
                 );
-                currentY += lineHeight;
             }
         }
 
@@ -182,11 +164,8 @@ export class EntityView extends ShapeView {
             <rect class-sprotty-node={true} x={0} y={0} width={w} height={h} fill={background} stroke="black" stroke-width="2"/>
 
             <g>
-                {nameLabel && (
-                    <g transform={`translate(${w/2}, ${headerH/2})`}>
-                        {context.renderElement(nameLabel)}
-                    </g>
-                )}
+                {nameLabel && context.renderElement(nameLabel)}
+
                 <line x1={0} y1={headerH} x2={w} y2={headerH} class-simple-line={true}/>
             </g>
 
