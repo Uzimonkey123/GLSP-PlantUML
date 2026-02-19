@@ -1,5 +1,6 @@
 package com.diagrams.ClassDiagram.handler;
 
+import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.google.inject.Inject;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.AbstractCommand;
@@ -15,7 +16,7 @@ import com.diagrams.ClassDiagram.state.ClassModelState;
 
 import java.util.*;
 
-public class mChangeBoundsHandler implements OperationHandler<ChangeBoundsOperation> {
+public class ChangeBoundsHandler implements OperationHandler<ChangeBoundsOperation> {
 
     @Inject
     protected ClassModelState modelState;
@@ -59,27 +60,33 @@ public class mChangeBoundsHandler implements OperationHandler<ChangeBoundsOperat
 
                 if (newPosition != null) {
                     ClassEntity entity = modelState.getModel().getClassEntityById(elementId);
+                    ClassLabel label;
+                    ClassEntity note;
 
                     if (entity != null) {
-                        double oldX = entity.getX();
-                        double oldY = entity.getY();
-                        NodePosition oldPosition = new NodePosition(
-                                oldX,
-                                oldY
-                        );
-                        oldPositions.put(elementId, oldPosition);
-
-
-                        // Set new position
-                        NodePosition position = new NodePosition(
-                                newPosition.getX(),
-                                newPosition.getY()
-                        );
+                        oldPositions.put(elementId, new NodePosition(entity.getX(), entity.getY()));
                         entity.setX(newPosition.getX());
                         entity.setY(newPosition.getY());
 
                         System.out.println("Updated position for " + entity.getName() +
-                                " to (" + position.getX() + ", " + position.getY() + ")");
+                                " to (" + newPosition.getX() + ", " + newPosition.getY() + ")");
+
+                    } else if ((label = modelState.getModel().getClassLabelById(elementId)) != null) {
+                        oldPositions.put(elementId, new NodePosition(label.getX(), label.getY()));
+                        label.setX(newPosition.getX());
+                        label.setY(newPosition.getY());
+                        label.setModified(true);
+
+                        System.out.println("Updated label position to (" +
+                                newPosition.getX() + ", " + newPosition.getY() + ")");
+
+                    } else if ((note = modelState.getModel().getClassNoteById(elementId)) != null) {
+                        oldPositions.put(elementId, new NodePosition(note.getX(), note.getY()));
+                        note.setX(newPosition.getX());
+                        note.setY(newPosition.getY());
+
+                        System.out.println("Updated note position to (" +
+                                newPosition.getX() + ", " + newPosition.getY() + ")");
                     }
                 }
             }
@@ -95,11 +102,22 @@ public class mChangeBoundsHandler implements OperationHandler<ChangeBoundsOperat
         @Override
         public void undo() {
             for (Map.Entry<String, NodePosition> entry : oldPositions.entrySet()) {
-                ClassEntity entity = modelState.getModel().getClassEntityById(entry.getKey());
+                String elementId = entry.getKey();
+                ClassEntity entity = modelState.getModel().getClassEntityById(elementId);
+                ClassLabel label;
+                ClassEntity note;
 
-                if (entity != null && entry.getValue() != null) {
+                if (entity != null) {
                     entity.setX(entry.getValue().getX());
                     entity.setY(entry.getValue().getY());
+
+                } else if ((label = modelState.getModel().getClassLabelById(elementId)) != null) {
+                    label.setX(entry.getValue().getX());
+                    label.setY(entry.getValue().getY());
+
+                } else if ((note = modelState.getModel().getClassNoteById(elementId)) != null) {
+                    note.setX(entry.getValue().getX());
+                    note.setY(entry.getValue().getY());
                 }
             }
 
@@ -118,12 +136,22 @@ public class mChangeBoundsHandler implements OperationHandler<ChangeBoundsOperat
 
         @Override
         public Collection<?> getAffectedObjects() {
-            List<ClassEntity> affected = new ArrayList<>();
+            List<Object> affected = new ArrayList<>();
+
             for (String elementId : oldPositions.keySet()) {
                 ClassEntity entity = modelState.getModel().getClassEntityById(elementId);
+                ClassLabel label;
+                ClassEntity note;
 
                 if (entity != null) {
                     affected.add(entity);
+
+                } else if ((label = modelState.getModel().getClassLabelById(elementId)) != null) {
+                    affected.add(label);
+                    label.setModified(true);
+
+                } else if ((note = modelState.getModel().getClassNoteById(elementId)) != null) {
+                    affected.add(note);
                 }
             }
 

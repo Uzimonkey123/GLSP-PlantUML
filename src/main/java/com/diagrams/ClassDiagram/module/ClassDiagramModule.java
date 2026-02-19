@@ -6,7 +6,7 @@ import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.diagrams.ClassDiagram.ClassDiagramConfiguration;
 import com.diagrams.ClassDiagram.factory.ClassModelFactory;
 import com.diagrams.ClassDiagram.handler.ClassLabelEditHandler;
-import com.diagrams.ClassDiagram.handler.mChangeBoundsHandler;
+import com.diagrams.ClassDiagram.handler.ChangeBoundsHandler;
 import com.diagrams.ClassDiagram.handler.ChangeRoutingPointsHandler;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.parser.ClassModelParser;
@@ -64,7 +64,7 @@ public class ClassDiagramModule extends DiagramModule {
     protected void configureOperationHandlers(MultiBinding<OperationHandler<?>> mb) {
         super.configureOperationHandlers(mb);
 
-        mb.add(mChangeBoundsHandler.class);
+        mb.add(ChangeBoundsHandler.class);
         mb.add(ChangeRoutingPointsHandler.class);
         mb.add(ClassLabelEditHandler.class);
     }

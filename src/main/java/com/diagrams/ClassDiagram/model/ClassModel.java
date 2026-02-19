@@ -34,4 +34,18 @@ public class ClassModel {
                 .findFirst()
                 .orElse(null);
     }
+
+    public ClassLabel getClassLabelById(String id) {
+        return labels.stream()
+                .filter(label -> label.getLabelId() != null && label.getLabelId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public ClassEntity getClassNoteById(String id) {
+        return notes.stream()
+                .filter(note -> note.getId() != null && note.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
 }
