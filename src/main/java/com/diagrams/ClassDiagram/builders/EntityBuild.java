@@ -212,7 +212,9 @@ public class EntityBuild {
 
         switch (pkg.getType().toLowerCase()) {
             case "node" -> { headerY = 25;}
-            case "folder", "frame" -> { headerX = 40;}
+            case "folder", "frame" -> {
+                headerX = pkg.estimateLabelWidth() / 2.0;
+            }
             case "database" -> { headerY = 14;}
             case "cloud" -> { headerX = 55; headerY = 25;}
         }
