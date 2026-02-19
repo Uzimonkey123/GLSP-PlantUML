@@ -1,9 +1,7 @@
 package com.diagrams.ClassDiagram.handler;
 
 import com.diagrams.ClassDiagram.model.ClassModel;
-import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
-import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
-import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
+import com.diagrams.ClassDiagram.model.ClassParts.*;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import org.eclipse.emf.common.command.Command;
@@ -41,6 +39,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             }
 
             updateLinkLabels(operation);
+            updateQualifierLabels(operation);
             updateNoteLabels(operation);
             updatePackageLabels(operation);
             updatePageDetails(operation);
@@ -60,6 +59,11 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
         if (suffix.equals("-label-name")) {
             entity.setName(newText);
+            return;
+        }
+
+        if (suffix.equals("generic")) {
+            entity.setGeneric(newText);
             return;
         }
 
@@ -110,6 +114,27 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
                 }
             }
         }
+    }
+
+    private void updateQualifierLabels(final ApplyLabelEditOperation operation) {
+        String id = label.getId();
+
+        if (id.startsWith("link-qual-src-")) {
+            String linkId = id.substring("link-qual-src-".length());
+            findLink(linkId).ifPresent(link -> link.setSourceQualifier(operation.getText()));
+            return;
+        }
+
+        if (id.startsWith("link-qual-tgt-")) {
+            String linkId = id.substring("link-qual-tgt-".length());
+            findLink(linkId).ifPresent(link -> link.setTargetQualifier(operation.getText()));
+        }
+    }
+
+    private Optional<ClassLink> findLink(String linkId) {
+        return model.links.stream()
+                .filter(l -> l.getLinkId().equals(linkId))
+                .findFirst();
     }
 
     private void updatePackageLabels(final ApplyLabelEditOperation operation) {

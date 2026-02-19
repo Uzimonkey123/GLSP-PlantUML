@@ -18,8 +18,9 @@ public class ClassLink {
     private String color = "#000000";
     private double thickness = 1.0;
 
-    private String sourceQualifier = null;
-    private String targetQualifier = null;
+    private ClassLabel sourceQualifier = null;
+    private ClassLabel targetQualifier = null;
+
     private boolean noteLink = false;
 
     private String noteOnLink = null;
@@ -147,20 +148,50 @@ public class ClassLink {
         this.targetMember = targetMember;
     }
 
-    public String getSourceQualifier() {
+    public ClassLabel getSourceQualifierLabel() {
         return sourceQualifier;
     }
 
-    public void setSourceQualifier(String sourceQualifier) {
-        this.sourceQualifier = sourceQualifier;
-    }
-
-    public String getTargetQualifier() {
+    public ClassLabel getTargetQualifierLabel() {
         return targetQualifier;
     }
 
-    public void setTargetQualifier(String targetQualifier) {
-        this.targetQualifier = targetQualifier;
+    public String getSourceQualifier() {
+        return sourceQualifier != null ? sourceQualifier.getLabel() : null;
+    }
+
+    public String getTargetQualifier() {
+        return targetQualifier != null ? targetQualifier.getLabel() : null;
+    }
+
+    public void setSourceQualifier(String text) {
+        if (text == null || text.isEmpty()) {
+            this.sourceQualifier = null;
+
+            return;
+        }
+
+        if (this.sourceQualifier == null) {
+            this.sourceQualifier = new ClassLabel(0, 0, "link-qual-src-" + linkId, text);
+
+        } else {
+            this.sourceQualifier.setLabel(text);
+        }
+    }
+
+    public void setTargetQualifier(String text) {
+        if (text == null || text.isEmpty()) {
+            this.targetQualifier = null;
+
+            return;
+        }
+
+        if (this.targetQualifier == null) {
+            this.targetQualifier = new ClassLabel(0, 0, "link-qual-tgt-" + linkId, text);
+
+        } else {
+            this.targetQualifier.setLabel(text);
+        }
     }
 
     public boolean isNoteLink() {
