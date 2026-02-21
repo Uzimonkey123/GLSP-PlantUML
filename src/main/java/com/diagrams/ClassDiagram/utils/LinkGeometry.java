@@ -7,6 +7,7 @@ import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 public class LinkGeometry {
 
     private final double labelPerpendicularOffset = 15.0;
+    private final double parallelLabelPerpendicularOffset = 65.0;
 
     private final CurvedEdgeCalculator curvedCalculator = new CurvedEdgeCalculator();
 
@@ -154,6 +155,125 @@ public class LinkGeometry {
         }
     }
 
+    public class ParallelEdge implements EdgeGeometry {
+        private final GeometryUtils.Point srcAnchor;
+        private final GeometryUtils.Point tgtAnchor;
+        private final CurvedEdgeCalculator.CurveData curve;
+        private final int index;
+        private final int totalCount;
+
+        public ParallelEdge(ClassLink link, ClassLayout.Size srcSize, ClassLayout.Size tgtSize,
+                            boolean flipCurve, int index, int totalCount) {
+            this.index = index;
+            this.totalCount = totalCount;
+
+            ClassEntity src = link.getEntity1();
+            ClassEntity tgt = link.getEntity2();
+
+            double srcCx = src.getX() + srcSize.width  / 2.0;
+            double srcCy = src.getY() + srcSize.height / 2.0;
+            double tgtCx = tgt.getX() + tgtSize.width  / 2.0;
+            double tgtCy = tgt.getY() + tgtSize.height / 2.0;
+
+            // Unit perpendicular to the centre→centre direction
+            double dx = tgtCx - srcCx;
+            double dy = tgtCy - srcCy;
+            double len = Math.sqrt(dx * dx + dy * dy);
+            if (len < 0.01) len = 1.0;
+            double perpX = -dy / len;
+            double perpY =  dx / len;
+
+            double spacing = 25.0;
+            double middle = (totalCount - 1) / 2.0;
+            double offset = (index - middle) * spacing;
+
+            // Offset centres
+            double srcOffCx = srcCx + perpX * offset;
+            double srcOffCy = srcCy + perpY * offset;
+            double tgtOffCx = tgtCx + perpX * offset;
+            double tgtOffCy = tgtCy + perpY * offset;
+
+            // Intersect offset ray with entity rectangle boundary
+            this.srcAnchor = entityBoundaryPoint(
+                    src.getX(), srcSize.width, srcSize.height,
+                    srcOffCx, srcOffCy, tgtOffCx, tgtOffCy);
+
+            this.tgtAnchor = entityBoundaryPoint(
+                    tgt.getX(), tgtSize.width, tgtSize.height,
+                    tgtOffCx, tgtOffCy, srcOffCx, srcOffCy);
+
+            this.curve = curvedCalculator.calculateCurve(srcAnchor, tgtAnchor, flipCurve);
+        }
+
+        private GeometryUtils.Point entityBoundaryPoint(
+                double entityX, double w, double h,
+                double fromCx, double fromCy, double toCx, double toCy) {
+
+            double dx = toCx - fromCx;
+            double dy = toCy - fromCy;
+
+            if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) {
+                return new GeometryUtils.Point(entityX + w, fromCy);
+            }
+
+            double hw = w / 2.0;
+            double hh = h / 2.0;
+            double t;
+
+            if (Math.abs(dx) / hw > Math.abs(dy) / hh) {
+                t = (dx > 0 ? hw : -hw) / dx;
+
+            } else {
+                t = (dy > 0 ? hh : -hh) / dy;
+            }
+
+            return new GeometryUtils.Point(fromCx + t * dx, fromCy + t * dy);
+        }
+
+        @Override
+        public GeometryUtils.Point getLabelPosition(int messageLengthChars) {
+            double spacing = 25.0;
+            double middle = (totalCount - 1) / 2.0;
+            double signedPos = (index - middle) * spacing;
+
+            double labelOffset = parallelLabelPerpendicularOffset + Math.abs(signedPos) * 0.4;
+            double sign = signedPos >= 0 ? 1.0 : -1.0;
+            return curvedCalculator.calculateLabelPosition(curve, sign * labelOffset);
+        }
+
+        @Override
+        public GeometryUtils.Point getQuantifierPosition(boolean isSource, double headSize) {
+            GeometryUtils.Point anchor = isSource ? srcAnchor : tgtAnchor;
+            GeometryUtils.Point base = curvedCalculator.calculateQuantifierPosition(
+                    anchor, srcAnchor, tgtAnchor, headSize, isSource);
+
+            double spacing = 25.0;
+            double middle = (totalCount - 1) / 2.0;
+            double signedPos = (index - middle) * spacing;
+            double extraOffset = Math.abs(signedPos) * 0.4;
+            double sign = signedPos >= 0 ? 1.0 : -1.0;
+
+            double perpX = -curve.midTangentY();
+            double perpY =  curve.midTangentX();
+            return base.offset(perpX * sign * extraOffset, perpY * sign * extraOffset);
+        }
+
+        @Override
+        public GeometryUtils.Point getMidpoint() {
+            return curve.midPoint();
+        }
+
+        @Override
+        public GeometryUtils.Vector getDirection() {
+            return new GeometryUtils.Vector(curve.midTangentX(), curve.midTangentY());
+        }
+
+        @Override
+        public double getLinkXAtY(double y) {
+            return curve.midPoint().x();
+        }
+    }
+
     public EdgeGeometry create(ClassLink link, ClassLayout.Size srcSize, ClassLayout.Size tgtSize) {
         boolean hasMembers = (link.getSourceMember() != null && !link.getSourceMember().isEmpty())
                 || (link.getTargetMember() != null && !link.getTargetMember().isEmpty());
@@ -164,5 +284,10 @@ public class LinkGeometry {
         } else {
             return new StraightEdge(link.getEntity1(), link.getEntity2(), srcSize, tgtSize);
         }
+    }
+
+    public EdgeGeometry createParallel(ClassLink link, ClassLayout.Size srcSize, ClassLayout.Size tgtSize,
+                                       boolean flipCurve, int index, int totalCount) {
+        return new ParallelEdge(link, srcSize, tgtSize, flipCurve, index, totalCount);
     }
 }
