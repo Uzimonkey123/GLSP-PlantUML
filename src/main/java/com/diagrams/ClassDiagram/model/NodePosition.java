@@ -1,6 +1,8 @@
 package com.diagrams.ClassDiagram.model;
 
-public class NodePosition {
+import com.diagrams.ClassDiagram.reconstructor.SourceElement;
+
+public class NodePosition extends SourceElement {
     private double x;
     private double y;
     private boolean isModified = false;

@@ -4,6 +4,7 @@ import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
+import com.diagrams.ClassDiagram.reconstructor.ClassLineMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,28 @@ public class ClassModel {
     public String header;
     public String title;
 
+    public int titleLineStart  = -1;
+    public int titleLineEnd    = -1;
+    public int headerLineStart = -1;
+    public int headerLineEnd   = -1;
+    public int footerLineStart = -1;
+    public int footerLineEnd   = -1;
+
+    public boolean titleModified  = false;
+    public boolean headerModified = false;
+    public boolean footerModified = false;
+
+    private ClassLineMapper lineMapper;
+
     public ClassModel() {}
+
+    public void setMapper(ClassLineMapper lineMapper) {
+        this.lineMapper = lineMapper;
+    }
+
+    public ClassLineMapper getLineMapper() {
+        return lineMapper;
+    }
 
     public ClassEntity getClassEntity(String name) {
         return entities.stream()

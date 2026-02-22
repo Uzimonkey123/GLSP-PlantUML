@@ -1,6 +1,8 @@
 package com.diagrams.ClassDiagram.model.ClassParts;
 
-public class ClassLink {
+import com.diagrams.ClassDiagram.reconstructor.SourceElement;
+
+public class ClassLink extends SourceElement {
     private final String linkId;
     private final ClassEntity entity1;
     private final ClassEntity entity2;
