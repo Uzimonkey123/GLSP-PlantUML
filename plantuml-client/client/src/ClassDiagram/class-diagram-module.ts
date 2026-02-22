@@ -50,6 +50,7 @@ import {
     PackageRectangleView,
     PackageHeaderView
 } from "./class-package-view";
+import '../../css/diagram.css';
 
 export const ClassDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {

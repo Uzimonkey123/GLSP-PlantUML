@@ -10,12 +10,33 @@ import java.util.List;
 public class ClassDiagramConfiguration extends BaseDiagramConfiguration {
     @Override
     public List<ShapeTypeHint> getShapeTypeHints() {
-        return List.of();
+        return List.of(
+                new ShapeTypeHint("entity", true, true, false, false),
+                new ShapeTypeHint("entity:circle", true, true, false, false),
+                new ShapeTypeHint("entity:diamond", true, true, false, false),
+                new ShapeTypeHint("entity:association-point", true, true, false, false),
+                new ShapeTypeHint("entity:note", true, true, false, false),
+                new ShapeTypeHint("entity:lollipop", true, true, false, false),
+                new ShapeTypeHint("entity:invis", false, false, false, false),
+                new ShapeTypeHint("package-folder", false, true, false, false),
+                new ShapeTypeHint("package-rectangle", false, true, false, false),
+                new ShapeTypeHint("package-frame", false, true, false, false),
+                new ShapeTypeHint("package-node", false, true, false, false),
+                new ShapeTypeHint("package-database", false, true, false, false),
+                new ShapeTypeHint("package-cloud", false, true, false, false)
+        );
     }
 
     @Override
     public List<EdgeTypeHint> getEdgeTypeHints() {
-        return List.of();
+        List<String> allNodes = List.of(
+                "entity", "entity:circle", "entity:diamond",
+                "entity:association-point", "entity:lollipop", "entity:note"
+        );
+        return List.of(
+                new EdgeTypeHint("link", false, true, false, allNodes, allNodes),
+                new EdgeTypeHint("link:note", false, true, false, allNodes, List.of("entity:note"))
+        );
     }
 
     @Override

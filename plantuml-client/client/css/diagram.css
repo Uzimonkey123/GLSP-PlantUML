@@ -39,3 +39,14 @@ path.sprotty-edge {
     stroke-width: 1;
     stroke-dasharray: 4 2;
 }
+
+.tool-palette {
+    display: none !important;
+}
+
+g.selected > rect,
+g.selected > polygon,
+g.selected > circle {
+    stroke: #1e90ff !important;
+    stroke-width: 2px !important;
+}
