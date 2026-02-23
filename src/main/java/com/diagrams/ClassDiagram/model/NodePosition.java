@@ -5,7 +5,6 @@ import com.diagrams.ClassDiagram.reconstructor.SourceElement;
 public class NodePosition extends SourceElement {
     private double x;
     private double y;
-    private boolean isModified = false;
 
     public NodePosition(double x, double y) {
         this.x = x;
@@ -28,11 +27,12 @@ public class NodePosition extends SourceElement {
         this.y = y;
     }
 
-    public boolean isModified() {
-        return isModified;
-    }
-
     public void setModified(boolean modified) {
-        isModified = modified;
+        if (modified) {
+            setModified();
+
+        } else {
+            clearModified();
+        }
     }
 }
