@@ -7,6 +7,9 @@ import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.model.Visibility;
+import com.diagrams.ClassDiagram.reconstructor.ClassLineFinder;
+import com.diagrams.ClassDiagram.reconstructor.ClassLineMapper;
+import com.diagrams.ClassDiagram.reconstructor.SourceElement;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.BlockUml;
@@ -26,10 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
@@ -45,6 +45,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     private int packageCounter = 0;
     private int entityCounter = 0;
 
+    private ClassLineMapper lineMapper;
+    private ClassLineFinder lineFinder;
+    private final Map<Object, Integer> elementToLineMap = new HashMap<>();
+
     @Override
     public ClassModel parse(File file) throws IOException {
         String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
@@ -52,8 +56,13 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         entityMapping.clear();
         packageMapping.clear();
+        elementToLineMap.clear();
         packageCounter = 0;
         entityCounter = 0;
+
+        // Create mapper and finder from the original text
+        lineMapper = new ClassLineMapper(originalText);
+        lineFinder = new ClassLineFinder(lineMapper, elementToLineMap);
 
         // Prepare text for PlantUML
         String text = originalText;
@@ -88,7 +97,30 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             }
         }
 
+        model.setMapper(lineMapper);
         return model;
+    }
+
+    private void addMapperInfo(SourceElement element, int lineNum) {
+        if (lineNum >= 0) {
+            element.setSourceLines(lineNum, lineNum);
+            ClassLineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
+
+            if (info != null) {
+                element.setRawSourceText(info.originalText);
+            }
+        }
+    }
+
+    private void addMapperInfo(SourceElement element, int startLine, int endLine) {
+        if (startLine >= 0) {
+            element.setSourceLines(startLine, endLine >= 0 ? endLine : startLine);
+            ClassLineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
+
+            if (info != null) {
+                element.setRawSourceText(info.originalText);
+            }
+        }
     }
 
     private void processEntityRecursively(Entity entity, Package parentPackage) {
@@ -121,6 +153,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         if (parentPackage != null) {
             parentPackage.addChildPackage(pkg);
         }
+
+        int line = lineFinder.findPackageLine(name, pkg);
+        addMapperInfo(pkg, line);
 
         model.packages.add(pkg);
         packageMapping.put(entity, pkg);
@@ -223,6 +258,25 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         model.entities.add(newEntity);
         entityMapping.put(entity, newEntity);
 
+        int line = lineFinder.findEntityLine(name, newEntity);
+        if (line >= 0) {
+            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(line).originalText);
+
+            if (alias != null && !alias.isEmpty() && !alias.equals(name)) {
+                newEntity.setAlias(alias);
+            }
+
+            int endLine = line;
+            if (lineMapper.getLineInfo(line).type == ClassLineMapper.LineType.ENTITY_DECLARATION) {
+                endLine = findBlockEnd(line);
+            }
+
+            addMapperInfo(newEntity, line, endLine);
+
+        } else {
+            addMapperInfo(newEntity, -1);
+        }
+
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             newEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
@@ -258,6 +312,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             lollipop.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
 
+        int line = lineFinder.findEntityLine(name, lollipop);
+        addMapperInfo(lollipop, line);
+
         if (parentPackage != null) {
             parentPackage.addEntity(lollipop);
         }
@@ -287,6 +344,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             circleEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
+
+        int line = lineFinder.findEntityLine(name, circleEntity);
+        addMapperInfo(circleEntity, line);
 
         if (parentPackage != null) {
             parentPackage.addEntity(circleEntity);
@@ -321,6 +381,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         if (entity.getColors().getColor(ColorType.BACK) != null) {
             noteEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
+
+        int startLine = lineFinder.findNoteLine(name, noteEntity);
+        int endLine   = lineFinder.findNoteEndLine(noteEntity);
+        addMapperInfo(noteEntity, startLine, endLine);
 
         if (parentPackage != null) {
             parentPackage.addEntity(noteEntity);
@@ -451,6 +515,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             }
         }
 
+        int line = lineFinder.findRelationshipLine(entity1.getName(), entity2.getName(), newLink);
+        addMapperInfo(newLink, line);
+
         model.links.add(newLink);
         linkAttributes(newLink, link);
         System.err.println(newLink);
@@ -463,8 +530,23 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         UStroke stroke = link.getType().getStroke3(null);
-        double thickness = stroke.getThickness();
-        newLink.setThickness(thickness);
+        newLink.setThickness(stroke.getThickness());
+    }
+
+    private int findBlockEnd(int startLine) {
+        List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
+        int depth = 0;
+        for (int i = startLine; i < all.size(); i++) {
+            for (char c : all.get(i).originalText.toCharArray()) {
+                if (c == '{') depth++;
+                else if (c == '}') {
+                    depth--;
+                    if (depth == 0) return i;
+                }
+            }
+        }
+
+        return startLine;
     }
 
     private void markNoteLinks() {
@@ -497,6 +579,14 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 && classDiagram.getTitle().getDisplay() != null
                 && classDiagram.getTitle().getDisplay().size() > 0) {
             model.title = String.join("<br>", classDiagram.getTitle().getDisplay());
+
+            int start = lineFinder.findTitleLine();
+            int end   = lineFinder.findEndTitleLine();
+
+            if (start >= 0) {
+                model.titleLineStart = start;
+                model.titleLineEnd   = end >= 0 ? end : start;
+            }
         }
     }
 
@@ -507,6 +597,14 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 && classDiagram.getHeader().getDisplay() != null
                 && classDiagram.getHeader().getDisplay().size() > 0) {
             model.header = String.join("<br>", classDiagram.getHeader().getDisplay());
+
+            int start = lineFinder.findHeaderLine();
+            int end   = lineFinder.findEndHeaderLine();
+
+            if (start >= 0) {
+                model.headerLineStart = start;
+                model.headerLineEnd   = end >= 0 ? end : start;
+            }
         }
     }
 
@@ -517,6 +615,14 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 && classDiagram.getFooter().getDisplay() != null
                 && classDiagram.getFooter().getDisplay().size() > 0) {
             model.footer = String.join("<br>", classDiagram.getFooter().getDisplay());
+
+            int start = lineFinder.findFooterLine();
+            int end   = lineFinder.findEndFooterLine();
+
+            if (start >= 0) {
+                model.footerLineStart = start;
+                model.footerLineEnd   = end >= 0 ? end : start;
+            }
         }
     }
 }
