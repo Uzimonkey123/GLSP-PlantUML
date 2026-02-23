@@ -20,6 +20,7 @@ public class ClassEntity extends NodePosition {
     private String stereotypeColor = "";
     private String generic = "";
     private String background = null;
+    private String alias = null;
 
     public ClassEntity(int x, int y, String id, String name, String type,
                         List<EntityMethod> methods, List<EntityMethod> fields, List<EntityMethod> rawBody) {
@@ -55,6 +56,13 @@ public class ClassEntity extends NodePosition {
     }
 
     public void setName(String name) {
+        if (this.originalName == null) {
+            this.originalName = name;
+
+        } else if (!this.name.equals(name)) {
+            setModified();
+        }
+
         this.name = name;
     }
 
@@ -120,6 +128,7 @@ public class ClassEntity extends NodePosition {
 
     public void setGeneric(String generic) {
         this.generic = generic;
+        setModified();
     }
 
     public boolean isGeneric() {
@@ -138,6 +147,25 @@ public class ClassEntity extends NodePosition {
             };
         }
 
+        return background;
+    }
+    public String getAlias() {
+        return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
+    public String getSourceName() {
+        return (alias != null && !alias.isEmpty()) ? alias : name;
+    }
+
+    public String getOriginalName() {
+        return originalName != null ? originalName : name;
+    }
+
+    public String getExplicitBackground() {
         return background;
     }
 

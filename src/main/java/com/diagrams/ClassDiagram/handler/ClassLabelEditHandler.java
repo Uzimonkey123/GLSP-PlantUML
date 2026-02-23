@@ -59,26 +59,31 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
         if (suffix.equals("-label-name")) {
             entity.setName(newText);
+            entity.setModified();
             return;
         }
 
         if (suffix.equals("generic")) {
             entity.setGeneric(newText);
+            entity.setModified();
             return;
         }
 
         if (suffix.startsWith("-field-")) {
             updateListItem(entity.getFields(), suffix, "-field-", newText);
+            entity.setModified();
             return;
         }
 
         if (suffix.startsWith("-method-")) {
             updateListItem(entity.getMethods(), suffix, "-method-", newText);
+            entity.setModified();
             return;
         }
 
         if (suffix.startsWith("-body-")) {
             updateListItem(entity.getRawBody(), suffix, "-body-", newText);
+            entity.setModified();
         }
     }
 
@@ -99,6 +104,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             for (ClassEntity note : model.notes) {
                 if (label.getId().startsWith(note.getId())) {
                     note.setName(operation.getText());
+                    note.setModified();
                     return;
                 }
             }
@@ -110,6 +116,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             for (ClassLabel classLabel : model.labels) {
                 if (classLabel.getLabelId().equals(label.getId())) {
                     classLabel.setLabel(operation.getText());
+                    classLabel.setModified();
                     return;
                 }
             }
@@ -121,13 +128,19 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
         if (id.startsWith("link-qual-src-")) {
             String linkId = id.substring("link-qual-src-".length());
-            findLink(linkId).ifPresent(link -> link.setSourceQualifier(operation.getText()));
+            findLink(linkId).ifPresent(link -> {
+                link.setSourceQualifier(operation.getText());
+                link.setModified();
+            });
             return;
         }
 
         if (id.startsWith("link-qual-tgt-")) {
             String linkId = id.substring("link-qual-tgt-".length());
-            findLink(linkId).ifPresent(link -> link.setTargetQualifier(operation.getText()));
+            findLink(linkId).ifPresent(link -> {
+                link.setTargetQualifier(operation.getText());
+                link.setModified();
+            });
         }
     }
 
@@ -142,6 +155,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             for (Package pkg : model.packages) {
                 if (label.getId().startsWith(pkg.getId())) {
                     pkg.setName(operation.getText());
+                    pkg.setModified();
                     return;
                 }
             }
@@ -151,16 +165,19 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
     private void updatePageDetails(final ApplyLabelEditOperation operation) {
         if (label.getId().startsWith("header")) {
             model.header = operation.getText();
+            model.headerModified = true;
             return;
         }
 
         if (label.getId().startsWith("footer")) {
             model.footer = operation.getText();
+            model.footerModified = true;
             return;
         }
 
         if (label.getId().startsWith("title")) {
             model.title = operation.getText();
+            model.titleModified = true;
         }
     }
 }

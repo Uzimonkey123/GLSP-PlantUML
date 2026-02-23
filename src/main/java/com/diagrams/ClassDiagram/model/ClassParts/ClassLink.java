@@ -178,6 +178,7 @@ public class ClassLink extends SourceElement {
 
         } else {
             this.sourceQualifier.setLabel(text);
+            setModified();
         }
     }
 
@@ -193,6 +194,7 @@ public class ClassLink extends SourceElement {
 
         } else {
             this.targetQualifier.setLabel(text);
+            setModified();
         }
     }
 
@@ -230,14 +232,6 @@ public class ClassLink extends SourceElement {
 
     public String getNoteColor() {
         return noteColor;
-    }
-
-    public void setQuantifier1(String quantifier1) {
-        this.quantifier1.setLabel(quantifier1);
-    }
-
-    public void setQuantifier2(String quantifier2) {
-        this.quantifier2.setLabel(quantifier2);
     }
 
     @Override
