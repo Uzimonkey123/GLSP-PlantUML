@@ -160,7 +160,9 @@ public class ClassLineMapper {
 
     private static boolean isSeparatorLine(String trimmed) {
         return (trimmed.startsWith("--") && trimmed.endsWith("--"))
-                || (trimmed.startsWith("__") && trimmed.endsWith("__"));
+                || (trimmed.startsWith("__") && trimmed.endsWith("__"))
+                || (trimmed.startsWith("..") && trimmed.endsWith(".."))
+                || (trimmed.startsWith("==") && trimmed.endsWith("=="));
     }
 
     private static boolean containsClassArrow(String line) {
