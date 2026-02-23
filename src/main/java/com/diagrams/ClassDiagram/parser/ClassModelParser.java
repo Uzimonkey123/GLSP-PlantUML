@@ -365,6 +365,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             diamondEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
         }
 
+        int line = lineFinder.findEntityLine(name, diamondEntity);
+        addMapperInfo(diamondEntity, line);
+
         if (parentPackage != null) {
             parentPackage.addEntity(diamondEntity);
         }

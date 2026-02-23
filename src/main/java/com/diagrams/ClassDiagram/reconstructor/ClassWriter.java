@@ -63,8 +63,11 @@ public class ClassWriter {
 
     private void writeEntities() {
         for (ClassEntity entity : model.entities) {
+            System.err.println("[is modified]: " + entity + " : " + entity.hasLine());
             if (!entity.isModified()) continue;
             if (!entity.hasLine()) continue;
+
+            System.err.println("[To write]: " + entity);
 
             int start = entity.getSourceLineStart();
             int end   = entity.getSourceLineEnd();
@@ -143,8 +146,15 @@ public class ClassWriter {
             case "INTERFACE" -> sb.append("interface");
             case "ENUM" -> sb.append("enum");
             case "ANNOTATION" -> sb.append("annotation");
-            case "ABSTRACT" -> sb.append("abstract");
-            case "ABSTRACT_CLASS" -> sb.append("abstract class");
+            case "ABSTRACT", "ABSTRACT_CLASS" -> {
+                String raw = entity.getRawSourceText();
+                if (raw != null && raw.trim().startsWith("abstract class")) {
+                    sb.append("abstract class");
+
+                } else {
+                    sb.append("abstract");
+                }
+            }
             case "DATACLASS" -> sb.append("dataclass");
             case "ENTITY" -> sb.append("entity");
             case "EXCEPTION" -> sb.append("exception");
@@ -153,6 +163,8 @@ public class ClassWriter {
             case "RECORD" -> sb.append("record");
             case "STEREOTYPE" -> sb.append("stereotype");
             case "STRUCT" -> sb.append("struct");
+            case "DIAMOND" -> sb.append("diamond");
+            case "CIRCLE" -> sb.append("circle");
             default -> sb.append("class");
         }
         sb.append(" ");
@@ -186,12 +198,26 @@ public class ClassWriter {
         }
 
         if (entity.isStereotype()) {
-            sb.append(" <<");
+            sb.append(" << ");
             char c = entity.getStereotypeChar();
-            if (c != ' ' && c != 0) sb.append(c).append(":");
+            String sColor = entity.getStereotypeColor();
+            if (c != ' ' && c != 0) {
+                sb.append("(").append(c);
+                if (sColor != null && !sColor.isEmpty()) {
+                    sb.append(",").append(sColor);
+                }
+
+                sb.append(") ");
+            }
+
             String sName = entity.getStereotypeName();
-            if (sName != null && !sName.isEmpty()) sb.append(sName);
-            sb.append(">>");
+            if (sName != null && !sName.isEmpty()) {
+                sName = sName.replace("«", "").replace("»", "")
+                        .replace("<<", "").replace(">>", "").trim();
+                if (!sName.isEmpty()) sb.append(sName);
+            }
+
+            sb.append(" >>");
         }
 
         String bg = entity.getExplicitBackground();

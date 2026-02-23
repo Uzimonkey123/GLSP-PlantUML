@@ -1,7 +1,9 @@
 package com.diagrams.ClassDiagram.reconstructor;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,10 +12,12 @@ public class ClassLineFinder {
     private final ClassLineMapper lineMapper;
     private final Map<Object, Integer> elementToLineMap;
     private int searchFrom = 0;
+    private final Set<Integer> claimedLines;
 
     public ClassLineFinder(ClassLineMapper lineMapper, Map<Object, Integer> elementToLineMap) {
         this.lineMapper       = lineMapper;
         this.elementToLineMap = elementToLineMap;
+        this.claimedLines     = new HashSet<>();
     }
 
     public int findEntityLine(String name, Object element) {
@@ -21,6 +25,7 @@ public class ClassLineFinder {
 
         for (int i = 0; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
+            if (claimedLines.contains(i)) continue;
 
             if ((info.type == ClassLineMapper.LineType.ENTITY_DECLARATION
                     || info.type == ClassLineMapper.LineType.ENTITY_INLINE)
@@ -32,6 +37,7 @@ public class ClassLineFinder {
 
         for (int i = 0; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
+            if (claimedLines.contains(i)) continue;
 
             if (info.type == ClassLineMapper.LineType.RELATIONSHIP
                     && relMatchesName(info.originalText, name)) {
@@ -256,5 +262,6 @@ public class ClassLineFinder {
 
     private void register(Object element, int line) {
         if (element != null) elementToLineMap.put(element, line);
+        claimedLines.add(line);
     }
 }

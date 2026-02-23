@@ -31,7 +31,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
             if (label.getId().startsWith("ent-")) {
                 for (ClassEntity entity : model.entities) {
-                    if (label.getId().startsWith(entity.getId())) {
+                    if (label.getId().startsWith(entity.getId() + "-")) {
                         updateEntityLabel(entity, label.getId(), operation.getText());
                         break;
                     }
@@ -102,7 +102,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
     private void updateNoteLabels(final ApplyLabelEditOperation operation) {
         if (label.getId().startsWith("note-") || label.getId().startsWith("ent-")) {
             for (ClassEntity note : model.notes) {
-                if (label.getId().startsWith(note.getId())) {
+                if (label.getId().startsWith(note.getId() + "-")) {
                     note.setName(operation.getText());
                     note.setModified();
                     return;
@@ -153,7 +153,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
     private void updatePackageLabels(final ApplyLabelEditOperation operation) {
         if (label.getId().startsWith("pkg-")) {
             for (Package pkg : model.packages) {
-                if (label.getId().startsWith(pkg.getId())) {
+                if (label.getId().startsWith(pkg.getId() + "-")) {
                     pkg.setName(operation.getText());
                     pkg.setModified();
                     return;

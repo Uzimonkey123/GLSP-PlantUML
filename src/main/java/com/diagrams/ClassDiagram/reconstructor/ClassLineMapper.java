@@ -112,7 +112,10 @@ public class ClassLineMapper {
             case "@startuml" -> { return LineType.START_UML; }
             case "@enduml" -> { return LineType.END_UML; }
 
-            case "class", "interface", "enum", "annotation", "abstract" -> {
+            case "class", "interface", "enum", "annotation", "abstract",
+                 "dataclass", "entity", "exception", "metaclass",
+                 "protocol", "record", "stereotype", "struct",
+                 "diamond", "circle", "()", "<>" -> {
                 if (hasInlineBody(trimmed)) return LineType.ENTITY_INLINE;
                 return LineType.ENTITY_DECLARATION;
             }
