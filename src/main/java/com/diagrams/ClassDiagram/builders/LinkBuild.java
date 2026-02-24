@@ -1,6 +1,5 @@
 package com.diagrams.ClassDiagram.builders;
 
-import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import org.eclipse.glsp.graph.*;
@@ -43,7 +42,7 @@ public class LinkBuild {
             edge.addArgument("targetQualifier", link.getTargetQualifier());
         }
 
-        if (link.getNoteOnLink() != null && !link.getNoteOnLink().isEmpty()) {
+        if (link.getNoteOnLink() != null) {
             edge.addArgument("noteText", link.getNoteOnLink());
             edge.addArgument("notePosition", link.getNotePosition());
         }

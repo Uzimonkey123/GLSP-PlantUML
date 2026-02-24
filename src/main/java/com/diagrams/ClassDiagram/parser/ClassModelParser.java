@@ -386,7 +386,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         int startLine = lineFinder.findNoteLine(name, noteEntity);
-        int endLine   = lineFinder.findNoteEndLine(noteEntity);
+        int endLine   = lineFinder.findNoteEndLine(startLine, noteEntity);
         addMapperInfo(noteEntity, startLine, endLine);
 
         if (parentPackage != null) {
@@ -510,12 +510,21 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         if (link.getNote() != null) {
             String noteText = String.join("<br>", link.getNote().getDisplay());
-            newLink.setNoteOnLink(noteText);
+            String noteId = "note-" + id;
+
+            ClassEntity newNote = new ClassEntity(0, 0, noteId, noteText, "NOTE");
+            newLink.setNoteOnLink(newNote);
             newLink.setNotePosition(link.getNote().getPosition().toString());
 
             if (link.getNote().getColors().getColor(ColorType.BACK) != null) {
-                newLink.setNoteColor(link.getNote().getColors().getColor(ColorType.BACK).asString());
+                newNote.setBackground(link.getNote().getColors().getColor(ColorType.BACK).asString());
             }
+
+            model.notes.add(newNote);
+
+            int startLine = lineFinder.findNoteLine(noteText, newNote);
+            int endLine   = lineFinder.findNoteEndLine(startLine, newNote);
+            addMapperInfo(newNote, startLine, endLine);
         }
 
         int line = lineFinder.findRelationshipLine(entity1.getName(), entity2.getName(), newLink);

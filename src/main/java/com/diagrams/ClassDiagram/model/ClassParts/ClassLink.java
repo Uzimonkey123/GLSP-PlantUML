@@ -25,9 +25,8 @@ public class ClassLink extends SourceElement {
 
     private boolean noteLink = false;
 
-    private String noteOnLink = null;
+    private ClassEntity noteOnLink = null;
     private String notePosition = null;
-    private String noteColor = "#FFFFE0";
 
     public ClassLink(String linkId, ClassEntity entity1, ClassEntity entity2,
                      String type, String message, int length,
@@ -206,16 +205,16 @@ public class ClassLink extends SourceElement {
         this.noteLink = setNoteLink;
     }
 
-    public String getNoteOnLink() {
+    public ClassEntity getNoteOnLink() {
         return noteOnLink;
     }
 
-    public void setNoteOnLink(String noteOnLink) {
+    public void setNoteOnLink(ClassEntity noteOnLink) {
         this.noteOnLink = noteOnLink;
     }
 
     public boolean hasNoteOnLink() {
-        return noteOnLink != null && !noteOnLink.isEmpty();
+        return noteOnLink != null;
     }
 
     public String getNotePosition() {
@@ -224,14 +223,6 @@ public class ClassLink extends SourceElement {
 
     public void setNotePosition(String notePosition) {
         this.notePosition = notePosition;
-    }
-
-    public void setNoteColor(String noteColor) {
-        this.noteColor = noteColor;
-    }
-
-    public String getNoteColor() {
-        return noteColor;
     }
 
     @Override

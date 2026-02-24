@@ -296,7 +296,7 @@ public class ClassLinkFactory {
             }
 
             if (link.hasNoteOnLink()) {
-                Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink());
+                Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink().getName());
                 double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());
                 labelPos = noteCalculator.adjustLabelForNote(
                         labelPos, link.getMessage().getLabel(), noteDim,
@@ -319,7 +319,7 @@ public class ClassLinkFactory {
             EdgeGeometry geometry = createEdgeGeometry(link);
             if (geometry == null) continue;
 
-            Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink());
+            Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink().getName());
             Point labelPos = geometry.getLabelPosition(
                     link.getMessage() != null ? link.getMessage().getLabel().length() : 0);
 
@@ -334,22 +334,17 @@ public class ClassLinkFactory {
             ClassEntity noteEntity = model.notes.stream()
                     .filter(n -> n.getId().equals(noteId))
                     .findFirst()
-                    .orElseGet(() -> {
-                        ClassEntity newNote = new ClassEntity(
-                                (int) notePos.x(),
-                                (int) notePos.y(),
-                                noteId,
-                                link.getNoteOnLink(),
-                                "NOTE"
-                        );
-                        model.notes.add(newNote);
-                        return newNote;
-                    });
+                    .orElse(null);
+
+            if (noteEntity.getX() == 0 && noteEntity.getY() == 0) {
+                noteEntity.setX(notePos.x());
+                noteEntity.setY(notePos.y());
+            }
 
             double entityWidth = WidthCalculator.calculateWidth(noteEntity.getName(), 20) + 20;
             double entityHeight = calculateNoteHeight(noteEntity.getName());
 
-            noteEntity.setBackground(link.getNoteColor());
+            noteEntity.setBackground(noteEntity.getBackground());
 
             elements.add(entityBuild.buildNoteEntity(noteEntity, entityWidth, entityHeight));
         }
