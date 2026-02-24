@@ -20,11 +20,14 @@ public class Package extends NodePosition {
     private double anchorY = -1;
     private double anchorSumX = 0, anchorSumY = 0;
     private int anchorCount = 0;
+    private String originalName;
+
 
     public Package(String id, String name, String type) {
         super(0, 0);
         this.id = id;
         this.name = name;
+        this.originalName = name;
         this.type = type;
     }
 
@@ -34,6 +37,10 @@ public class Package extends NodePosition {
 
     public String getName() {
         return name;
+    }
+
+    public String getOriginalName() {
+        return originalName;
     }
 
     public void setName(String name) {
