@@ -63,7 +63,7 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             return;
         }
 
-        if (suffix.equals("generic")) {
+        if (suffix.equals("-generic")) {
             entity.setGeneric(newText);
             entity.setModified();
             return;

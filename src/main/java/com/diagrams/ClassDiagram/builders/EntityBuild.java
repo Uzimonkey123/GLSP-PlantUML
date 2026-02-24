@@ -72,7 +72,7 @@ public class EntityBuild {
 
         if (entity.isGeneric()) {
             nodeBuilder.add(new GLabelBuilder("label:generic")
-                    .id(entity.getId() + "generic")
+                    .id(entity.getId() + "-generic")
                     .text(entity.getGeneric())
                     .position(genericBoxX + genericBoxW / 2.0, genericBoxH / 2.0)
                     .size(genericBoxW, genericBoxH)
