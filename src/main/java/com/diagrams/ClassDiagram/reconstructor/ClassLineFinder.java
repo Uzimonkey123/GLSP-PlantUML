@@ -15,9 +15,9 @@ public class ClassLineFinder {
     private final Set<Integer> claimedLines;
 
     public ClassLineFinder(ClassLineMapper lineMapper, Map<Object, Integer> elementToLineMap) {
-        this.lineMapper       = lineMapper;
+        this.lineMapper = lineMapper;
         this.elementToLineMap = elementToLineMap;
-        this.claimedLines     = new HashSet<>();
+        this.claimedLines = new HashSet<>();
     }
 
     public int findEntityLine(String name, Object element) {
@@ -94,23 +94,42 @@ public class ClassLineFinder {
         List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
         boolean filter = text != null && !text.isEmpty();
 
+        // normalize search text for comparison
+        String normalizedText = filter ? text.replace("<br>", "\\n").trim() : null;
+
         for (int i = searchFrom; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
-            if (info.type == ClassLineMapper.LineType.NOTE
-                    && (!filter || info.originalText.contains(text))) {
-                register(element, i);
-                searchFrom = i + 1;
-                return i;
+            System.err.println(info.lineNumber + " " + info.type);
+
+            if (info.type == ClassLineMapper.LineType.NOTE) {
+                StringBuilder fullNote = new StringBuilder();
+                fullNote.append(info.originalText.replace("<br>", "\\n").trim());
+
+                // Append all NOTE_BODY lines
+                for (int j = i + 1; j < all.size(); j++) {
+                    ClassLineMapper.LineInfo body = all.get(j);
+                    if (body.type != ClassLineMapper.LineType.NOTE_BODY) break;
+
+                    fullNote.append("\\n").append(body.originalText.replace("<br>", "\\n").trim());
+                }
+
+                String noteText = fullNote.toString();
+
+                if (!filter || noteText.contains(normalizedText)) {
+                    register(element, i);
+                    searchFrom = i + 1;
+                    return i;
+                }
             }
         }
 
         return -1;
     }
 
-    public int findNoteEndLine(Object element) {
+    public int findNoteEndLine(int noteStartLine, Object element) {
         List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
 
-        for (int i = searchFrom; i < all.size(); i++) {
+        for (int i = noteStartLine + 1; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
 
             if (info.type == ClassLineMapper.LineType.END_NOTE) {
@@ -118,9 +137,15 @@ public class ClassLineFinder {
                 searchFrom = i + 1;
                 return i;
             }
+
+            if (info.type == ClassLineMapper.LineType.NOTE) {
+                break;
+            }
         }
 
-        return -1;
+        register(element, noteStartLine);
+
+        return noteStartLine;
     }
 
     public int findTitleLine()     { return findLineByType(ClassLineMapper.LineType.TITLE); }
