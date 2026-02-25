@@ -70,33 +70,88 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
         }
 
         if (suffix.startsWith("-field-")) {
-            updateListItem(entity.getFields(), suffix, "-field-", newText);
+            int fieldIndex = extractIndex(suffix, "-field-");
+            if (fieldIndex == -1) return;
+
+            updateField(entity, fieldIndex, newText);
+
             entity.setModified();
             return;
         }
 
         if (suffix.startsWith("-method-")) {
-            updateListItem(entity.getMethods(), suffix, "-method-", newText);
+            int methodIndex = extractIndex(suffix, "-method-");
+            if (methodIndex == -1) return;
+
+            updateMethod(entity, methodIndex, newText);
+
             entity.setModified();
             return;
         }
 
         if (suffix.startsWith("-body-")) {
-            updateListItem(entity.getRawBody(), suffix, "-body-", newText);
+            int bodyIndex = extractIndex(suffix, "-body-");
+            if (bodyIndex == -1) return;
+
+            updateRawBody(entity, bodyIndex, newText);
             entity.setModified();
         }
     }
 
-    private void updateListItem(List<?> list, String suffix, String prefix, String newText) {
+    private int extractIndex(String suffix, String prefix) {
         try {
-            int index = Integer.parseInt(suffix.substring(prefix.length()));
-            if (index >= 0 && index < list.size()) {
-                ((EntityMethod) list.get(index)).setMethodName(newText);
+            if (!suffix.startsWith(prefix)) {
+                return -1;
             }
 
-        } catch (NumberFormatException e) {
-            System.err.println("[ApplyLabelEdit] No index: " + suffix);
+            return Integer.parseInt(suffix.substring(prefix.length()));
+
+        } catch (Exception e) {
+            System.err.println("INDEX PARSE FAILED → " + suffix);
+            return -1;
         }
+    }
+
+    private void updateField(ClassEntity entity, int fieldIndex, String newText) {
+        if (fieldIndex < 0 || fieldIndex >= entity.getFields().size()) {
+            return;
+        }
+
+        EntityMethod field = entity.getFields().get(fieldIndex);
+        field.setMethodName(newText);
+
+        if (fieldIndex >= entity.getRawBody().size()) {
+            return;
+        }
+
+        EntityMethod raw = entity.getRawBody().get(fieldIndex);
+        raw.setMethodName(newText);
+    }
+
+    private void updateMethod(ClassEntity entity, int methodIndex, String newText) {
+        if (methodIndex < 0 || methodIndex >= entity.getMethods().size()) {
+            return;
+        }
+
+        EntityMethod method = entity.getMethods().get(methodIndex);
+        method.setMethodName(newText);
+
+        int bodyIndex = entity.getFields().size() + methodIndex;
+        if (bodyIndex < 0 || bodyIndex >= entity.getRawBody().size()) {
+            return;
+        }
+
+        EntityMethod raw = entity.getRawBody().get(bodyIndex);
+        raw.setMethodName(newText);
+    }
+
+    private void updateRawBody(ClassEntity entity, int bodyIndex, String newText) {
+        if (bodyIndex < 0 || bodyIndex >= entity.getRawBody().size()) {
+            return;
+        }
+
+        EntityMethod raw = entity.getRawBody().get(bodyIndex);
+        raw.setMethodName(newText);
     }
 
     private void updateNoteLabels(final ApplyLabelEditOperation operation) {

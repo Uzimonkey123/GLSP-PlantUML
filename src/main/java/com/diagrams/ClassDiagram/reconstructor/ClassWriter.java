@@ -101,6 +101,40 @@ public class ClassWriter {
                     updateReferenceLine(info.lineNumber, entity);
                 }
             }
+
+            writeStandaloneMembers(entity);
+        }
+    }
+
+    private void writeStandaloneMembers(ClassEntity entity) {
+        List<EntityMethod> members = entity.getRawBody();
+        int memberCursor = 0;
+
+        for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
+            if (info.type != ClassLineMapper.LineType.MEMBER) continue;
+
+            String line = getEffectiveLine(info.lineNumber);
+            String trimmed = line.trim();
+
+            String oldName = entity.getOriginalName();
+            String alias = entity.getAlias();
+            String token = (alias != null && !alias.isEmpty()) ? alias : entity.getName();
+
+            boolean matchesOwner = trimmed.startsWith(oldName + " :")
+                                    || trimmed.startsWith("\"" + oldName + "\" :")
+                                    || trimmed.startsWith(token + " :")
+                                    || trimmed.startsWith("\"" + token + "\" :");
+
+            if (!matchesOwner) continue;
+            if (memberCursor >= members.size()) {
+                continue;
+            }
+
+            EntityMethod member = members.get(memberCursor++);
+            String indent = extractIndentation(line);
+            String rebuilt = getEntityToken(entity) + " : " + buildMemberLine(member);
+
+            changeLine(info.lineNumber, info.lineNumber, List.of(applyIndentation(rebuilt, indent)));
         }
     }
 
