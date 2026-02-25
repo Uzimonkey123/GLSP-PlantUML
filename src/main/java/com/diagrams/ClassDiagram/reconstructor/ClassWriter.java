@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ClassWriter {
 
@@ -97,7 +98,8 @@ public class ClassWriter {
 
             for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
                 if (info.type == ClassLineMapper.LineType.MEMBER
-                        || info.type == ClassLineMapper.LineType.RELATIONSHIP) {
+                        || info.type == ClassLineMapper.LineType.RELATIONSHIP
+                        || info.type == ClassLineMapper.LineType.NOTE) {
                     updateReferenceLine(info.lineNumber, entity);
                 }
             }
@@ -310,33 +312,17 @@ public class ClassWriter {
         String alias = entity.getAlias();
         String newToken = (alias != null && !alias.isEmpty()) ? alias : entity.getName();
 
-        boolean needsQuotes = newToken.contains(" ") || !newToken.matches("[A-Za-z0-9_]+");
-        String quotedNew = needsQuotes ? '"' + newToken + '"' : newToken;
+        if (oldName.equals(newToken)) return current;
 
-        if (oldName.equals(newToken)) {
-            return current;
-        }
+        // Build strict token regex: match oldName optionally quoted
+        String regex = "(?<![A-Za-z0-9_])" + Pattern.quote(oldName) + "(?![A-Za-z0-9_])";
+        current = current.replaceAll(regex, Matcher.quoteReplacement(newToken));
 
-        ClassLineMapper.LineType type = lineMap.getLineInfo(lineNum).type;
+        // Also replace quoted oldName
+        regex = "(?<![A-Za-z0-9_])\"" + Pattern.quote(oldName) + "\"(?![A-Za-z0-9_])";
+        current = current.replaceAll(regex, Matcher.quoteReplacement('"' + newToken + '"'));
 
-        if (type == ClassLineMapper.LineType.RELATIONSHIP
-                || type == ClassLineMapper.LineType.MEMBER) {
-            int labelIdx = current.indexOf(" : ");
-
-            if (labelIdx >= 0) {
-                String before = current.substring(0, labelIdx);
-                String after = current.substring(labelIdx);
-                before = replaceWordBoundary(before, oldName, quotedNew);
-                before = before.replace('"' + oldName + '"', quotedNew);
-
-                return before + after;
-            }
-        }
-
-        String updated = replaceWordBoundary(current, oldName, quotedNew);
-        updated = updated.replace('"' + oldName + '"', quotedNew);
-
-        return updated;
+        return current;
     }
 
     private static String replaceWordBoundary(String text, String oldWord, String replacement) {
@@ -369,104 +355,23 @@ public class ClassWriter {
         return result.toString();
     }
 
-    private void writePackages() {
-        for (Package pkg : model.packages) {
-            if (!pkg.isModified()) continue;
-            if (!pkg.hasLine()) continue;
-
-            String oldPath = buildFullPath(pkg, true);
-            String newPath = buildFullPath(pkg, false);
-            if (oldPath.equals(newPath)) continue;
-
-            boolean needsQuotes = newPath.contains(" ");
-            String quotedNew = needsQuotes ? '"' + newPath + '"' : newPath;
-
-            for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
-                if (info.type == ClassLineMapper.LineType.PACKAGE_DECLARATION
-                        || info.type == ClassLineMapper.LineType.ENTITY_DECLARATION
-                        || info.type == ClassLineMapper.LineType.ENTITY_INLINE
-                        || info.type == ClassLineMapper.LineType.RELATIONSHIP
-                        || info.type == ClassLineMapper.LineType.MEMBER
-                        || info.type == ClassLineMapper.LineType.UNKNOWN) {
-                    updatePackageReferenceLine(info.lineNumber, oldPath, quotedNew);
-                }
-            }
-        }
-    }
-
-    private String buildFullPath(Package pkg, boolean useOriginal) {
-        List<String> parts = new ArrayList<>();
-        Package current = pkg;
-
-        while (current != null) {
-            parts.add(useOriginal ? current.getOriginalName() : current.getName());
-            current = current.getParentPackage();
-        }
-
-        Collections.reverse(parts);
-        String separator = detectSeparator();
-
-        return String.join(separator, parts);
-    }
-
-    private String detectSeparator() {
-        for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
-            String trimmed = info.originalText.trim();
-
-            if (trimmed.startsWith("set separator")) {
-                String sep = trimmed.substring("set separator".length()).trim();
-                if (!sep.isEmpty() && !sep.equalsIgnoreCase("none")) return sep;
-            }
-        }
-
-        return ".";
-    }
-
-    private void updatePackageReferenceLine(int lineNum, String oldPath, String newPath) {
-        String current;
-        if (newLines.containsKey(lineNum)) {
-            List<String> pending = newLines.get(lineNum).newLines();
-            current = pending.isEmpty() ? "" : pending.getFirst();
-        } else {
-            current = sourceLines.get(lineNum);
-        }
-
-        ClassLineMapper.LineType type = lineMap.getLineInfo(lineNum).type;
-        String updated;
-
-        if (type == ClassLineMapper.LineType.RELATIONSHIP
-                || type == ClassLineMapper.LineType.MEMBER) {
-            int labelIdx = current.indexOf(" : ");
-
-            if (labelIdx >= 0) {
-                String before = current.substring(0, labelIdx);
-                String after = current.substring(labelIdx);
-                before = replaceWordBoundary(before, oldPath, newPath);
-                before = before.replace('"' + oldPath + '"', newPath);
-                updated = before + after;
-
-            } else {
-                updated = replaceWordBoundary(current, oldPath, newPath);
-                updated = updated.replace('"' + oldPath + '"', newPath);
-            }
-
-        } else {
-            updated = replaceWordBoundary(current, oldPath, newPath);
-            updated = updated.replace('"' + oldPath + '"', newPath);
-        }
-
-        if (!updated.equals(current)) {
-            changeLine(lineNum, lineNum, List.of(updated));
-        }
-    }
-
     private void writeLinks() {
         for (ClassLink link : model.links) {
             if (!link.isModified() && !link.getMessage().isModified()
-                    && !link.getQuantifier1().isModified() && !link.getQuantifier2().isModified()) continue;
+                    && !link.getQuantifier1().isModified() && !link.getQuantifier2().isModified()
+                    && !link.getEntity1().isModified() && !link.getEntity2().isModified()) continue;
 
             int start = link.getSourceLineStart();
             int end   = link.getSourceLineEnd();
+
+            if (link.getEntity1().getType().equals("ASSOCIATION_POINT") || link.getEntity2().getType().equals("ASSOCIATION_POINT")) {
+                continue;
+            }
+
+            if (start == -1) {
+                continue;
+            }
+
             String indent = extractIndentation(sourceLines.get(start));
 
             changeLine(start, end, List.of(applyIndentation(buildLinkLine(link), indent)));
@@ -475,8 +380,8 @@ public class ClassWriter {
 
     private String buildLinkLine(ClassLink link) {
         StringBuilder sb = new StringBuilder();
-        String e1Token = getEntityToken(link.getEntity1());
-        String e2Token = getEntityToken(link.getEntity2());
+        String e1Token = getLinkTokenFromLine(link.getEntity1(), link.getSourceLineStart());
+        String e2Token = getLinkTokenFromLine(link.getEntity2(), link.getSourceLineStart());
         String srcQual = link.getSourceQualifier();
 
         if (srcQual != null && !srcQual.isEmpty()) {
@@ -516,6 +421,27 @@ public class ClassWriter {
         return sb.toString();
     }
 
+    private String getLinkTokenFromLine(ClassEntity entity, int lineNum) {
+        String line = getEffectiveLine(lineNum);
+
+        String oldName = Pattern.quote(entity.getOriginalName());
+        Pattern pattern = Pattern.compile("([\\w.]*\"?" + oldName + "\"?)");
+        Matcher matcher = pattern.matcher(line);
+
+        if (matcher.find()) {
+            String tokenInLine = matcher.group(1);
+
+            // Replace the bare old name with alias or new name
+            String replacement = entity.getAlias() != null && !entity.getAlias().isEmpty()
+                    ? entity.getAlias()
+                    : entity.getName();
+
+            return tokenInLine.replace(entity.getOriginalName(), replacement);
+        }
+
+        return getEntityToken(entity);
+    }
+
     private String getEntityToken(ClassEntity entity) {
         String alias = entity.getAlias();
         if (alias != null && !alias.isEmpty()) {
@@ -535,27 +461,48 @@ public class ClassWriter {
 
         sb.append(decoratorToLeft(link.getDecorator2()));
         String lineChar = link.getType().contains("DOTTED") || link.getType().contains("DASHED") ? "." : "-";
-        String color = link.getColor();
-        boolean hasColor = color != null && !color.equals("#000000") && !color.isEmpty();
-        double thickness = link.getThickness();
-        boolean hasThickness = thickness != 1.0;
 
-        if (hasColor || hasThickness) {
-            sb.append(lineChar);
-            sb.append("[");
-            if (hasColor) sb.append(color);
+        // Check original line for bracket style
+        String originalLine = getEffectiveLine(link.getSourceLineStart());
+        Pattern bracketPattern = Pattern.compile("-\\[(.*?)]->|\\.\\.\\[(.*?)]\\.|-\\[(.*?)]-");
+        Matcher m = bracketPattern.matcher(originalLine);
 
-            if (hasThickness) {
-                if (hasColor) sb.append(",");
-
-                sb.append("thickness=").append((int) thickness);
+        String bracket = null;
+        if (m.find()) {
+            for (int i = 1; i <= m.groupCount(); i++) {
+                if (m.group(i) != null) {
+                    bracket = m.group(i);
+                    break;
+                }
             }
+        }
 
-            sb.append("]");
-            sb.append(lineChar);
+        if (bracket != null && !bracket.isEmpty()) {
+            sb.append(lineChar).append("[").append(bracket).append("]").append(lineChar);
 
         } else {
-            sb.append(lineChar.repeat(Math.max(0, link.getLength())));
+            String color = link.getColor();
+            boolean hasColor = color != null && !color.equals("#000000") && !color.isEmpty();
+            double thickness = link.getThickness();
+            boolean hasThickness = thickness != 1.0;
+
+            if (hasColor || hasThickness) {
+                sb.append(lineChar);
+                sb.append("[");
+                if (hasColor) sb.append(color);
+
+                if (hasThickness) {
+                    if (hasColor) sb.append(",");
+
+                    sb.append("thickness=").append((int) thickness);
+                }
+
+                sb.append("]");
+                sb.append(lineChar);
+
+            } else {
+                sb.append(lineChar.repeat(Math.max(0, link.getLength())));
+            }
         }
 
         sb.append(decoratorToRight(link.getDecorator1()));
@@ -703,6 +650,104 @@ public class ClassWriter {
         }
 
         return lines;
+    }
+
+    private void writePackages() {
+        for (Package pkg : model.packages) {
+            System.err.println("[PKG] " + pkg.getName()
+                    + " original=" + pkg.getOriginalName()
+                    + " modified=" + pkg.isModified()
+                    + " hasLine=" + pkg.hasLine()
+                    + (pkg.hasLine() ? " line=" + pkg.getSourceLineStart() : "")
+                    + " parent=" + (pkg.getParentPackage() != null ? pkg.getParentPackage().getName() : "null"));
+
+            if (!pkg.isModified()) continue;
+
+            String oldPath = buildFullPath(pkg, true);
+            String newPath = buildFullPath(pkg, false);
+            System.err.println("[PKG] oldPath=" + oldPath + " newPath=" + newPath);
+            if (oldPath.equals(newPath)) continue;
+
+            boolean needsQuotes = newPath.contains(" ");
+            String quotedNew = needsQuotes ? '"' + newPath + '"' : newPath;
+
+            for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
+                if (info.type == ClassLineMapper.LineType.PACKAGE_DECLARATION
+                        || info.type == ClassLineMapper.LineType.ENTITY_DECLARATION
+                        || info.type == ClassLineMapper.LineType.ENTITY_INLINE
+                        || info.type == ClassLineMapper.LineType.RELATIONSHIP
+                        || info.type == ClassLineMapper.LineType.MEMBER
+                        || info.type == ClassLineMapper.LineType.UNKNOWN) {
+                    updatePackageReferenceLine(info.lineNumber, oldPath, quotedNew);
+                }
+            }
+        }
+    }
+
+    private String buildFullPath(Package pkg, boolean useOriginal) {
+        List<String> parts = new ArrayList<>();
+        Package current = pkg;
+
+        while (current != null) {
+            parts.add(useOriginal ? current.getOriginalName() : current.getName());
+            current = current.getParentPackage();
+        }
+
+        Collections.reverse(parts);
+        String separator = detectSeparator();
+
+        return String.join(separator, parts);
+    }
+
+    private String detectSeparator() {
+        for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
+            String trimmed = info.originalText.trim();
+
+            if (trimmed.startsWith("set separator")) {
+                String sep = trimmed.substring("set separator".length()).trim();
+                if (!sep.isEmpty() && !sep.equalsIgnoreCase("none")) return sep;
+            }
+        }
+
+        return ".";
+    }
+
+    private void updatePackageReferenceLine(int lineNum, String oldPath, String newPath) {
+        String current;
+        if (newLines.containsKey(lineNum)) {
+            List<String> pending = newLines.get(lineNum).newLines();
+            current = pending.isEmpty() ? "" : pending.getFirst();
+        } else {
+            current = sourceLines.get(lineNum);
+        }
+
+        ClassLineMapper.LineType type = lineMap.getLineInfo(lineNum).type;
+        String updated;
+
+        if (type == ClassLineMapper.LineType.RELATIONSHIP
+                || type == ClassLineMapper.LineType.MEMBER) {
+            int labelIdx = current.indexOf(" : ");
+
+            if (labelIdx >= 0) {
+                String before = current.substring(0, labelIdx);
+                String after = current.substring(labelIdx);
+                before = replaceWordBoundary(before, oldPath, newPath);
+                before = before.replace('"' + oldPath + '"', newPath);
+                updated = before + after;
+
+            } else {
+                updated = replaceWordBoundary(current, oldPath, newPath);
+                updated = updated.replace('"' + oldPath + '"', newPath);
+            }
+
+        } else {
+            updated = replaceWordBoundary(current, oldPath, newPath);
+            updated = updated.replace('"' + oldPath + '"', newPath);
+        }
+
+        if (!updated.equals(current)) {
+            changeLine(lineNum, lineNum, List.of(updated));
+        }
     }
 
     private void applyReplacements() {

@@ -62,13 +62,26 @@ public class ClassLineMapper {
 
             lineInfos.add(new LineInfo(i, original, type));
 
-            switch (type) {
-                case ENTITY_DECLARATION -> blockStack.push(true);
-                case PACKAGE_DECLARATION -> blockStack.push(false);
-                case BLOCK_END -> { if (!blockStack.isEmpty()) blockStack.pop(); }
-                default -> {}
+            String text = original.trim();
+
+            if (opensBlock(text)) {
+                System.err.println("START");
+                blockStack.push(true);
+            }
+
+            if (closesBlock(text)) {
+                System.err.println("END");
+                if (!blockStack.isEmpty()) blockStack.pop();
             }
         }
+    }
+
+    private static boolean opensBlock(String text) {
+        return text.contains("{");
+    }
+
+    private static boolean closesBlock(String text) {
+        return text.contains("}");
     }
 
     public List<LineInfo> getLineInfos() {
@@ -84,6 +97,10 @@ public class ClassLineMapper {
 
     private static LineType determineType(String trimmed) {
         if (trimmed.isEmpty()) return LineType.EMPTY;
+
+        if (trimmed.matches("[A-Za-z0-9_<>]+\\s*:\\s*.+")) {
+            return LineType.MEMBER;
+        }
 
         // Single-line and block comments
         if (trimmed.startsWith("'")) return LineType.COMMENT;
@@ -104,8 +121,8 @@ public class ClassLineMapper {
         }
 
         String firstWord = trimmed.split("\\s+", 2)[0].toLowerCase();
-        if (firstWord.contains("#")) {
-            firstWord = firstWord.substring(0, firstWord.indexOf('#'));
+        while (!firstWord.isEmpty() && "-#~+".indexOf(firstWord.charAt(0)) >= 0) {
+            firstWord = firstWord.substring(1);
         }
 
         switch (firstWord) {
@@ -116,6 +133,7 @@ public class ClassLineMapper {
                  "dataclass", "entity", "exception", "metaclass",
                  "protocol", "record", "stereotype", "struct",
                  "diamond", "circle", "()", "<>" -> {
+                if (lineLooksLikeRelationship(trimmed)) return LineType.RELATIONSHIP;
                 if (hasInlineBody(trimmed)) return LineType.ENTITY_INLINE;
                 return LineType.ENTITY_DECLARATION;
             }
@@ -143,6 +161,15 @@ public class ClassLineMapper {
         if (containsClassArrow(trimmed)) return LineType.RELATIONSHIP;
 
         return LineType.UNKNOWN;
+    }
+
+    private static boolean lineLooksLikeRelationship(String line) {
+        String trimmed = line.trim();
+        if (trimmed.startsWith("diamond") || trimmed.startsWith("<>")) {
+            return trimmed.matches("^diamond\\s*[-.]\\s*\"?.+\"?\\s+\\S.*");
+        }
+
+        return false;
     }
 
     private static boolean hasInlineBody(String trimmed) {

@@ -247,7 +247,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             }
 
             int endLine = line;
-            if (lineMapper.getLineInfo(line).type == ClassLineMapper.LineType.ENTITY_DECLARATION) {
+            if (opensBlock(line)) {
                 endLine = findBlockEnd(line);
             }
 
@@ -335,7 +335,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleDiamondEntity(Entity entity, String id, Package parentPackage) {
         String type = "DIAMOND";
-        String name = String.join("<br>", entity.getDisplay());
+        String name = String.join("<br>", entity.getName());
 
         ClassEntity diamondEntity = new ClassEntity(0, 0, id, name, type);
         model.entities.add(diamondEntity);
@@ -488,6 +488,20 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             newLink.setTargetQualifier(kal2);
         }
 
+        String alias1 = entity1.getAlias();
+        String alias2 = entity2.getAlias();
+
+        if (alias1 == null) {
+            alias1 = entity1.getName();
+        }
+
+        if (alias2 == null) {
+            alias2 = entity2.getName();
+        }
+
+        int line = lineFinder.findRelationshipLine(alias1, alias2, newLink);
+        addMapperInfo(newLink, line, lineMapper);
+
         if (link.getNote() != null) {
             String noteText = String.join("<br>", link.getNote().getDisplay());
             String noteId = "note-" + id;
@@ -507,9 +521,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             addMapperInfo(newNote, startLine, endLine, lineMapper);
         }
 
-        int line = lineFinder.findRelationshipLine(entity1.getName(), entity2.getName(), newLink);
-        addMapperInfo(newLink, line, lineMapper);
-
         model.links.add(newLink);
         linkAttributes(newLink, link);
         System.err.println(newLink);
@@ -523,6 +534,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         UStroke stroke = link.getType().getStroke3(null);
         newLink.setThickness(stroke.getThickness());
+    }
+
+    private boolean opensBlock(int line) {
+        String text = lineMapper.getLineInfo(line).originalText.trim();
+        return text.endsWith("{");
     }
 
     private int findBlockEnd(int startLine) {
