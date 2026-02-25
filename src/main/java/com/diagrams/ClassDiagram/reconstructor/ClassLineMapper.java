@@ -158,7 +158,8 @@ public class ClassLineMapper {
             return true;
         }
 
-        return trimmed.contains(":");
+        String stripped = trimmed.replace("::", "");
+        return stripped.contains(":");
     }
 
     private static boolean isSeparatorLine(String trimmed) {

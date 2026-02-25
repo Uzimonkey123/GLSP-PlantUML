@@ -9,7 +9,6 @@ import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.model.Visibility;
 import com.diagrams.ClassDiagram.reconstructor.ClassLineFinder;
 import com.diagrams.ClassDiagram.reconstructor.ClassLineMapper;
-import com.diagrams.ClassDiagram.reconstructor.SourceElement;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import com.google.inject.Inject;
 import net.sourceforge.plantuml.BlockUml;
@@ -30,6 +29,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+
+import static com.diagrams.ClassDiagram.utils.MapperInfo.addMapperInfo;
 
 public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
@@ -98,29 +99,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         model.setMapper(lineMapper);
+        model.setLineFinder(lineFinder);
         return model;
-    }
-
-    private void addMapperInfo(SourceElement element, int lineNum) {
-        if (lineNum >= 0) {
-            element.setSourceLines(lineNum, lineNum);
-            ClassLineMapper.LineInfo info = lineMapper.getLineInfo(lineNum);
-
-            if (info != null) {
-                element.setRawSourceText(info.originalText);
-            }
-        }
-    }
-
-    private void addMapperInfo(SourceElement element, int startLine, int endLine) {
-        if (startLine >= 0) {
-            element.setSourceLines(startLine, endLine >= 0 ? endLine : startLine);
-            ClassLineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
-
-            if (info != null) {
-                element.setRawSourceText(info.originalText);
-            }
-        }
     }
 
     private void processEntityRecursively(Entity entity, Package parentPackage) {
@@ -155,7 +135,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         int line = lineFinder.findPackageLine(name, pkg);
-        addMapperInfo(pkg, line);
+        addMapperInfo(pkg, line, lineMapper);
 
         model.packages.add(pkg);
         packageMapping.put(entity, pkg);
@@ -271,10 +251,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 endLine = findBlockEnd(line);
             }
 
-            addMapperInfo(newEntity, line, endLine);
+            addMapperInfo(newEntity, line, endLine, lineMapper);
 
         } else {
-            addMapperInfo(newEntity, -1);
+            addMapperInfo(newEntity, -1, lineMapper);
         }
 
         if (entity.getColors().getColor(ColorType.BACK) != null) {
@@ -313,7 +293,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         int line = lineFinder.findEntityLine(name, lollipop);
-        addMapperInfo(lollipop, line);
+        addMapperInfo(lollipop, line, lineMapper);
 
         if (parentPackage != null) {
             parentPackage.addEntity(lollipop);
@@ -346,7 +326,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         int line = lineFinder.findEntityLine(name, circleEntity);
-        addMapperInfo(circleEntity, line);
+        addMapperInfo(circleEntity, line, lineMapper);
 
         if (parentPackage != null) {
             parentPackage.addEntity(circleEntity);
@@ -366,7 +346,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
 
         int line = lineFinder.findEntityLine(name, diamondEntity);
-        addMapperInfo(diamondEntity, line);
+        addMapperInfo(diamondEntity, line, lineMapper);
 
         if (parentPackage != null) {
             parentPackage.addEntity(diamondEntity);
@@ -387,7 +367,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         int startLine = lineFinder.findNoteLine(name, noteEntity);
         int endLine   = lineFinder.findNoteEndLine(startLine, noteEntity);
-        addMapperInfo(noteEntity, startLine, endLine);
+        addMapperInfo(noteEntity, startLine, endLine, lineMapper);
 
         if (parentPackage != null) {
             parentPackage.addEntity(noteEntity);
@@ -524,11 +504,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
             int startLine = lineFinder.findNoteLine(noteText, newNote);
             int endLine   = lineFinder.findNoteEndLine(startLine, newNote);
-            addMapperInfo(newNote, startLine, endLine);
+            addMapperInfo(newNote, startLine, endLine, lineMapper);
         }
 
         int line = lineFinder.findRelationshipLine(entity1.getName(), entity2.getName(), newLink);
-        addMapperInfo(newLink, line);
+        addMapperInfo(newLink, line, lineMapper);
 
         model.links.add(newLink);
         linkAttributes(newLink, link);

@@ -13,6 +13,8 @@ import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.*;
 
+import static com.diagrams.ClassDiagram.utils.MapperInfo.addMapperInfo;
+
 public class ClassEntityFactory {
 
     private final ClassModel model;
@@ -224,6 +226,11 @@ public class ClassEntityFactory {
                             );
                             newTip.setBackground(field.getTipBackground());
                             model.notes.add(newTip);
+
+                            int startLine = model.getLineFinder().findNoteLine(newTip.getName(), newTip);
+                            int endLine   = model.getLineFinder().findNoteEndLine(startLine, newTip);
+                            addMapperInfo(newTip, startLine, endLine, model.getLineMapper());
+
                             return newTip;
                         });
 
@@ -262,6 +269,11 @@ public class ClassEntityFactory {
                             );
                             newTip.setBackground(method.getTipBackground());
                             model.notes.add(newTip);
+
+                            int startLine = model.getLineFinder().findNoteLine(newTip.getName(), newTip);
+                            int endLine   = model.getLineFinder().findNoteEndLine(startLine, newTip);
+                            addMapperInfo(newTip, startLine, endLine, model.getLineMapper());
+
                             return newTip;
                         });
 

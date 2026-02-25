@@ -4,6 +4,7 @@ import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
+import com.diagrams.ClassDiagram.reconstructor.ClassLineFinder;
 import com.diagrams.ClassDiagram.reconstructor.ClassLineMapper;
 
 import java.util.ArrayList;
@@ -32,8 +33,17 @@ public class ClassModel {
     public boolean footerModified = false;
 
     private ClassLineMapper lineMapper;
+    private ClassLineFinder lineFinder;
 
     public ClassModel() {}
+
+    public void setLineFinder(ClassLineFinder lineFinder) {
+        this.lineFinder = lineFinder;
+    }
+
+    public ClassLineFinder getLineFinder() {
+        return lineFinder;
+    }
 
     public void setMapper(ClassLineMapper lineMapper) {
         this.lineMapper = lineMapper;
