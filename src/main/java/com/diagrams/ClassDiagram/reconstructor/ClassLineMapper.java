@@ -65,12 +65,10 @@ public class ClassLineMapper {
             String text = original.trim();
 
             if (opensBlock(text)) {
-                System.err.println("START");
                 blockStack.push(true);
             }
 
             if (closesBlock(text)) {
-                System.err.println("END");
                 if (!blockStack.isEmpty()) blockStack.pop();
             }
         }

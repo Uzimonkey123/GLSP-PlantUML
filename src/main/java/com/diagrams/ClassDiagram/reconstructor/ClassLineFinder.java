@@ -99,7 +99,6 @@ public class ClassLineFinder {
 
         for (int i = searchFrom; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
-            System.err.println(info.lineNumber + " " + info.type);
 
             if (info.type == ClassLineMapper.LineType.NOTE) {
                 StringBuilder fullNote = new StringBuilder();

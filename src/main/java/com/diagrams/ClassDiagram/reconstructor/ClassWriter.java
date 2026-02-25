@@ -397,7 +397,12 @@ public class ClassWriter {
         }
 
         sb.append(" ");
-        sb.append(buildClassArrow(link));
+        if (link.getEntity1().getType().equals("LOLLIPOP") || link.getEntity2().getType().equals("LOLLIPOP")) {
+            sb.append("()-");
+
+        } else {
+            sb.append(buildClassArrow(link));
+        }
         sb.append(" ");
 
         String q2 = link.getQuantifier2().getLabel();
@@ -653,15 +658,16 @@ public class ClassWriter {
     }
 
     private void writePackages() {
-        for (Package pkg : model.packages) {
-            System.err.println("[PKG] " + pkg.getName()
-                    + " original=" + pkg.getOriginalName()
-                    + " modified=" + pkg.isModified()
-                    + " hasLine=" + pkg.hasLine()
-                    + (pkg.hasLine() ? " line=" + pkg.getSourceLineStart() : "")
-                    + " parent=" + (pkg.getParentPackage() != null ? pkg.getParentPackage().getName() : "null"));
+        List<Package> modified = model.packages.stream()
+                .filter(Package::isModified)
+                .sorted(Comparator.comparingInt(this::getDepth).reversed())
+                .toList();
 
+        for (Package pkg : modified) {
             if (!pkg.isModified()) continue;
+            if (pkg.hasLine()) {
+                rewritePackageDeclaration(pkg);
+            }
 
             String oldPath = buildFullPath(pkg, true);
             String newPath = buildFullPath(pkg, false);
@@ -681,6 +687,25 @@ public class ClassWriter {
                     updatePackageReferenceLine(info.lineNumber, oldPath, quotedNew);
                 }
             }
+        }
+    }
+
+    private void rewritePackageDeclaration(Package pkg) {
+
+        int lineNum = pkg.getSourceLineStart();
+        String line = getEffectiveLine(lineNum);
+
+        String oldName = pkg.getOriginalName();
+        String newName = pkg.getName();
+
+        if (oldName.equals(newName)) return;
+
+        String updated = line;
+        updated = replaceWordBoundary(updated, oldName, newName);
+        updated = updated.replace("\"" + oldName + "\"", "\"" + newName + "\"");
+
+        if (!updated.equals(line)) {
+            changeLine(lineNum, lineNum, List.of(updated));
         }
     }
 
@@ -748,6 +773,17 @@ public class ClassWriter {
         if (!updated.equals(current)) {
             changeLine(lineNum, lineNum, List.of(updated));
         }
+    }
+
+    private int getDepth(Package pkg) {
+        int depth = 0;
+
+        while (pkg != null) {
+            depth++;
+            pkg = pkg.getParentPackage();
+        }
+
+        return depth;
     }
 
     private void applyReplacements() {
