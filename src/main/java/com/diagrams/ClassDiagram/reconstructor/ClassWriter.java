@@ -271,6 +271,13 @@ public class ClassWriter {
             sb.append(" >>");
         }
 
+        String raw = entity.getRawSourceText();
+        String inheritance = extractInheritance(raw);
+
+        if (inheritance != null) {
+            sb.append(" ").append(inheritance);
+        }
+
         String bg = entity.getExplicitBackground();
         if (bg != null && !bg.isEmpty()) {
             sb.append(" ").append(bg);
@@ -287,6 +294,30 @@ public class ClassWriter {
             case "public" -> '+';
             default -> 0;
         };
+    }
+
+    private String extractInheritance(String raw) {
+        if (raw == null) return null;
+
+        String trimmed = raw.trim();
+        trimmed = trimmed.replaceAll("\\{.*", "");
+
+        Matcher m = Pattern.compile("\\b(extends|implements)\\b(.*)", Pattern.CASE_INSENSITIVE).matcher(trimmed);
+        if (!m.find()) return null;
+
+        String keyword = m.group(1);
+        String tail = m.group(2);
+
+        for (ClassEntity entity : model.entities) {
+            if (!entity.isModified()) continue;
+
+            String oldName = entity.getOriginalName();
+            String newName = entity.getName();
+
+            tail = replaceWordBoundary(tail, oldName, newName);
+        }
+
+        return keyword + tail;
     }
 
     private void updateReferenceLine(int lineNum, ClassEntity entity) {
