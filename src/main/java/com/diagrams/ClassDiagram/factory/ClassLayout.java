@@ -1,5 +1,6 @@
 package com.diagrams.ClassDiagram.factory;
 
+import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
@@ -23,10 +24,11 @@ import static guru.nidi.graphviz.attribute.Attributes.attr;
 
 public class ClassLayout {
 
-    public void layoutEntities(List<ClassEntity> entities, List<ClassLink> links,
-                               Map<String, Size> dimensions, List<Package> packages) {
+    public void layoutEntities(ClassModel model, Map<String, Size> dimensions) {
+        String rankdir = model.isLeftToRight() ? "RL" : "BT";
+
         MutableGraph graph = mutGraph("class_diagram").setDirected(true).graphAttrs().add(
-                        attr("rankdir", "BT"),
+                        attr("rankdir", rankdir),
                         attr("nodesep", 2.0),
                         attr("ranksep", 1.3),
                         attr("splines", "polyline"),
@@ -34,15 +36,15 @@ public class ClassLayout {
                 );
 
         // Add packages as clusters if they exist
-        if (!packages.isEmpty()) {
-            addPackagesToGraph(graph, packages, dimensions);
-            addEntitiesWithoutPackages(graph, entities, packages, dimensions);
+        if (!model.packages.isEmpty()) {
+            addPackagesToGraph(graph, model.packages, dimensions);
+            addEntitiesWithoutPackages(graph, model.entities, model.packages, dimensions);
 
         } else {
-            addEntitiesToGraph(graph, entities, dimensions);
+            addEntitiesToGraph(graph, model.entities, dimensions);
         }
 
-        for (ClassLink link : links) {
+        for (ClassLink link : model.links) {
             if (link.getEntity1() != null && link.getEntity2() != null) {
                 int minlen = calculateMinLen(link);
 
@@ -59,7 +61,7 @@ public class ClassLayout {
                 .render(Format.JSON)
                 .toString();
 
-        parseAndApplyPositions(json, entities, dimensions);
+        parseAndApplyPositions(json, model.entities, dimensions);
     }
 
     private void addPackagesToGraph(MutableGraph graph, List<Package> packages,

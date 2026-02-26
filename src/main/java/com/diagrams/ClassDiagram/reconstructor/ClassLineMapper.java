@@ -1,5 +1,8 @@
 package com.diagrams.ClassDiagram.reconstructor;
 
+import com.diagrams.ClassDiagram.model.ClassModel;
+import com.diagrams.SequenceDiagram.utils.NewLine;
+
 import java.util.ArrayList;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -8,7 +11,7 @@ import java.util.List;
 public class ClassLineMapper {
     private final List<LineInfo> lineInfos;
 
-    public ClassLineMapper(String sourceText) {
+    public ClassLineMapper(String sourceText, ClassModel model) {
         this.lineInfos = new ArrayList<>();
         String[] lines = sourceText.split("\n", -1);
 
@@ -19,6 +22,12 @@ public class ClassLineMapper {
         for (int i = 0; i < lines.length; i++) {
             String original = lines[i];
             String trimmed = original.trim();
+
+            if (trimmed.equals("left to right direction")) {
+                lineInfos.add(new LineInfo(i, original, LineType.LEFT_TO_RIGHT));
+                model.setLeftToRight(true);
+                continue;
+            }
 
             if (insideMultiLineComment) {
                 lineInfos.add(new LineInfo(i, original, LineType.COMMENT));
@@ -96,7 +105,7 @@ public class ClassLineMapper {
     private static LineType determineType(String trimmed) {
         if (trimmed.isEmpty()) return LineType.EMPTY;
 
-        if (trimmed.matches("[A-Za-z0-9_<>]+\\s*:\\s*.+")) {
+        if (trimmed.matches("[A-Za-z0-9_<>]+\\s*:\\s*.+") && !trimmed.contains("::")) {
             return LineType.MEMBER;
         }
 
@@ -272,6 +281,7 @@ public class ClassLineMapper {
         FOOTER,
         END_FOOTER,
 
+        LEFT_TO_RIGHT,
         UNKNOWN
     }
 }

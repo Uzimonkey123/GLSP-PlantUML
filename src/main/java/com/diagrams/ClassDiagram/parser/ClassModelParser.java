@@ -62,7 +62,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         entityCounter = 0;
 
         // Create mapper and finder from the original text
-        lineMapper = new ClassLineMapper(originalText);
+        lineMapper = new ClassLineMapper(originalText, model);
         lineFinder = new ClassLineFinder(lineMapper, elementToLineMap);
 
         // Prepare text for PlantUML

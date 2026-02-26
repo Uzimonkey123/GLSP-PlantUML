@@ -35,6 +35,8 @@ public class ClassModel {
     private ClassLineMapper lineMapper;
     private ClassLineFinder lineFinder;
 
+    private boolean isLeftToRight = false;
+
     public ClassModel() {}
 
     public void setLineFinder(ClassLineFinder lineFinder) {
@@ -51,6 +53,14 @@ public class ClassModel {
 
     public ClassLineMapper getLineMapper() {
         return lineMapper;
+    }
+
+    public boolean isLeftToRight() {
+        return isLeftToRight;
+    }
+
+    public void setLeftToRight(boolean leftToRight) {
+        isLeftToRight = leftToRight;
     }
 
     public ClassEntity getClassEntity(String name) {

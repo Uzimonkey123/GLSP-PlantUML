@@ -120,7 +120,7 @@ public class ClassEntityFactory {
                 .anyMatch(e -> e.getX() == 0 && e.getY() == 0);
 
         if (needsLayout) {
-            layoutEngine.layoutEntities(model.entities, model.links, dimensions, model.packages);
+            layoutEngine.layoutEntities(model, dimensions);
         }
 
         // Calculate package dimensions if packages exist
