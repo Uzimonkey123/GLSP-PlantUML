@@ -5,6 +5,7 @@ import com.GLSPPlantUML.handlers.SetDirtyStateHandler;
 import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.diagrams.ClassDiagram.ClassDiagramConfiguration;
 import com.diagrams.ClassDiagram.factory.ClassModelFactory;
+import com.diagrams.ClassDiagram.handler.ClassDeleteHandler;
 import com.diagrams.ClassDiagram.handler.ClassLabelEditHandler;
 import com.diagrams.ClassDiagram.handler.ChangeBoundsHandler;
 import com.diagrams.ClassDiagram.handler.ChangeRoutingPointsHandler;
@@ -67,6 +68,7 @@ public class ClassDiagramModule extends DiagramModule {
         mb.add(ChangeBoundsHandler.class);
         mb.add(ChangeRoutingPointsHandler.class);
         mb.add(ClassLabelEditHandler.class);
+        mb.add(ClassDeleteHandler.class);
     }
 
     @Override
