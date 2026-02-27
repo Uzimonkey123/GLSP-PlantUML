@@ -1,9 +1,7 @@
 package com.diagrams.ClassDiagram.reconstructor;
 
 import com.diagrams.ClassDiagram.model.ClassModel;
-import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
-import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
-import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
+import com.diagrams.ClassDiagram.model.ClassParts.*;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
 import com.diagrams.ClassDiagram.utils.NewLine;
 
@@ -25,24 +23,33 @@ public class ClassWriter {
     private final Map<Integer, NewLine> newLines;
     private final ClassLineMapper lineMap;
 
+    private Map<Integer, String> lineNamespaceMap;
+    private Map<String, String> entityNamespaceMap;
+
     public ClassWriter(ClassModel model, String sourceUri) throws IOException {
         this.model = model;
         this.source = new File(URI.create(sourceUri));
         this.sourceLines = Files.readAllLines(source.toPath(), StandardCharsets.UTF_8);
         this.newLines = new HashMap<>();
         this.lineMap = model.getLineMapper();
+        this.lineNamespaceMap = null;
+        this.entityNamespaceMap = null;
     }
 
     public void write() throws IOException {
         sourceLines.clear();
         sourceLines.addAll(Files.readAllLines(source.toPath(), StandardCharsets.UTF_8));
         newLines.clear();
+        lineNamespaceMap = null;
+        entityNamespaceMap = null;
 
         for (int i = 0; i < lineMap.getLineInfos().size(); i++) {
             System.out.println(lineMap.getLineInfos().get(i));
         }
 
         writeEntities();
+        updateInheritanceReferences();
+        writeMemberReferences();
         writePackages();
         writeLinks();
         writeNotes();
@@ -70,6 +77,116 @@ public class ClassWriter {
         return indent + line;
     }
 
+    private String getEffectiveLine(int lineNum) {
+        if (newLines.containsKey(lineNum)) {
+            List<String> pending = newLines.get(lineNum).newLines();
+            return pending.isEmpty() ? "" : pending.getFirst();
+        }
+        if (lineNum >= 0 && lineNum < sourceLines.size()) {
+            return sourceLines.get(lineNum);
+        }
+        return "";
+    }
+
+    private String getNewToken(ClassEntity entity) {
+        String alias = entity.getAlias();
+        return (alias != null && !alias.isEmpty()) ? alias : entity.getName();
+    }
+
+    private String getEntityToken(ClassEntity entity) {
+        String alias = entity.getAlias();
+        if (alias != null && !alias.isEmpty()) {
+            return alias;
+        }
+
+        String name = entity.getName();
+        if (name.contains(" ") || !name.matches("[A-Za-z0-9_]+")) {
+            return "\"" + name + "\"";
+        }
+
+        return name;
+    }
+
+    private String detectSeparator() {
+        for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
+            String trimmed = info.originalText.trim();
+            if (trimmed.startsWith("set separator")) {
+                String sep = trimmed.substring("set separator".length()).trim();
+                if (!sep.isEmpty() && !sep.equalsIgnoreCase("none")) return sep;
+            }
+        }
+
+        return ".";
+    }
+
+    private static char visibilityToSymbol(String visibilityValue) {
+        return switch (visibilityValue) {
+            case "private" -> '-';
+            case "protected" -> '#';
+            case "package_private" -> '~';
+            case "public" -> '+';
+            default -> 0;
+        };
+    }
+
+    private static int countChar(String s, char c) {
+        int count = 0;
+
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == c) count++;
+        }
+
+        return count;
+    }
+
+    private static String replaceWordBoundary(String text, String oldWord, String replacement) {
+        StringBuilder result = new StringBuilder();
+        int i = 0;
+
+        while (i < text.length()) {
+            int idx = text.indexOf(oldWord, i);
+            if (idx < 0) {
+                result.append(text.substring(i));
+                break;
+            }
+
+            char before = idx > 0 ? text.charAt(idx - 1) : ' ';
+            char after = idx + oldWord.length() < text.length()
+                    ? text.charAt(idx + oldWord.length()) : ' ';
+
+            boolean ok = !Character.isLetterOrDigit(before) && before != '_'
+                    && !Character.isLetterOrDigit(after) && after != '_';
+
+            if (ok) {
+                result.append(text, i, idx).append(replacement);
+                i = idx + oldWord.length();
+
+            } else {
+                result.append(text.charAt(idx));
+                i = idx + 1;
+            }
+        }
+
+        return result.toString();
+    }
+
+    private String replaceReferenceLine(String current, ClassEntity entity, boolean strict) {
+        String oldName = entity.getOriginalName();
+        String newToken = getNewToken(entity);
+
+        if (oldName.equals(newToken)) return current;
+
+        String lookbehind = strict ? "(?<![A-Za-z0-9_.])" : "(?<![A-Za-z0-9_])";
+
+        String regex = lookbehind + Pattern.quote(oldName) + "(?![A-Za-z0-9_])";
+        current = current.replaceAll(regex, Matcher.quoteReplacement(newToken));
+
+        regex = lookbehind + "\"" + Pattern.quote(oldName) + "\"(?![A-Za-z0-9_])";
+        current = current.replaceAll(regex, Matcher.quoteReplacement('"' + newToken + '"'));
+
+        return current;
+    }
+
     private void writeEntities() {
         for (ClassEntity entity : model.entities) {
             if (!entity.isModified()) continue;
@@ -77,7 +194,7 @@ public class ClassWriter {
             if ("NOTE".equals(entity.getType())) continue;
 
             int start = entity.getSourceLineStart();
-            int end   = entity.getSourceLineEnd();
+            int end = entity.getSourceLineEnd();
 
             ClassLineMapper.LineType startType = lineMap.getLineInfo(start).type;
 
@@ -111,9 +228,11 @@ public class ClassWriter {
     private void writeStandaloneMembers(ClassEntity entity) {
         List<EntityMethod> members = entity.getRawBody();
         int memberCursor = 0;
+        boolean conflicted = hasNameConflict(entity);
 
         for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
             if (info.type != ClassLineMapper.LineType.MEMBER) continue;
+            if (conflicted && !shouldUpdateBareReference(info.lineNumber, entity)) continue;
 
             String line = getEffectiveLine(info.lineNumber);
             String trimmed = line.trim();
@@ -134,8 +253,16 @@ public class ClassWriter {
 
             EntityMethod member = members.get(memberCursor++);
             String indent = extractIndentation(line);
-            String rebuilt = getEntityToken(entity) + " : " + buildMemberLine(member);
 
+            String entityToken = getEntityToken(entity);
+            String origName = entity.getOriginalName();
+            String sep = detectSeparator();
+            if (origName.contains(sep)) {
+                String prefix = origName.substring(0, origName.lastIndexOf(sep) + sep.length());
+                entityToken = prefix + entityToken;
+            }
+
+            String rebuilt = entityToken + " : " + buildMemberLine(member);
             changeLine(info.lineNumber, info.lineNumber, List.of(applyIndentation(rebuilt, indent)));
         }
     }
@@ -163,22 +290,27 @@ public class ClassWriter {
         String source = entity.getRawSourceText();
         String indent = extractIndentation(source);
         StringBuilder sb = new StringBuilder(buildDeclarationHeader(entity));
+
         sb.append(" {");
         for (EntityMethod m : entity.getRawBody()) {
             sb.append(" ").append(buildMemberLine(m));
         }
         sb.append(" }");
+
         return applyIndentation(sb.toString(), indent);
     }
 
     private List<String> buildEntityBlock(ClassEntity entity) {
         String source = entity.getRawSourceText();
         String indent = extractIndentation(source);
+
         List<String> lines = new ArrayList<>();
         lines.add(applyIndentation(buildDeclarationHeader(entity) + " {", indent));
+
         for (EntityMethod member : entity.getRawBody()) {
             lines.add(applyIndentation("  " + buildMemberLine(member), indent));
         }
+
         lines.add(applyIndentation("}", indent));
         return lines;
     }
@@ -193,34 +325,34 @@ public class ClassWriter {
         }
 
         String type = entity.getType();
-        switch (type) {
-            case "INTERFACE" -> sb.append("interface");
-            case "ENUM" -> sb.append("enum");
-            case "ANNOTATION" -> sb.append("annotation");
+        sb.append(switch (type) {
+            case "INTERFACE" -> "interface";
+            case "ENUM" -> "enum";
+            case "ANNOTATION" -> "annotation";
             case "ABSTRACT", "ABSTRACT_CLASS" -> {
                 String raw = entity.getRawSourceText();
                 if (raw != null && raw.trim().startsWith("abstract class")) {
-                    sb.append("abstract class");
+                    yield "abstract class";
 
                 } else {
-                    sb.append("abstract");
+                    yield "abstract";
                 }
             }
-            case "DATACLASS" -> sb.append("dataclass");
-            case "ENTITY" -> sb.append("entity");
-            case "EXCEPTION" -> sb.append("exception");
-            case "METACLASS" -> sb.append("metaclass");
-            case "PROTOCOL" -> sb.append("protocol");
-            case "RECORD" -> sb.append("record");
-            case "STEREOTYPE" -> sb.append("stereotype");
-            case "STRUCT" -> sb.append("struct");
-            case "DIAMOND" -> sb.append("diamond");
-            case "CIRCLE" -> sb.append("circle");
-            default -> sb.append("class");
-        }
+            case "DATACLASS" -> "dataclass";
+            case "ENTITY" -> "entity";
+            case "EXCEPTION" -> "exception";
+            case "METACLASS" -> "metaclass";
+            case "PROTOCOL" -> "protocol";
+            case "RECORD" -> "record";
+            case "STEREOTYPE" -> "stereotype";
+            case "STRUCT" -> "struct";
+            case "DIAMOND" -> "diamond";
+            case "CIRCLE" -> "circle";
+            default -> "class";
+        });
         sb.append(" ");
 
-        String name  = entity.getName();
+        String name = entity.getName();
         String alias = entity.getAlias();
 
         boolean needsAlias = alias != null && !alias.isEmpty() && !alias.equals(name);
@@ -235,12 +367,7 @@ public class ClassWriter {
             }
 
         } else {
-            if (nameNeedsQuotes) {
-                sb.append("\"").append(name).append("\"");
-
-            } else {
-                sb.append(name);
-            }
+            sb.append(nameNeedsQuotes ? "\"" + name + "\"" : name);
         }
 
         String generic = entity.getGeneric();
@@ -273,8 +400,7 @@ public class ClassWriter {
 
         String raw = entity.getRawSourceText();
         String inheritance = extractInheritance(raw);
-
-        if (inheritance != null) {
+        if (inheritance != null && generic.isEmpty()) {
             sb.append(" ").append(inheritance);
         }
 
@@ -284,16 +410,6 @@ public class ClassWriter {
         }
 
         return sb.toString();
-    }
-
-    private static char visibilityToSymbol(String visibilityValue) {
-        return switch (visibilityValue) {
-            case "private" -> '-';
-            case "protected" -> '#';
-            case "package_private" -> '~';
-            case "public" -> '+';
-            default -> 0;
-        };
     }
 
     private String extractInheritance(String raw) {
@@ -310,102 +426,464 @@ public class ClassWriter {
 
         for (ClassEntity entity : model.entities) {
             if (!entity.isModified()) continue;
-
-            String oldName = entity.getOriginalName();
-            String newName = entity.getName();
-
-            tail = replaceWordBoundary(tail, oldName, newName);
+            tail = replaceWordBoundary(tail, entity.getOriginalName(), entity.getName());
         }
 
         return keyword + tail;
     }
 
-    private void updateReferenceLine(int lineNum, ClassEntity entity) {
-        String current;
+    private void updateInheritanceReferences() {
+        Map<String, String> nameChanges = new HashMap<>();
 
-        if (newLines.containsKey(lineNum)) {
-            List<String> pending = newLines.get(lineNum).newLines();
-            current = pending.isEmpty() ? "" : pending.getFirst();
+        for (ClassEntity entity : model.entities) {
+            if (!entity.isModified()) continue;
 
-        } else {
-            current = sourceLines.get(lineNum);
+            String oldName = entity.getOriginalName();
+            String newName = entity.getName();
+
+            if (!oldName.equals(newName)) {
+                nameChanges.put(oldName, newName);
+            }
         }
 
-        String updated = replaceReferenceLine(current, entity, lineNum);
+        if (nameChanges.isEmpty()) return;
+
+        for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
+            if (info.type != ClassLineMapper.LineType.ENTITY_DECLARATION
+                    && info.type != ClassLineMapper.LineType.ENTITY_INLINE) {
+                continue;
+            }
+
+            int lineNum = info.lineNumber;
+            String line = getEffectiveLine(lineNum);
+
+            Matcher m = Pattern.compile("\\b(extends|implements)\\b(.*)").matcher(line);
+            if (!m.find()) continue;
+
+            String beforeInheritance = line.substring(0, m.start());
+            String keyword = m.group(1);
+            String tail = m.group(2);
+
+            String afterTail = "";
+            int braceIdx = tail.indexOf('{');
+            if (braceIdx >= 0) {
+                afterTail = tail.substring(braceIdx);
+                tail = tail.substring(0, braceIdx);
+            }
+
+            String originalTail = tail;
+            for (Map.Entry<String, String> change : nameChanges.entrySet()) {
+                tail = replaceWordBoundary(tail, change.getKey(), change.getValue());
+            }
+
+            if (!tail.equals(originalTail)) {
+                String updated = beforeInheritance + keyword + tail + afterTail;
+                changeLine(lineNum, lineNum, List.of(updated));
+            }
+        }
+    }
+
+    private void updateReferenceLine(int lineNum, ClassEntity entity) {
+        String current = getEffectiveLine(lineNum);
+        String oldName = entity.getOriginalName();
+        String newToken = getNewToken(entity);
+
+        if (oldName.equals(newToken)) return;
+
+        String updated = current;
+        String sep = detectSeparator();
+
+        if (oldName.contains(sep)) {
+            String prefix = oldName.substring(0, oldName.lastIndexOf(sep) + sep.length());
+            String qualifiedNew = prefix + newToken;
+
+            String regex = "(?<![A-Za-z0-9_])" + Pattern.quote(oldName) + "(?![A-Za-z0-9_])";
+            updated = updated.replaceAll(regex, Matcher.quoteReplacement(qualifiedNew));
+
+            regex = "(?<![A-Za-z0-9_])\"" + Pattern.quote(oldName) + "\"(?![A-Za-z0-9_])";
+            updated = updated.replaceAll(regex, Matcher.quoteReplacement('"' + qualifiedNew + '"'));
+
+        } else {
+            boolean conflicted = hasNameConflict(entity);
+
+            if (conflicted) {
+                updated = replaceQualifiedReference(updated, entity);
+            }
+
+            if (shouldUpdateBareReference(lineNum, entity)) {
+                updated = replaceReferenceLine(updated, entity, conflicted);
+            }
+        }
 
         if (!updated.equals(current)) {
             changeLine(lineNum, lineNum, List.of(updated));
         }
     }
 
-    private String replaceReferenceLine(String current, ClassEntity entity, int lineNum) {
-        String oldName = entity.getOriginalName();
-        String alias = entity.getAlias();
-        String newToken = (alias != null && !alias.isEmpty()) ? alias : entity.getName();
+    private String replaceQualifiedReference(String current, ClassEntity entity) {
+        String entityNs = getEntityNamespaceMap().getOrDefault(entity.getId(), "");
+        if (entityNs.isEmpty()) return current;
 
+        String oldName = entity.getOriginalName();
+        String newToken = getNewToken(entity);
         if (oldName.equals(newToken)) return current;
 
-        // Build strict token regex: match oldName optionally quoted
-        String regex = "(?<![A-Za-z0-9_])" + Pattern.quote(oldName) + "(?![A-Za-z0-9_])";
-        current = current.replaceAll(regex, Matcher.quoteReplacement(newToken));
+        String sep = detectSeparator();
+        String qualifiedOld = entityNs + sep + oldName;
+        String qualifiedNew = entityNs + sep + newToken;
 
-        // Also replace quoted oldName
-        regex = "(?<![A-Za-z0-9_])\"" + Pattern.quote(oldName) + "\"(?![A-Za-z0-9_])";
-        current = current.replaceAll(regex, Matcher.quoteReplacement('"' + newToken + '"'));
+        current = replaceWordBoundary(current, qualifiedOld, qualifiedNew);
+        current = current.replace('"' + qualifiedOld + '"', '"' + qualifiedNew + '"');
 
         return current;
     }
 
-    private static String replaceWordBoundary(String text, String oldWord, String replacement) {
-        StringBuilder result = new StringBuilder();
-        int i = 0;
+    private static String deriveMemberRef(String methodName) {
+        if (methodName == null || methodName.isEmpty()) return methodName;
+        String temp = methodName.trim();
 
-        while (i < text.length()) {
-            int idx = text.indexOf(oldWord, i);
-            if (idx < 0) {
-                result.append(text.substring(i)); break;
-            }
+        int parenIdx = temp.indexOf('(');
+        if (parenIdx >= 0) {
+            String beforeParen = temp.substring(0, parenIdx).trim();
+            String[] parts = beforeParen.split("\\s+");
+            return parts[parts.length - 1] + temp.substring(parenIdx);
+        }
 
-            char before = idx > 0 ? text.charAt(idx - 1) : ' ';
-            char after  = idx + oldWord.length() < text.length()
-                    ? text.charAt(idx + oldWord.length()) : ' ';
+        int colonIdx = temp.indexOf(" : ");
+        if (colonIdx >= 0) {
+            String field = temp.substring(0, colonIdx).trim();
+            String[] parts = field.split("\\s+");
+            return parts[parts.length - 1];
+        }
 
-            boolean ok = !Character.isLetterOrDigit(before) && before != '_'
-                    && !Character.isLetterOrDigit(after)  && after  != '_';
+        String[] parts = temp.split("\\s+");
+        if (parts.length > 1) {
+            return parts[parts.length - 1];
+        }
 
-            if (ok) {
-                result.append(text, i, idx).append(replacement);
-                i = idx + oldWord.length();
+        return temp;
+    }
 
-            } else {
-                result.append(text.charAt(idx));
-                i = idx + 1;
+    private static String parseRawMemberName(String raw) {
+        if (raw == null || raw.isEmpty()) return raw;
+        String tempName = raw;
+        boolean hasVis = false;
+
+        if (tempName.length() >= 2 && tempName.charAt(0) != tempName.charAt(1)) {
+            char c = tempName.charAt(0);
+            if (c == '+' || c == '-' || c == '#' || c == '~') {
+                hasVis = true;
             }
         }
 
-        return result.toString();
+        if (raw.charAt(0) == '\\' || hasVis) {
+            tempName = raw.substring(1).trim();
+        }
+
+        tempName = tempName
+                .replaceAll("\\{(?!static\\}|classifier\\}|abstract\\})[^}]*\\}", "")
+                .trim();
+
+        return tempName;
+    }
+
+    private static String findNewMemberRef(ClassEntity entity, String oldRef) {
+        if (oldRef == null || oldRef.isEmpty()) return null;
+
+        String bareRef = oldRef;
+        if (bareRef.startsWith("\"") && bareRef.endsWith("\"")) {
+            bareRef = bareRef.substring(1, bareRef.length() - 1);
+        }
+
+        for (EntityMethod member : entity.getRawBody()) {
+            String oldParsed = parseRawMemberName(member.getOriginalName());
+            String oldMemberRef = deriveMemberRef(oldParsed);
+
+            if (bareRef.equals(oldMemberRef)) {
+                String newMemberRef = deriveMemberRef(member.getMethodName());
+
+                if (!oldMemberRef.equals(newMemberRef)) {
+                    return newMemberRef;
+                }
+
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private static String formatMemberRef(String ref) {
+        if (ref == null) return "";
+
+        if (ref.contains(" ") || ref.contains("(") || ref.contains(":")) {
+            return "\"" + ref + "\"";
+        }
+
+        return ref;
+    }
+
+    private void writeMemberReferences() {
+        Map<ClassEntity, Map<String, String>> entityMemberMaps = new LinkedHashMap<>();
+        for (ClassEntity entity : model.entities) {
+            if ("NOTE".equals(entity.getType())) continue;
+
+            Map<String, String> refMap = buildMemberRefMap(entity);
+
+            if (!refMap.isEmpty()) {
+                entityMemberMaps.put(entity, refMap);
+            }
+        }
+
+        if (entityMemberMaps.isEmpty()) return;
+
+        for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
+            if (info.type != ClassLineMapper.LineType.RELATIONSHIP
+                    && info.type != ClassLineMapper.LineType.NOTE
+                    && info.type != ClassLineMapper.LineType.MEMBER) continue;
+
+            String current = getEffectiveLine(info.lineNumber);
+            if (!current.contains("::")) continue;
+
+            String updated = current;
+
+            for (var entry : entityMemberMaps.entrySet()) {
+                ClassEntity entity = entry.getKey();
+                Map<String, String> refMap = entry.getValue();
+
+                for (String token : new String[]{entity.getOriginalName(), entity.getName(), entity.getAlias()}) {
+                    if (token == null || token.isEmpty()) continue;
+                    updated = replaceMemberRefsForToken(updated, token, refMap);
+                }
+            }
+
+            if (!updated.equals(current)) {
+                changeLine(info.lineNumber, info.lineNumber, List.of(updated));
+            }
+        }
+    }
+
+    private static Map<String, String> buildMemberRefMap(ClassEntity entity) {
+        Map<String, String> map = new LinkedHashMap<>();
+
+        for (EntityMethod member : entity.getRawBody()) {
+            String oldParsed = parseRawMemberName(member.getOriginalName());
+            String oldRef = deriveMemberRef(oldParsed);
+            String newRef = deriveMemberRef(member.getMethodName());
+
+            if (oldRef != null && newRef != null && !oldRef.equals(newRef)) {
+                map.put(oldRef, newRef);
+            }
+        }
+
+        return map;
+    }
+
+    private static String replaceMemberRefsForToken(String text, String token, Map<String, String> refMap) {
+        for (var refEntry : refMap.entrySet()) {
+            String oldRef = refEntry.getKey();
+            String newRef = refEntry.getValue();
+
+            text = text.replace(token + "::" + oldRef, token + "::" + formatMemberRef(newRef));
+            text = text.replace(token + "::\"" + oldRef + "\"", token + "::" + formatMemberRef(newRef));
+        }
+        return text;
+    }
+
+    private Map<Integer, String> getLineNamespaceMap() {
+        if (lineNamespaceMap == null) {
+            lineNamespaceMap = buildLineNamespaceMap();
+        }
+
+        return lineNamespaceMap;
+    }
+
+    private Map<String, String> getEntityNamespaceMap() {
+        if (entityNamespaceMap == null) {
+            entityNamespaceMap = buildEntityNamespaceMap();
+        }
+
+        return entityNamespaceMap;
+    }
+
+    private Map<Integer, String> buildLineNamespaceMap() {
+        Map<Integer, String> map = new HashMap<>();
+        Deque<String> nsStack = new ArrayDeque<>();
+        Deque<Integer> depthStack = new ArrayDeque<>();
+        int braceDepth = 0;
+
+        for (int i = 0; i < sourceLines.size(); i++) {
+            String trimmed = sourceLines.get(i).trim();
+
+            Matcher m = Pattern.compile("^(?:namespace|package)\\s+\"?([^\"\\s{#]+)\"?").matcher(trimmed);
+
+            if (m.find()) {
+                String nsName = m.group(1);
+                int opens = countChar(trimmed, '{');
+                int closes = countChar(trimmed, '}');
+
+                if (opens > closes) {
+                    nsStack.push(nsName);
+                    depthStack.push(braceDepth);
+                    braceDepth += (opens - closes);
+                    map.put(i, nsName);
+                    continue;
+                }
+            }
+
+            int opens = countChar(trimmed, '{');
+            int closes = countChar(trimmed, '}');
+            braceDepth += opens;
+            braceDepth -= closes;
+
+            while (!depthStack.isEmpty() && braceDepth <= depthStack.peek()) {
+                nsStack.pop();
+                depthStack.pop();
+            }
+
+            map.put(i, nsStack.isEmpty() ? "" : nsStack.peek());
+        }
+
+        return map;
+    }
+
+    private Map<String, String> buildEntityNamespaceMap() {
+        Map<String, String> map = new HashMap<>();
+
+        for (ClassEntity entity : model.entities) {
+            map.put(entity.getId(), "");
+        }
+
+        for (Package pkg : model.packages) {
+            mapEntitiesInPackage(pkg, map);
+        }
+
+        return map;
+    }
+
+    private void mapEntitiesInPackage(Package pkg, Map<String, String> map) {
+        for (ClassEntity entity : pkg.getEntities()) {
+            map.put(entity.getId(), pkg.getName());
+        }
+
+        for (Package child : pkg.getChildPackages()) {
+            mapEntitiesInPackage(child, map);
+        }
+    }
+
+    private boolean hasNameConflict(ClassEntity entity) {
+        String name = entity.getOriginalName();
+        for (ClassEntity other : model.entities) {
+            if (other != entity && name.equals(other.getOriginalName())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean shouldUpdateBareReference(int lineNum, ClassEntity entity) {
+        if (!hasNameConflict(entity)) {
+            return true;
+        }
+
+        String entityNs = getEntityNamespaceMap().getOrDefault(entity.getId(), "");
+        String lineNs = getLineNamespaceMap().getOrDefault(lineNum, "");
+
+        return entityNs.equals(lineNs);
     }
 
     private void writeLinks() {
         for (ClassLink link : model.links) {
-            if (!link.isModified() && !link.getMessage().isModified()
-                    && !link.getQuantifier1().isModified() && !link.getQuantifier2().isModified()
-                    && !link.getEntity1().isModified() && !link.getEntity2().isModified()) continue;
+            boolean linkModified = link.isModified() || link.getMessage().isModified()
+                    || link.getQuantifier1().isModified() || link.getQuantifier2().isModified();
+            boolean entityModified = link.getEntity1().isModified() || link.getEntity2().isModified();
+
+            if (!linkModified && !entityModified) continue;
 
             int start = link.getSourceLineStart();
-            int end   = link.getSourceLineEnd();
-
-            if (link.getEntity1().getType().equals("ASSOCIATION_POINT") || link.getEntity2().getType().equals("ASSOCIATION_POINT")) {
-                continue;
-            }
-
-            if (start == -1) {
-                continue;
-            }
+            int end = link.getSourceLineEnd();
+            if (start == -1) continue;
 
             String indent = extractIndentation(sourceLines.get(start));
 
-            changeLine(start, end, List.of(applyIndentation(buildLinkLine(link), indent)));
+            if (link.getEntity1().getType().equals("ASSOCIATION_POINT") || link.getEntity2().getType().equals("ASSOCIATION_POINT")) {
+                ClassEntity assoc = link.getEntity1().getType().equals("ASSOCIATION_POINT")
+                        ? link.getEntity1() : link.getEntity2();
+
+                List<ClassLink> assocLinks = model.links.stream()
+                        .filter(l -> l.getEntity1() == assoc || l.getEntity2() == assoc)
+                        .toList();
+
+                List<ClassEntity> realEntities = new ArrayList<>();
+                for (ClassLink l : assocLinks) {
+                    if (l.getEntity1() != assoc && !realEntities.contains(l.getEntity1())) realEntities.add(l.getEntity1());
+                    if (l.getEntity2() != assoc && !realEntities.contains(l.getEntity2())) realEntities.add(l.getEntity2());
+                }
+
+                if (realEntities.size() >= 2) {
+                    ClassEntity a = realEntities.get(0);
+                    ClassEntity b = realEntities.get(1);
+
+                    ClassLabel q1 = assocLinks.get(0).getQuantifier1();
+                    ClassLabel q2 = assocLinks.get(1).getQuantifier2();
+                    ClassLabel msg = link.getMessage();
+
+                    int assocLine = -1;
+                    for (int i = 0; i < sourceLines.size(); i++) {
+                        String line = sourceLines.get(i);
+                        if (line.contains("(" + a.getOriginalName() + ", " + b.getOriginalName() + ")") &&
+                                line.contains("..") || line.contains(".")) {
+                            assocLine = i;
+                            break;
+                        }
+                    }
+
+                    if (assocLine != -1) {
+                        String line = buildLinkLine(a, b, q1, q2, msg, link);
+                        changeLine(assocLine, assocLine, List.of(applyIndentation(line, indent)));
+                    }
+
+                    continue;
+                }
+            }
+
+            if (!linkModified && entityModified) {
+                rewriteLinkEntityReferences(link, start);
+
+            } else {
+                changeLine(start, end, List.of(applyIndentation(buildLinkLine(link), indent)));
+            }
+        }
+    }
+
+    private void rewriteLinkEntityReferences(ClassLink link, int lineNum) {
+        String current = getEffectiveLine(lineNum);
+
+        Map<String, String> replacements = new TreeMap<>((a, b) -> Integer.compare(b.length(), a.length()));
+        for (ClassEntity entity : new ClassEntity[]{link.getEntity1(), link.getEntity2()}) {
+            if (!entity.isModified()) continue;
+
+            String oldName = entity.getOriginalName();
+            String newToken = getNewToken(entity);
+
+            if (!oldName.equals(newToken)) replacements.put(oldName, newToken);
+        }
+
+        if (replacements.isEmpty()) return;
+
+        int labelIdx = current.indexOf(" : ");
+        String entityPart = labelIdx >= 0 ? current.substring(0, labelIdx) : current;
+        String labelPart = labelIdx >= 0 ? current.substring(labelIdx) : "";
+
+        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+            String regex = "(?<![A-Za-z0-9_.])" + Pattern.quote(entry.getKey()) + "(?![A-Za-z0-9_.])";
+            entityPart = entityPart.replaceAll(regex, Matcher.quoteReplacement(entry.getValue()));
+        }
+
+        String updated = entityPart + labelPart;
+        if (!updated.equals(current)) {
+            changeLine(lineNum, lineNum, List.of(updated));
         }
     }
 
@@ -413,8 +891,22 @@ public class ClassWriter {
         StringBuilder sb = new StringBuilder();
         String e1Token = getLinkTokenFromLine(link.getEntity1(), link.getSourceLineStart());
         String e2Token = getLinkTokenFromLine(link.getEntity2(), link.getSourceLineStart());
-        String srcQual = link.getSourceQualifier();
 
+        String srcMember = link.getSourceMember();
+        if (srcMember != null && !srcMember.isEmpty() && !e1Token.contains("::")) {
+            String newRef = findNewMemberRef(link.getEntity1(), srcMember);
+            String ref = (newRef != null) ? formatMemberRef(newRef) : srcMember;
+            e1Token = e1Token + "::" + ref;
+        }
+
+        String tgtMember = link.getTargetMember();
+        if (tgtMember != null && !tgtMember.isEmpty() && !e2Token.contains("::")) {
+            String newRef = findNewMemberRef(link.getEntity2(), tgtMember);
+            String ref = (newRef != null) ? formatMemberRef(newRef) : tgtMember;
+            e2Token = e2Token + "::" + ref;
+        }
+
+        String srcQual = link.getSourceQualifier();
         if (srcQual != null && !srcQual.isEmpty()) {
             sb.append(e1Token).append(" [").append(srcQual).append("]");
 
@@ -450,8 +942,35 @@ public class ClassWriter {
         }
 
         String label = link.getMessage().getLabel();
-        if (label != null && !label.isEmpty()) {
-            sb.append(" : ").append(label);
+        if (label != null && !label.isEmpty()) sb.append(" : ").append(label);
+
+        return sb.toString();
+    }
+
+    private String buildLinkLine(ClassEntity e1, ClassEntity e2,
+                                 ClassLabel q1, ClassLabel q2,
+                                 ClassLabel message, ClassLink link) {
+        StringBuilder sb = new StringBuilder();
+        String e1Token = getEntityToken(e1);
+        String e2Token = getEntityToken(e2);
+
+        if (q1 != null && q1.getLabel() != null && !q1.getLabel().isEmpty()) {
+            sb.append(e1Token).append(" \"").append(q1.getLabel()).append("\"");
+
+        } else {
+            sb.append(e1Token);
+        }
+
+        sb.append(" ").append(buildClassArrow(link)).append(" ");
+
+        if (q2 != null && q2.getLabel() != null && !q2.getLabel().isEmpty()) {
+            sb.append("\"").append(q2.getLabel()).append("\" ");
+        }
+
+        sb.append(e2Token);
+
+        if (message != null && message.getLabel() != null && !message.getLabel().isEmpty()) {
+            sb.append(" : ").append(message.getLabel());
         }
 
         return sb.toString();
@@ -461,41 +980,56 @@ public class ClassWriter {
         String line = getEffectiveLine(lineNum);
 
         String oldName = Pattern.quote(entity.getOriginalName());
-        Pattern pattern = Pattern.compile("([\\w.]*\"?" + oldName + "\"?)");
+        Pattern pattern = Pattern.compile("([\\w.]*\"?" + oldName + "\"?)" + "(?:::(\"[^\"]+\"|[\\w]+))?");
         Matcher matcher = pattern.matcher(line);
 
         if (matcher.find()) {
             String tokenInLine = matcher.group(1);
+            String memberRef = matcher.group(2);
 
-            // Replace the bare old name with alias or new name
-            String replacement = entity.getAlias() != null && !entity.getAlias().isEmpty()
-                    ? entity.getAlias()
-                    : entity.getName();
+            String replacement = getNewToken(entity);
+            String origName = entity.getOriginalName();
+            String sep = detectSeparator();
 
-            return tokenInLine.replace(entity.getOriginalName(), replacement);
+            if (hasNameConflict(entity)) {
+                String tokenBare = tokenInLine.replace("\"", "");
+                if (tokenBare.contains(sep)) {
+                    String tokenPrefix = tokenBare.substring(0, tokenBare.lastIndexOf(sep));
+                    String entityNs = getEntityNamespaceMap().getOrDefault(entity.getId(), "");
+
+                    if (!tokenPrefix.equals(entityNs)) {
+                        String result = tokenInLine;
+                        if (memberRef != null) result += "::" + memberRef;
+
+                        return result;
+                    }
+                }
+            }
+
+            String result;
+            if (origName.contains(sep)) {
+                String prefix = origName.substring(0, origName.lastIndexOf(sep) + sep.length());
+                result = tokenInLine.replace(origName, prefix + replacement);
+
+            } else {
+                result = tokenInLine.replace(origName, replacement);
+            }
+
+            if (memberRef != null) {
+                String newRef = findNewMemberRef(entity, memberRef);
+                result += "::" + (newRef != null ? formatMemberRef(newRef) : memberRef);
+            }
+
+            return result;
         }
 
         return getEntityToken(entity);
     }
 
-    private String getEntityToken(ClassEntity entity) {
-        String alias = entity.getAlias();
-        if (alias != null && !alias.isEmpty()) {
-            return alias;
-        }
-
-        String name = entity.getName();
-        if (name.contains(" ") || !name.matches("[A-Za-z0-9_]+")) {
-            return "\"" + name + "\"";
-        }
-
-        return name;
-    }
-
     private String buildClassArrow(ClassLink link) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(decoratorToLeft(link.getDecorator2()));
+        sb.append(decoratorSymbol(link.getDecorator2(), true));
         String lineChar = link.getType().contains("DOTTED") || link.getType().contains("DASHED") ? "." : "-";
 
         // Check original line for bracket style
@@ -541,36 +1075,21 @@ public class ClassWriter {
             }
         }
 
-        sb.append(decoratorToRight(link.getDecorator1()));
+        sb.append(decoratorSymbol(link.getDecorator1(), false));
         return sb.toString();
     }
 
-    private static String decoratorToLeft(String dec) {
+    private static String decoratorSymbol(String dec, boolean left) {
         if (dec == null || dec.isEmpty()) return "";
 
         return switch (dec) {
-            case "ARROW" -> "<";
-            case "EXTENDS" -> "<|";
+            case "ARROW" -> left ? "<" : ">";
+            case "EXTENDS" -> left ? "<|" : "|>";
             case "COMPOSITION" -> "*";
             case "AGREGATION" -> "o";
             case "PLUS" -> "+";
             case "SQUARE" -> "#";
-            case "CROWFOOT" -> "}";
-            default -> "";
-        };
-    }
-
-    private static String decoratorToRight(String dec) {
-        if (dec == null || dec.isEmpty()) return "";
-
-        return switch (dec) {
-            case "ARROW" -> ">";
-            case "EXTENDS" -> "|>";
-            case "COMPOSITION" -> "*";
-            case "AGREGATION" -> "o";
-            case "PLUS" -> "+";
-            case "SQUARE" -> "#";
-            case "CROWFOOT" -> "{";
+            case "CROWFOOT" -> left ? "}" : "{";
             default -> "";
         };
     }
@@ -583,25 +1102,8 @@ public class ClassWriter {
             int start = note.getSourceLineStart();
             int end = note.getSourceLineEnd();
 
-            if (start != end) {
-                changeLine(start, end, rebuildMultilineNote(note));
-            } else {
-                changeLine(start, end, rebuildSingleLineNote(note));
-            }
+            changeLine(start, end, (start != end) ? rebuildMultilineNote(note) : rebuildSingleLineNote(note));
         }
-    }
-
-    private String getEffectiveLine(int lineNum) {
-        if (newLines.containsKey(lineNum)) {
-            List<String> pending = newLines.get(lineNum).newLines();
-            return pending.isEmpty() ? "" : pending.getFirst();
-        }
-
-        if (lineNum >= 0 && lineNum < sourceLines.size()) {
-            return sourceLines.get(lineNum);
-        }
-
-        return "";
     }
 
     private List<String> rebuildSingleLineNote(ClassEntity note) {
@@ -612,7 +1114,7 @@ public class ClassWriter {
         List<String> lines = new ArrayList<>();
 
         if (trimmed.matches("(?i)^note\\s+\".*\"\\s+as\\s+.*$")) {
-            String newText = note.getName().replace("<br>", "\\n"); // keep literal \n
+            String newText = note.getName().replace("<br>", "\\n");
             String updatedLine = trimmed.replaceAll("\".*?\"", "\"" + Matcher.quoteReplacement(newText) + "\"");
 
             lines.add(applyIndentation(updatedLine, indent));
@@ -702,7 +1204,6 @@ public class ClassWriter {
 
             String oldPath = buildFullPath(pkg, true);
             String newPath = buildFullPath(pkg, false);
-            System.err.println("[PKG] oldPath=" + oldPath + " newPath=" + newPath);
             if (oldPath.equals(newPath)) continue;
 
             boolean needsQuotes = newPath.contains(" ");
@@ -750,38 +1251,16 @@ public class ClassWriter {
         }
 
         Collections.reverse(parts);
-        String separator = detectSeparator();
-
-        return String.join(separator, parts);
-    }
-
-    private String detectSeparator() {
-        for (ClassLineMapper.LineInfo info : lineMap.getLineInfos()) {
-            String trimmed = info.originalText.trim();
-
-            if (trimmed.startsWith("set separator")) {
-                String sep = trimmed.substring("set separator".length()).trim();
-                if (!sep.isEmpty() && !sep.equalsIgnoreCase("none")) return sep;
-            }
-        }
-
-        return ".";
+        return String.join(detectSeparator(), parts);
     }
 
     private void updatePackageReferenceLine(int lineNum, String oldPath, String newPath) {
-        String current;
-        if (newLines.containsKey(lineNum)) {
-            List<String> pending = newLines.get(lineNum).newLines();
-            current = pending.isEmpty() ? "" : pending.getFirst();
-        } else {
-            current = sourceLines.get(lineNum);
-        }
+        String current = getEffectiveLine(lineNum);
 
         ClassLineMapper.LineType type = lineMap.getLineInfo(lineNum).type;
         String updated;
 
-        if (type == ClassLineMapper.LineType.RELATIONSHIP
-                || type == ClassLineMapper.LineType.MEMBER) {
+        if (type == ClassLineMapper.LineType.RELATIONSHIP || type == ClassLineMapper.LineType.MEMBER) {
             int labelIdx = current.indexOf(" : ");
 
             if (labelIdx >= 0) {

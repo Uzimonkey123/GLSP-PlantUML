@@ -7,9 +7,11 @@ public class EntityMethod {
     private String methodName;
     private String tip;
     private String tipBackground = "#FFFFCC";
+    private final String originalName;
 
     public EntityMethod(String methodName) {
         parse(methodName);
+        this.originalName = methodName;
     }
 
     private void parse(String raw) {
@@ -64,5 +66,9 @@ public class EntityMethod {
 
     public void setMethodName(String methodName) {
         parse(methodName);
+    }
+
+    public String getOriginalName() {
+        return originalName;
     }
 }
