@@ -24,7 +24,7 @@ public class PlantUMLServerLauncher {
             moduleLoader.loadModules();
 
             GLSPServerLauncher launcher = parser.isWebsocket() ?
-                    new WebsocketServerLauncher(serverModule, "/plantuml",
+                    new PlantUMLWebsocketLauncher(serverModule, "/plantuml",
                     parser.parseWebsocketLogLevel()) :
                     new SocketGLSPServerLauncher(serverModule);
 

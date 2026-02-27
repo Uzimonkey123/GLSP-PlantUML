@@ -78,7 +78,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             await vscode.commands.executeCommand(
                 'vscode.openWith',
                 resource,
-                'plantuml.glspDiagram'
+                'plantuml.glspDiagram',
+                vscode.ViewColumn.Beside
             );
         })
     );
