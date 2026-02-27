@@ -85,6 +85,155 @@ export class CurvedEdgeRenderer {
         };
     }
 
+    public static calculateMemberAnchorPointClosest(
+        entity: GNode,
+        otherEntity: GNode,
+        memberName: string | null | undefined,
+        forceRight?: boolean
+    ): Point {
+        const memberYOffset = this.getMemberYOffset(entity, memberName);
+
+        // Calculate entity edges
+        const entityLeft = entity.position.x;
+        const entityRight = entity.position.x + entity.size.width;
+
+        let anchorX: number;
+
+        if (forceRight !== undefined) {
+            anchorX = forceRight ? entityRight : entityLeft;
+
+        } else {
+            const otherCenterX = otherEntity.position.x + otherEntity.size.width / 2;
+
+            // Determine which side of this entity is closest to the other entity's center
+            const distToLeft = Math.abs(entityLeft - otherCenterX);
+            const distToRight = Math.abs(entityRight - otherCenterX);
+
+            anchorX = distToRight < distToLeft ? entityRight : entityLeft;
+        }
+
+        return {
+            x: anchorX,
+            y: entity.position.y + memberYOffset
+        };
+    }
+
+    public static getMemberIndex(entity: GNode, memberName: string | null | undefined): number {
+        if (!memberName || memberName.trim() === '') {
+            return 0;
+        }
+
+        const fieldLabels = entity.children?.filter(child => child.type === 'label:field') || [];
+        const methodLabels = entity.children?.filter(child => child.type === 'label:method') || [];
+
+        for (let i = 0; i < fieldLabels.length; i++) {
+            const fieldText = (fieldLabels[i] as any).text || '';
+            const cleanText = fieldText.replace(/^[+\-#~]\s*/, '').trim();
+
+            if (cleanText.startsWith(memberName + ' ') ||
+                cleanText.startsWith(memberName + ':') ||
+                cleanText === memberName) {
+
+                return i;
+            }
+        }
+
+        for (let i = 0; i < methodLabels.length; i++) {
+            const methodText = (methodLabels[i] as any).text || '';
+            const cleanText = methodText.replace(/^[+\-#~]\s*/, '').trim();
+
+            if (cleanText.startsWith(memberName + '(') ||
+                cleanText.startsWith(memberName + ' ') ||
+                cleanText === memberName) {
+
+                return fieldLabels.length + i;
+            }
+        }
+
+        return 0;
+    }
+
+    public static determineMemberLinkStyle(
+        source: GNode,
+        target: GNode,
+        sourceMember: string | null | undefined,
+        targetMember: string | null | undefined
+    ): {
+        sourceAnchor: Point;
+        targetAnchor: Point;
+        needsCurve: boolean;
+        flipCurve: boolean;
+    } {
+        // Get the source member's index to determine alternation
+        const memberIndex = this.getMemberIndex(source, sourceMember);
+
+        const sourceCenterX = source.position.x + source.size.width / 2;
+        const sourceCenterY = source.position.y + source.size.height / 2;
+        const targetCenterX = target.position.x + target.size.width / 2;
+        const targetCenterY = target.position.y + target.size.height / 2;
+
+        // Determine if entities are horizontal or vertical
+        const dx = Math.abs(targetCenterX - sourceCenterX);
+        const dy = Math.abs(targetCenterY - sourceCenterY);
+
+        const sourceLeft = source.position.x;
+        const sourceRight = source.position.x + source.size.width;
+        const targetLeft = target.position.x;
+        const targetRight = target.position.x + target.size.width;
+
+        const hasHorizontalOverlap = !(sourceRight < targetLeft || targetRight < sourceLeft);
+        const isVerticallyArranged = hasHorizontalOverlap || dy > dx * 1.5;
+
+        let sourceExitsRight: boolean;
+        let targetExitsRight: boolean;
+        let needsCurve: boolean;
+
+        if (isVerticallyArranged) {
+
+            const exitRight = memberIndex % 2 === 0;
+            sourceExitsRight = exitRight;
+            targetExitsRight = exitRight;
+            needsCurve = true;
+
+        } else {
+            sourceExitsRight = targetCenterX > sourceCenterX;
+            targetExitsRight = sourceCenterX > targetCenterX;
+
+            needsCurve = false;
+        }
+
+        const sourceAnchor = this.calculateMemberAnchorPointClosest(
+            source, target, sourceMember, sourceExitsRight
+        );
+        const targetAnchor = this.calculateMemberAnchorPointClosest(
+            target, source, targetMember, targetExitsRight
+        );
+
+        // Determine curve direction
+        const sourceY = sourceAnchor.y;
+        const targetY = targetAnchor.y;
+        let flipCurve: boolean;
+
+        if (isVerticallyArranged) {
+            flipCurve = sourceExitsRight;
+
+        } else {
+            flipCurve = sourceY < targetY;
+
+            // If entities are roughly at same Y, use member index for variety
+            if (Math.abs(sourceY - targetY) < 20) {
+                flipCurve = memberIndex % 4 < 2;
+            }
+        }
+
+        return {
+            sourceAnchor,
+            targetAnchor,
+            needsCurve,
+            flipCurve
+        };
+    }
+
     public static determineCurveDirection(
         source: GNode,
         target: GNode,
