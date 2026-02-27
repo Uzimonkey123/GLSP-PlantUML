@@ -16,6 +16,7 @@ export class EntityView extends ShapeView {
         const background = (node as any).args.background;
 
         const nameLabel = node.children.find(child => child.type === 'label:entityName');
+        const stereotypeLabel = node.children.find(child => child.type === 'label:stereotype');
         const genericNameLabel = node.children.find(child => child.type === 'label:generic');
         const fieldLabels = node.children.filter(child => child.type === 'label:field');
         const methodLabels = node.children.filter(child => child.type === 'label:method');
@@ -24,12 +25,12 @@ export class EntityView extends ShapeView {
         const lineHeight = 14;
         const padding = 5;
         const minSectionHeight = 10;
-        const hasStereotype = nameLabel && (nameLabel as any).args?.stereotypeName &&
-            (nameLabel as any).args.stereotypeName.length > 0;
+
+        const hasStereotype = !!stereotypeLabel;
         const headerH = hasStereotype ? 44 : 30;
 
         if (this.hasSeparator(bodyLabels)) {
-            return this.renderAdvanced(context, w, h, background, nameLabel, bodyLabels, headerH, lineHeight);
+            return this.renderAdvanced(context, w, h, background, nameLabel, stereotypeLabel, bodyLabels, headerH, lineHeight);
         }
 
         const fieldH = fieldLabels.length > 0
@@ -48,6 +49,7 @@ export class EntityView extends ShapeView {
             <rect class-sprotty-node={true} x={0} y={0} width={w} height={h} fill={background} stroke="white" stroke-width="2"/>
 
             <g>
+                {stereotypeLabel && context.renderElement(stereotypeLabel)}
                 {nameLabel && context.renderElement(nameLabel)}
                 <line x1={0} y1={headerH} x2={w} y2={headerH} class-simple-line={true}/>
             </g>
@@ -138,8 +140,8 @@ export class EntityView extends ShapeView {
     }
 
     private renderAdvanced(context: RenderingContext, w: number, h: number,
-                           background: string, nameLabel: any, bodyLabels: any[],
-                           headerH: number, lineHeight: number): VNode {
+                           background: string, nameLabel: any, stereotypeLabel: any,
+                           bodyLabels: any[], headerH: number, lineHeight: number): VNode {
         const elements: VNode[] = [];
 
         for (const label of bodyLabels) {
@@ -164,6 +166,7 @@ export class EntityView extends ShapeView {
             <rect class-sprotty-node={true} x={0} y={0} width={w} height={h} fill={background} stroke="black" stroke-width="2"/>
 
             <g>
+                {stereotypeLabel && context.renderElement(stereotypeLabel)}
                 {nameLabel && context.renderElement(nameLabel)}
 
                 <line x1={0} y1={headerH} x2={w} y2={headerH} class-simple-line={true}/>

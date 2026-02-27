@@ -63,6 +63,12 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
             return;
         }
 
+        if(suffix.equals("-label-stereotype")) {
+            entity.setStereotypeName(newText);
+            entity.setModified();
+            return;
+        }
+
         if (suffix.equals("-generic")) {
             entity.setGeneric(newText);
             entity.setModified();

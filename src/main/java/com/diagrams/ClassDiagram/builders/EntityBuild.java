@@ -47,6 +47,9 @@ public class EntityBuild {
         double genericBoxX = width - genericBoxW;
         double nameLabelX  = entity.isGeneric() ? genericBoxX / 2.0 : width / 2.0;
 
+        boolean hasStereotype = entity.getStereotypeName() != null && !entity.getStereotypeName().isEmpty();
+        double stereotypeY = 10;
+
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity")
                 .id(entity.getId())
                 .layout("freeform")
@@ -54,6 +57,16 @@ public class EntityBuild {
                 .size(width, height)
                 .addArgument("type", entity.getType())
                 .addArgument("background", entity.getBackground());
+
+        if (hasStereotype) {
+            nodeBuilder.add(new GLabelBuilder("label:stereotype")
+                    .id(entity.getId() + "-label-stereotype")
+                    .text(entity.getStereotypeName())
+                    .position(nameLabelX, stereotypeY)
+                    .size(width, 14)
+                    .addArgument("boxWidth", width)
+                    .build());
+        }
 
         nodeBuilder.add(new GLabelBuilder("label:entityName")
                 .id(entity.getId() + "-label-name")

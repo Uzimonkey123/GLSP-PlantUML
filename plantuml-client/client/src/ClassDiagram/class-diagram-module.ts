@@ -77,6 +77,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "link:note", GEdge, SimpleNoteEdgeView);
 
         configureModelElement(context, "label:entityName", GLabel, EntityLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
+        configureModelElement(context, "label:stereotype", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature]});
         configureModelElement(context, "label:method", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:field", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:body", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
