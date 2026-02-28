@@ -6,7 +6,7 @@ import {
     debugModule,
     DeleteElementContextMenuItemProvider, editLabelFeature,
     EditLabelUI,
-    FeatureModule, GCompartment, GEdge, GLabel, GLabelView, GNode,
+    FeatureModule, GCompartment, GEdge, GLabel, GNode,
     gridModule,
     helperLineModule,
     initializeDiagramContainer,
@@ -36,10 +36,11 @@ import {
     NoteEntityView, LollipopEntityView, InvisibleEntityView
 } from "./class-entity-views";
 import {
-    ClassLinkView,
     EntityLabelView,
     HiddenLabelView, SimpleNoteEdgeView
 } from "./class-views";
+
+import {ClassLinkView} from "./ClassEdge/link-views";
 
 import {
     PackageCloudView,

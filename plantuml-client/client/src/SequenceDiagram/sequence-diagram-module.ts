@@ -66,7 +66,7 @@ import '../../css/diagram.css';
 import 'sprotty/css/sprotty.css';
 import 'sprotty/css/edit-label.css';
 import 'balloon-css/balloon.min.css';
-import {BrEditLabelUI, HtmlLabelView} from "../utils";
+import {BrEditLabelUI, HtmlLabelView} from "../utils-common";
 
 export const SequenceDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
