@@ -24,7 +24,7 @@ import {
 
 import {PlantUmlGLSPDiagramWidget} from "../plantuml-diagram-widget";
 import {PlantUmlStartup} from "../plantuml-startup";
-import {BrEditLabelUI, HtmlLabelView} from "../utils";
+import {BrEditLabelUI, HtmlLabelView} from "../utils-common";
 
 import {Container} from "inversify";
 import {defaultModule as clientDefaultModule} from "@eclipse-glsp/client/lib/base/default.module";

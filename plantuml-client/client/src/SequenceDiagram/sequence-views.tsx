@@ -13,7 +13,7 @@ import {
 } from '@eclipse-glsp/client';
 import {VNode} from "snabbdom";
 import '../../css/diagram.css';
-import {createIcon, TspanConverter} from "../utils";
+import {createIcon, TspanConverter} from "../utils-common";
 
 /** @jsx svg */
 
