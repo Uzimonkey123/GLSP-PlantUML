@@ -8,10 +8,6 @@ interface CurveData {
     path: string;
     startTangent: Point;
     endTangent: Point;
-    cp1: Point;
-    cp2: Point;
-    midPoint: Point;
-    midTangent: Point;
 }
 
 interface EdgeStyle {
@@ -21,6 +17,11 @@ interface EdgeStyle {
     thickness: number;
     color: string;
 }
+
+const normalize = (x: number, y: number): Point => {
+    const len = Math.hypot(x, y) || 1;
+    return { x: x / len, y: y / len };
+};
 
 export class CurvedEdgeRenderer {
     private static curveDirectionMap = new Map<string, boolean>();
@@ -287,79 +288,29 @@ export class CurvedEdgeRenderer {
     public static calculateCurveWithTangents(
         start: Point,
         end: Point,
-        flipDirection: boolean = false
+        flip: boolean = false
     ): CurveData {
         const dx = end.x - start.x;
         const dy = end.y - start.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+        const dist = Math.hypot(dx, dy);
 
-        let perpX = -dy;
-        let perpY = dx;
+        const sign = flip ? -1 : 1;
+        const perp = normalize(-dy * sign, dx * sign);
+        const bulge = dist * 0.3;
 
-        if (flipDirection) {
-            perpX = -perpX;
-            perpY = -perpY;
-        }
-
-        const perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
-        const perpNormX = perpX / perpLength;
-        const perpNormY = perpY / perpLength;
-
-        const arcHeight = distance * 0.3;
-
-        // Control points
         const cp1 = {
-            x: start.x + dx * 0.25 + perpNormX * arcHeight,
-            y: start.y + dy * 0.25 + perpNormY * arcHeight
+            x: start.x + dx * 0.25 + perp.x * bulge,
+            y: start.y + dy * 0.25 + perp.y * bulge
         };
-
         const cp2 = {
-            x: start.x + dx * 0.75 + perpNormX * arcHeight,
-            y: start.y + dy * 0.75 + perpNormY * arcHeight
+            x: start.x + dx * 0.75 + perp.x * bulge,
+            y: start.y + dy * 0.75 + perp.y * bulge
         };
-
-        // Calculate tangent at start: tangent = 3(cp1 - start)
-        const startTangentX = 3 * (cp1.x - start.x);
-        const startTangentY = 3 * (cp1.y - start.y);
-        const startTangentLength = Math.sqrt(startTangentX * startTangentX + startTangentY * startTangentY);
-
-        // Calculate tangent at end: tangent = 3(end - cp2)
-        const endTangentX = 3 * (end.x - cp2.x);
-        const endTangentY = 3 * (end.y - cp2.y);
-        const endTangentLength = Math.sqrt(endTangentX * endTangentX + endTangentY * endTangentY);
-
-        // Calculate midpoint on bezier curve (t = 0.5)
-        const t = 0.5;
-        const u = 1 - t;
-        const midPoint = {
-            x: u * u * u * start.x + 3 * u * u * t * cp1.x + 3 * u * t * t * cp2.x + t * t * t * end.x,
-            y: u * u * u * start.y + 3 * u * u * t * cp1.y + 3 * u * t * t * cp2.y + t * t * t * end.y
-        };
-
-        // Calculate tangent at midpoint
-        const midTangentX = 3 * (u * u * (cp1.x - start.x) + 2 * u * t * (cp2.x - cp1.x) + t * t * (end.x - cp2.x));
-        const midTangentY = 3 * (u * u * (cp1.y - start.y) + 2 * u * t * (cp2.y - cp1.y) + t * t * (end.y - cp2.y));
-        const midTangentLength = Math.sqrt(midTangentX * midTangentX + midTangentY * midTangentY);
-
-        const path = `M ${start.x},${start.y} C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${end.x},${end.y}`;
 
         return {
-            path,
-            startTangent: {
-                x: startTangentX / startTangentLength,
-                y: startTangentY / startTangentLength
-            },
-            endTangent: {
-                x: endTangentX / endTangentLength,
-                y: endTangentY / endTangentLength
-            },
-            cp1,
-            cp2,
-            midPoint,
-            midTangent: {
-                x: midTangentX / midTangentLength,
-                y: midTangentY / midTangentLength
-            }
+            path: `M ${start.x},${start.y} C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${end.x},${end.y}`,
+            startTangent: normalize(cp1.x - start.x, cp1.y - start.y),
+            endTangent: normalize(end.x - cp2.x, end.y - cp2.y)
         };
     }
 
