@@ -196,7 +196,12 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         try {
             for (CharSequence item : entity.getBodier().getRawBody()) {
-                EntityMethod bodyItem = new EntityMethod(item.toString());
+                String itemStr = item.toString();
+                if (itemStr.isEmpty() || itemStr.isBlank()) {
+                    continue;
+                }
+
+                EntityMethod bodyItem = new EntityMethod(itemStr);
                 body.add(bodyItem);
             }
 
@@ -206,6 +211,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         try {
             for (CharSequence method : entity.getBodier().getMethodsToDisplay()) {
+                String itemStr = method.toString();
+                if (itemStr.isEmpty() || itemStr.isBlank()) {
+                    continue;
+                }
+
                 EntityMethod entityMethod = new EntityMethod(method.toString());
                 methods.add(entityMethod);
             }
@@ -221,6 +231,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         try {
             for (CharSequence field : entity.getBodier().getFieldsToDisplay()) {
+                String itemStr = field.toString();
+                if (itemStr.isEmpty() || itemStr.isBlank()) {
+                    continue;
+                }
+
                 EntityMethod entityMethod = new EntityMethod(field.toString());
                 fields.add(entityMethod);
             }

@@ -14,6 +14,9 @@ public class TipsHandler {
 
     public void applyTipsToEntity(Entity tipsEntity, ClassEntity targetEntity) {
         Map<String, Display> tips = tipsEntity.getTips();
+        if (targetEntity == null) {
+            return;
+        }
 
         for (Map.Entry<String, Display> entry : tips.entrySet()) {
             String memberName = entry.getKey();
