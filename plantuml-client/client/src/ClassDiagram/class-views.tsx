@@ -114,7 +114,14 @@ export class SimpleNoteEdgeView extends GEdgeView {
                 return this.renderMemberTipLink(source, target, segments, memberName);
 
             } else {
-                return this.renderRegularNoteLink(source, segments);
+                const isSourceNote = source.type === "entity:note";
+
+                if (isSourceNote) {
+                    return this.renderRegularNoteLink(source, segments, true);
+
+                } else {
+                    return this.renderRegularNoteLink(target, segments, false);
+                }
             }
         }
 
@@ -158,9 +165,12 @@ export class SimpleNoteEdgeView extends GEdgeView {
         />;
     }
 
-    private renderRegularNoteLink(source: GNode, segments: Point[]): VNode {
+    private renderRegularNoteLink(source: GNode, segments: Point[], noteAtStart: boolean): VNode {
         const first = segments[0];
         const last = segments[segments.length - 1];
+
+        const base = noteAtStart ? first : last;
+        const tip  = noteAtStart ? last : first;
 
         const noteColor = (source as any).args.background;
         const baseWidth = 12;
@@ -172,9 +182,9 @@ export class SimpleNoteEdgeView extends GEdgeView {
         const perpY = dx / length * baseWidth / 2;
 
         return <polygon
-            points={`${first.x - perpX},${first.y - perpY} 
-                     ${first.x + perpX},${first.y + perpY} 
-                     ${last.x},${last.y}`}
+            points={`${base.x - perpX},${base.y - perpY}
+                    ${base.x + perpX},${base.y + perpY}
+                    ${tip.x},${tip.y}`}
             fill={noteColor}
             stroke={noteColor}
             stroke-width="1"
