@@ -27,7 +27,7 @@ public abstract class ClassDiagramTestBase {
     protected Map<Object, Integer> elementToLineMap;
 
     @BeforeEach
-    void setUpBase() {
+    void setupBase() {
         model = new ClassModel();
         elementToLineMap = new HashMap<>();
     }

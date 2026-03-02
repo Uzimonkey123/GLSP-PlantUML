@@ -130,37 +130,24 @@ class TipsHandlerTest {
         @Test
         @DisplayName("matches method stripping visibility prefix (+/-/#/~)")
         void matchWithVisibilityPrefix() {
-            EntityMethod method = new EntityMethod("+publicMethod()");
-            targetEntity.getMethods().add(method);
+            EntityMethod method1 = new EntityMethod("+publicMethod()");
+            targetEntity.getMethods().add(method1);
             setupTips(singleTip("publicMethod", "Tip"));
-
             tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
 
-            assertEquals("Tip", method.getTip());
-        }
-
-        @Test
-        @DisplayName("matches method stripping {static} modifier")
-        void matchWithStaticModifier() {
-            EntityMethod method = new EntityMethod("{static} getInstance()");
-            targetEntity.getMethods().add(method);
+            EntityMethod method2 = new EntityMethod("{static} getInstance()");
+            targetEntity.getMethods().add(method2);
             setupTips(singleTip("getInstance", "Static tip"));
-
             tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
 
-            assertEquals("Static tip", method.getTip());
-        }
-
-        @Test
-        @DisplayName("matches method with full signature including parameters")
-        void matchWithFullSignature() {
-            EntityMethod method = new EntityMethod("process(String)");
-            targetEntity.getMethods().add(method);
+            EntityMethod method3 = new EntityMethod("process(String)");
+            targetEntity.getMethods().add(method3);
             setupTips(singleTip("process(String)", "Processing tip"));
-
             tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
 
-            assertEquals("Processing tip", method.getTip());
+            assertEquals("Tip", method1.getTip());
+            assertEquals("Static tip", method2.getTip());
+            assertEquals("Processing tip", method3.getTip());
         }
 
         @Test

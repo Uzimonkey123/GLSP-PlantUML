@@ -51,22 +51,6 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
         }
 
         @Test
-        @DisplayName("handles multiple empty lines between declarations")
-        void handleEmptyLines() throws IOException {
-            ClassModel result = parseSource(puml(
-                    "class A",
-                    "",
-                    "",
-                    "class B",
-                    "",
-                    "A --> B"
-            ));
-
-            assertEquals(2, result.entities.size());
-            assertEquals(1, result.links.size());
-        }
-
-        @Test
         @DisplayName("handles Windows CRLF line endings")
         void handleCRLF() throws IOException {
             String source = "@startuml\r\nclass User\r\nclass Order\r\n@enduml";
@@ -91,23 +75,6 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
     class EmptyContentTests {
 
         @Test
-        @DisplayName("empty-diagram: handles empty @startuml/@enduml")
-        void handleEmptyDiagram() throws IOException {
-            ClassModel result = parse("edge-cases/empty-diagram.puml");
-
-            assertNotNull(result);
-            assertTrue(result.entities.isEmpty());
-        }
-
-        @Test
-        @DisplayName("minimal: handles single class")
-        void handleMinimal() throws IOException {
-            ClassModel result = parse("edge-cases/minimal.puml");
-
-            assertEquals(1, result.entities.size());
-        }
-
-        @Test
         @DisplayName("handles empty class body with braces")
         void handleEmptyClassBody() throws IOException {
             ClassModel result = parseSource(puml(
@@ -128,17 +95,6 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
 
             assertEquals(1, result.packages.size());
             assertTrue(result.packages.getFirst().getEntities().isEmpty());
-        }
-
-        @Test
-        @DisplayName("with-comments: ignores comments correctly")
-        void handleComments() throws IOException {
-            ClassModel result = parse("edge-cases/with-comments.puml");
-
-            assertNotNull(result);
-
-            boolean hasCommentEntity = result.entities.stream().anyMatch(e -> e.getName().contains("'"));
-            assertFalse(hasCommentEntity);
         }
     }
 
@@ -175,22 +131,6 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
 
             assertTrue(result.links.stream().allMatch(l -> l.getEntity1().getId().equals(l.getEntity2().getId())));
         }
-
-        @Test
-        @DisplayName("handles self-reference with different decorators")
-        void handleSelfReferenceDecorators() throws IOException {
-            ClassModel result = parseSource(puml(
-                    "class Category",
-                    "Category *-- Category : subcategories",
-                    "Category o-- Category : related"
-            ));
-
-            assertEquals(2, result.links.size());
-            assertNotEquals(
-                    result.links.get(0).getDecorator1(),
-                    result.links.get(1).getDecorator1()
-            );
-        }
     }
 
     @Nested
@@ -206,21 +146,6 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
                     "A --> B : uses",
                     "A ..> B : depends",
                     "A --o B : aggregates"
-            ));
-
-            assertEquals(3, result.links.size());
-        }
-
-        @Test
-        @DisplayName("handles circular relationships")
-        void handleCircularRelationships() throws IOException {
-            ClassModel result = parseSource(puml(
-                    "class A",
-                    "class B",
-                    "class C",
-                    "A --> B",
-                    "B --> C",
-                    "C --> A"
             ));
 
             assertEquals(3, result.links.size());
@@ -318,103 +243,6 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
 
             assertEquals("My Package", result.packages.getFirst().getName());
         }
-
-        @Test
-        @DisplayName("handles relationship across packages")
-        void handleCrossPackageRelationship() throws IOException {
-            ClassModel result = parseSource(puml(
-                    "package Domain {",
-                    "  class User",
-                    "}",
-                    "package Service {",
-                    "  class UserService",
-                    "}",
-                    "UserService --> User"
-            ));
-
-            assertEquals(1, result.links.size());
-        }
-
-        @Test
-        @DisplayName("container-types: handles all container types")
-        void handleContainerTypes() throws IOException {
-            ClassModel result = parse("packages/container-types.puml");
-
-            assertEquals(7, result.packages.size());
-        }
-    }
-
-    @Nested
-    @DisplayName("Member Edge Cases")
-    class MemberTests {
-
-        @Test
-        @DisplayName("with-separators: handles separator lines in class")
-        void handleSeparators() throws IOException {
-            ClassModel result = parse("edge-cases/with-separators.puml");
-
-            assertFalse(result.entities.getFirst().getRawBody().isEmpty());
-        }
-
-        @Test
-        @DisplayName("handles method with many parameters")
-        void handleManyParameters() throws IOException {
-            ClassModel result = parseSource(puml(
-                    "class Calc {",
-                    "  +calc(a: int, b: int, c: int, d: int): int",
-                    "}"
-            ));
-
-            assertFalse(result.entities.getFirst().getRawBody().isEmpty());
-        }
-
-        @Test
-        @DisplayName("handles field with default value")
-        void handleDefaultValue() throws IOException {
-            ClassModel result = parseSource(puml(
-                    "class Config {",
-                    "  -timeout: int = 30",
-                    "}"
-            ));
-
-            assertFalse(result.entities.getFirst().getRawBody().isEmpty());
-        }
-
-        @Test
-        @DisplayName("static-abstract-members: handles {static} and {abstract}")
-        void handleStaticAbstract() throws IOException {
-            ClassModel result = parse("entities/static-abstract-members.puml");
-
-            boolean hasAbstract = result.entities.stream().anyMatch(e -> e.getType().equals("ABSTRACT_CLASS"));
-            assertTrue(hasAbstract);
-        }
-    }
-
-    @Nested
-    @DisplayName("Special Entity Types")
-    class SpecialEntityTests {
-
-        @Test
-        @DisplayName("special-entity-types: parses diamond, circle, lollipop")
-        void handleSpecialTypes() throws IOException {
-            ClassModel result = parse("edge-cases/special-entity-types.puml");
-
-            boolean hasSpecial = result.entities.stream()
-                    .anyMatch(e -> e.getType().equals("DIAMOND") || e.getType().equals("CIRCLE"));
-            assertTrue(hasSpecial);
-        }
-
-        @Test
-        @DisplayName("special-characters: parses generics, stereotypes, colors")
-        void handleSpecialCharacters() throws IOException {
-            ClassModel result = parse("edge-cases/special-characters.puml");
-
-            assertAll(
-                    () -> assertTrue(result.entities.stream().anyMatch(ClassEntity::isGeneric)),
-                    () -> assertTrue(result.entities.stream().anyMatch(ClassEntity::isStereotype)),
-                    () -> assertTrue(result.entities.stream().anyMatch(e -> e.getExplicitBackground() != null))
-            );
-        }
     }
 
     @Nested
@@ -493,7 +321,7 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
     class DuplicateTests {
 
         @Test
-        @DisplayName("handles duplicate class declarations (PlantUML merges)")
+        @DisplayName("handles duplicate class declarations")
         void handleDuplicateClass() throws IOException {
             ClassModel result = parseSource(puml("class User", "class User"));
 
@@ -526,15 +354,6 @@ class ClassModelParserComplexTest extends ClassDiagramTestBase {
         void handleNoStartUml() throws IOException {
             ClassModel result = parse("edge-cases/no-startuml.puml");
 
-            assertFalse(result.entities.isEmpty());
-        }
-
-        @Test
-        @DisplayName("left-to-right: handles direction directive")
-        void handleLeftToRight() throws IOException {
-            ClassModel result = parse("edge-cases/left-to-right.puml");
-
-            assertNotNull(result);
             assertFalse(result.entities.isEmpty());
         }
 

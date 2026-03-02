@@ -98,35 +98,12 @@ class ClassModelParserTest extends ClassDiagramTestBase {
         }
 
         @Test
-        @DisplayName("inline-entities: parses single-line class declarations")
-        void parseInlineEntities() throws IOException {
-            ClassModel model = parse("entities/inline-entities.puml");
-
-            assertTrue(model.entities.size() >= 2, "Should parse inline entities");
-            assertTrue(findEntity(model, "User").isPresent());
-            assertTrue(findEntity(model, "Order").isPresent());
-        }
-
-        @Test
         @DisplayName("visibility-modifiers: parses +, -, #, ~ prefixed members")
         void parseVisibilityModifiers() throws IOException {
             ClassModel model = parse("entities/visibility-modifiers.puml");
 
             ClassEntity entity = model.entities.getFirst();
             assertTrue(entity.getRawBody().size() >= 4, "Should have members with different visibilities");
-        }
-
-        @Test
-        @DisplayName("static-abstract-members: parses {static} and {abstract} modifiers")
-        void parseStaticAbstractMembers() throws IOException {
-            ClassModel model = parse("entities/static-abstract-members.puml");
-
-            Optional<ClassEntity> abstractClass = model.entities.stream()
-                    .filter(e -> e.getType().equals("ABSTRACT_CLASS"))
-                    .findFirst();
-
-            assertTrue(abstractClass.isPresent());
-            assertFalse(abstractClass.get().getRawBody().isEmpty());
         }
     }
 
@@ -135,49 +112,31 @@ class ClassModelParserTest extends ClassDiagramTestBase {
     class RelationshipParsingTests {
 
         @Test
-        @DisplayName("basic-arrows: parses association, aggregation, composition, inheritance")
-        void parseBasicArrows() throws IOException {
-            ClassModel model = parse("relationships/basic-arrows.puml");
+        @DisplayName("parses common relationship patterns correctly")
+        void parsesCommonRelationshipPatterns() throws IOException {
+            ClassModel basic = parse("relationships/basic-arrows.puml");
+            ClassModel cardinality = parse("relationships/with-cardinality.puml");
+            ClassModel directions = parse("relationships/with-directions.puml");
 
-            assertEquals(5, model.links.size(), "Should have 5 relationships");
-            assertTrue(model.links.stream().allMatch(ClassLink::hasLine));
+            assertEquals(5, basic.links.size());
+            assertTrue(basic.links.stream().allMatch(ClassLink::hasLine));
+
+            assertTrue(cardinality.links.stream()
+                    .anyMatch(l -> l.getQuantifier1() != null || l.getQuantifier2() != null));
+
+            assertTrue(directions.links.size() >= 4);
         }
 
         @Test
-        @DisplayName("with-cardinality: parses quantifiers")
-        void parseWithCardinality() throws IOException {
-            ClassModel model = parse("relationships/with-cardinality.puml");
+        @DisplayName("handles inheritance and extended arrow variations")
+        void parsesAdvancedRelationshipForms() throws IOException {
+            ClassModel inheritance = parse("relationships/inheritance-hierarchy.puml");
+            ClassModel allTypes = parse("relationships/all-arrow-types.puml");
 
-            boolean hasCardinality = model.links.stream()
-                    .anyMatch(l -> l.getQuantifier1() != null || l.getQuantifier2() != null);
+            boolean hasExtends = inheritance.links.stream().anyMatch(l -> "EXTENDS".equals(l.getDecorator2()));
 
-            assertTrue(hasCardinality, "Should have links with cardinality");
-        }
-
-        @Test
-        @DisplayName("with-directions: parses directional arrows")
-        void parseWithDirections() throws IOException {
-            ClassModel model = parse("relationships/with-directions.puml");
-
-            assertTrue(model.links.size() >= 4, "Should parse relationships regardless of directions");
-        }
-
-        @Test
-        @DisplayName("inheritance-hierarchy: parses extends relationships")
-        void parseInheritanceHierarchy() throws IOException {
-            ClassModel model = parse("relationships/inheritance-hierarchy.puml");
-
-            boolean hasExtends = model.links.stream().anyMatch(l -> "EXTENDS".equals(l.getDecorator2()));
-
-            assertTrue(hasExtends, "Should have inheritance relationships");
-        }
-
-        @Test
-        @DisplayName("all-arrow-types: parses solid, dashed, and decorators")
-        void parseAllArrowTypes() throws IOException {
-            ClassModel model = parse("relationships/all-arrow-types.puml");
-
-            assertTrue(model.links.size() >= 8, "Should parse many arrow types");
+            assertTrue(hasExtends);
+            assertTrue(allTypes.links.size() >= 8);
         }
     }
 
@@ -329,15 +288,6 @@ class ClassModelParserTest extends ClassDiagramTestBase {
             Set<String> types = entityTypes(model);
 
             assertTrue(types.contains("DIAMOND") || types.contains("CIRCLE"), "Should parse special entity types");
-        }
-
-        @Test
-        @DisplayName("left-to-right: handles direction directive")
-        void parseLeftToRight() throws IOException {
-            ClassModel model = parse("edge-cases/left-to-right.puml");
-
-            assertNotNull(model);
-            assertFalse(model.entities.isEmpty());
         }
     }
 

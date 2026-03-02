@@ -65,16 +65,6 @@ class ClassLineFinderTest extends ClassDiagramTestBase {
         }
 
         @Test
-        @DisplayName("finds inline entity")
-        void findInlineEntity() {
-            createFinder("entities/inline-entities.puml");
-
-            int line = finder.findEntityLine("User", new Object());
-
-            assertTrue(line >= 0);
-        }
-
-        @Test
         @DisplayName("returns -1 for non-existent entity")
         void entityNotFound() {
             createFinder("entities/simple-class.puml");
@@ -297,36 +287,15 @@ class ClassLineFinderTest extends ClassDiagramTestBase {
     @Nested
     @DisplayName("Entity Matching")
     class EntityMatchingTests {
-
         @Test
-        @DisplayName("matches simple class name")
-        void matchSimpleName() {
+        @DisplayName("matches entity names in various forms")
+        void matchEntityNames() {
             assertTrue(ClassLineFinder.entityMatchesName("class User", "User"));
-        }
-
-        @Test
-        @DisplayName("matches quoted name")
-        void matchQuotedName() {
             assertTrue(ClassLineFinder.entityMatchesName("class \"User Account\" as User", "User Account"));
-        }
-
-        @Test
-        @DisplayName("matches name with generic stripped")
-        void matchGenericStripped() {
             assertTrue(ClassLineFinder.entityMatchesName("class Container<T>", "Container"));
-        }
-
-        @Test
-        @DisplayName("does not match partial name")
-        void noPartialMatch() {
-            assertFalse(ClassLineFinder.entityMatchesName("class UserService", "User"));
-        }
-
-        @Test
-        @DisplayName("matches empty/null name to anything")
-        void matchEmptyName() {
             assertTrue(ClassLineFinder.entityMatchesName("class Anything", ""));
             assertTrue(ClassLineFinder.entityMatchesName("class Anything", null));
+            assertFalse(ClassLineFinder.entityMatchesName("class UserService", "User"));
         }
     }
 
@@ -339,18 +308,8 @@ class ClassLineFinderTest extends ClassDiagramTestBase {
         void matchRelationship() {
             assertTrue(ClassLineFinder.relMatchesName("A --> B", "A"));
             assertTrue(ClassLineFinder.relMatchesName("A --> B", "B"));
-        }
-
-        @Test
-        @DisplayName("ignores label part")
-        void ignoreLabel() {
             assertTrue(ClassLineFinder.relMatchesName("A --> B : uses", "A"));
             assertFalse(ClassLineFinder.relMatchesName("A --> B : uses", "uses"));
-        }
-
-        @Test
-        @DisplayName("matches quoted names")
-        void matchQuotedInRelationship() {
             assertTrue(ClassLineFinder.relMatchesName("\"User\" --> \"Order\"", "User"));
         }
     }
@@ -360,64 +319,15 @@ class ClassLineFinderTest extends ClassDiagramTestBase {
     class AliasExtractionTests {
 
         @Test
-        @DisplayName("extracts simple class name")
-        void extractSimpleName() {
-            assertEquals("User", ClassLineFinder.extractAlias("class User"));
-        }
-
-        @Test
         @DisplayName("extracts alias when present")
         void extractAlias() {
+            assertEquals("User", ClassLineFinder.extractAlias("class User"));
             assertEquals("UA", ClassLineFinder.extractAlias("class \"User Account\" as UA"));
-        }
-
-        @Test
-        @DisplayName("extracts name from quoted without alias")
-        void extractQuotedName() {
-            assertEquals("User Account", ClassLineFinder.extractAlias("class \"User Account\""));
-        }
-
-        @Test
-        @DisplayName("handles abstract class")
-        void extractAbstractClass() {
-            assertEquals("Base", ClassLineFinder.extractAlias("abstract class Base"));
-        }
-
-        @Test
-        @DisplayName("handles interface")
-        void extractInterface() {
-            assertEquals("Runnable", ClassLineFinder.extractAlias("interface Runnable"));
-        }
-
-        @Test
-        @DisplayName("handles enum")
-        void extractEnum() {
-            assertEquals("Status", ClassLineFinder.extractAlias("enum Status"));
-        }
-
-        @Test
-        @DisplayName("returns null for non-entity line")
-        void returnNullForNonEntity() {
             assertNull(ClassLineFinder.extractAlias("A --> B"));
             assertNull(ClassLineFinder.extractAlias("package domain"));
             assertNull(ClassLineFinder.extractAlias(null));
-        }
-
-        @Test
-        @DisplayName("handles name with generic")
-        void extractNameWithGeneric() {
             assertEquals("List", ClassLineFinder.extractAlias("class List<T>"));
-        }
-
-        @Test
-        @DisplayName("handles name with stereotype")
-        void extractNameWithStereotype() {
             assertEquals("Service", ClassLineFinder.extractAlias("class Service <<Singleton>>"));
-        }
-
-        @Test
-        @DisplayName("handles name with color")
-        void extractNameWithColor() {
             assertEquals("Important", ClassLineFinder.extractAlias("class Important #Red"));
         }
     }

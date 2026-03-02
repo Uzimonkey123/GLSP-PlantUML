@@ -240,7 +240,7 @@ class ClassFactoryIntegrationTest {
         private ClassLinkFactory linkFactory;
 
         @BeforeEach
-        void setUpLinks() {
+        void setupLinks() {
             ClassEntity e1 = createEntity("ent-0", "A", "CLASS");
             ClassEntity e2 = createEntity("ent-1", "B", "CLASS");
             e1.setX(0); e1.setY(0);

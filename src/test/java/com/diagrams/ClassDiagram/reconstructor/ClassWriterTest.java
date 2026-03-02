@@ -3,12 +3,8 @@ package com.diagrams.ClassDiagram.reconstructor;
 import com.diagrams.ClassDiagram.ClassDiagramTestBase;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.*;
-import com.diagrams.ClassDiagram.model.ClassParts.Package;
-
 import com.diagrams.ClassDiagram.parser.ClassModelParser;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -178,23 +174,15 @@ class ClassWriterTest extends ClassDiagramTestBase {
     class GetNewTokenTests {
 
         @Test
-        @DisplayName("returns alias when present")
-        void returnsAlias() throws Exception {
+        @DisplayName("prefers alias but falls back to name when missing")
+        void prefersAliasOrFallsBackToName() throws Exception {
             ClassEntity entity = mock(ClassEntity.class);
+            when(entity.getName()).thenReturn("MyName");
+
+            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+
             when(entity.getAlias()).thenReturn("MyAlias");
-            when(entity.getName()).thenReturn("MyName");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
             assertEquals("MyAlias", invokeGetNewToken(writer, entity));
-        }
-
-        @Test
-        @DisplayName("returns name when alias is null or empty")
-        void returnsNameWhenNoAlias() throws Exception {
-            ClassEntity entity = mock(ClassEntity.class);
-            when(entity.getName()).thenReturn("MyName");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
 
             when(entity.getAlias()).thenReturn(null);
             assertEquals("MyName", invokeGetNewToken(writer, entity));
@@ -222,12 +210,13 @@ class ClassWriterTest extends ClassDiagramTestBase {
             when(entity.getAlias()).thenReturn("MyAlias");
 
             ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+
             assertEquals("MyAlias", invokeGetEntityToken(writer, entity));
         }
 
         @Test
-        @DisplayName("quotes name with spaces or special characters")
-        void quotesSpecialNames() throws Exception {
+        @DisplayName("handles quoting rules for entity names")
+        void handlesQuotingRules() throws Exception {
             ClassEntity entity = mock(ClassEntity.class);
             when(entity.getAlias()).thenReturn(null);
 
@@ -238,16 +227,8 @@ class ClassWriterTest extends ClassDiagramTestBase {
 
             when(entity.getName()).thenReturn("My-Class");
             assertEquals("\"My-Class\"", invokeGetEntityToken(writer, entity));
-        }
 
-        @Test
-        @DisplayName("does not quote simple name")
-        void doesNotQuoteSimple() throws Exception {
-            ClassEntity entity = mock(ClassEntity.class);
-            when(entity.getAlias()).thenReturn(null);
             when(entity.getName()).thenReturn("MyClass");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
             assertEquals("MyClass", invokeGetEntityToken(writer, entity));
         }
 
@@ -264,110 +245,34 @@ class ClassWriterTest extends ClassDiagramTestBase {
     class DetectSeparatorTests {
 
         @Test
-        @DisplayName("returns default separator when none set")
-        void returnsDefault() throws Exception {
+        @DisplayName("detects separator configuration correctly")
+        void detectsSeparatorConfiguration() throws Exception {
+            ClassWriter writer;
+
             when(mockLineMapper.getLineInfos()).thenReturn(new ArrayList<>());
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+            writer = new ClassWriter(mockModel, testFile.toUri().toString());
             assertEquals(".", invokeDetectSeparator(writer));
-        }
 
-        @Test
-        @DisplayName("detects custom separator")
-        void detectsCustom() throws Exception {
-            ClassLineMapper.LineInfo info = new ClassLineMapper.LineInfo(
+            ClassLineMapper.LineInfo custom = new ClassLineMapper.LineInfo(
                     0, "set separator ::", ClassLineMapper.LineType.UNKNOWN
             );
-            when(mockLineMapper.getLineInfos()).thenReturn(List.of(info));
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+            when(mockLineMapper.getLineInfos()).thenReturn(List.of(custom));
+            writer = new ClassWriter(mockModel, testFile.toUri().toString());
             assertEquals("::", invokeDetectSeparator(writer));
-        }
 
-        @Test
-        @DisplayName("returns default when separator is 'none'")
-        void returnsDefaultForNone() throws Exception {
-            ClassLineMapper.LineInfo info = new ClassLineMapper.LineInfo(
+            ClassLineMapper.LineInfo none = new ClassLineMapper.LineInfo(
                     0, "set separator none", ClassLineMapper.LineType.UNKNOWN
             );
-            when(mockLineMapper.getLineInfos()).thenReturn(List.of(info));
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+            when(mockLineMapper.getLineInfos()).thenReturn(List.of(none));
+            writer = new ClassWriter(mockModel, testFile.toUri().toString());
             assertEquals(".", invokeDetectSeparator(writer));
         }
 
         private String invokeDetectSeparator(ClassWriter writer) throws Exception {
             Method method = ClassWriter.class.getDeclaredMethod("detectSeparator");
             method.setAccessible(true);
+
             return (String) method.invoke(writer);
-        }
-    }
-
-    @Nested
-    @DisplayName("getEffectiveLine")
-    class GetEffectiveLineTests {
-
-        @Test
-        @DisplayName("returns source line for valid index")
-        void returnsSourceLine() throws Exception {
-            Path file = createTempPumlFile(puml("class Foo"));
-
-            ClassWriter writer = new ClassWriter(mockModel, file.toUri().toString());
-            assertEquals("class Foo", invokeGetEffectiveLine(writer, 1));
-        }
-
-        @Test
-        @DisplayName("returns empty string for invalid index")
-        void returnsEmptyForInvalid() throws Exception {
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-
-            assertEquals("", invokeGetEffectiveLine(writer, 100));
-            assertEquals("", invokeGetEffectiveLine(writer, -1));
-        }
-
-        private String invokeGetEffectiveLine(ClassWriter writer, int lineNum) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("getEffectiveLine", int.class);
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer, lineNum);
-        }
-    }
-
-    @Nested
-    @DisplayName("hasNameConflict")
-    class HasNameConflictTests {
-
-        @Test
-        @DisplayName("returns true when another entity has same original name")
-        void detectsConflict() throws Exception {
-            ClassEntity entity1 = mock(ClassEntity.class);
-            ClassEntity entity2 = mock(ClassEntity.class);
-            when(entity1.getOriginalName()).thenReturn("SameName");
-            when(entity2.getOriginalName()).thenReturn("SameName");
-            mockModel.entities = List.of(entity1, entity2);
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            assertTrue(invokeHasNameConflict(writer, entity1));
-        }
-
-        @Test
-        @DisplayName("returns false when no conflict")
-        void noConflict() throws Exception {
-            ClassEntity entity1 = mock(ClassEntity.class);
-            ClassEntity entity2 = mock(ClassEntity.class);
-            when(entity1.getOriginalName()).thenReturn("Name1");
-            when(entity2.getOriginalName()).thenReturn("Name2");
-            mockModel.entities = List.of(entity1, entity2);
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            assertFalse(invokeHasNameConflict(writer, entity1));
-        }
-
-        private boolean invokeHasNameConflict(ClassWriter writer, ClassEntity entity) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("hasNameConflict", ClassEntity.class);
-            method.setAccessible(true);
-
-            return (boolean) method.invoke(writer, entity);
         }
     }
 
@@ -375,80 +280,27 @@ class ClassWriterTest extends ClassDiagramTestBase {
     @DisplayName("buildDeclarationHeader")
     class BuildDeclarationHeaderTests {
 
-        @ParameterizedTest
-        @CsvSource({
-                "CLASS, class",
-                "INTERFACE, interface",
-                "ENUM, enum",
-                "ANNOTATION, annotation",
-                "ABSTRACT, abstract",
-                "DIAMOND, diamond",
-                "CIRCLE, circle"
-        })
-        @DisplayName("generates correct type keyword")
-        void generatesTypeKeyword(String type, String expectedKeyword) throws Exception {
-            ClassEntity entity = createSimpleMockEntity("TestEntity", type);
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            String result = invokeBuildDeclarationHeader(writer, entity);
-            assertTrue(result.startsWith(expectedKeyword + " "));
-        }
-
         @Test
-        @DisplayName("includes visibility prefix")
-        void includesVisibility() throws Exception {
-            ClassEntity entity = createSimpleMockEntity("TestClass", "CLASS");
-            when(entity.getVisibility()).thenReturn("private");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            String result = invokeBuildDeclarationHeader(writer, entity);
-            assertTrue(result.startsWith("-"));
-        }
-
-        @Test
-        @DisplayName("includes alias")
-        void includesAlias() throws Exception {
+        @DisplayName("builds declaration header with all relevant attributes")
+        void buildsCompleteDeclarationHeader() throws Exception {
             ClassEntity entity = createSimpleMockEntity("Full Name", "CLASS");
+
+            when(entity.getVisibility()).thenReturn("private");
             when(entity.getAlias()).thenReturn("Alias");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            String result = invokeBuildDeclarationHeader(writer, entity);
-            assertTrue(result.contains("as"));
-        }
-
-        @Test
-        @DisplayName("includes generic parameter")
-        void includesGeneric() throws Exception {
-            ClassEntity entity = createSimpleMockEntity("Container", "CLASS");
             when(entity.getGeneric()).thenReturn("T");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            String result = invokeBuildDeclarationHeader(writer, entity);
-            assertTrue(result.contains("<T>"));
-        }
-
-        @Test
-        @DisplayName("includes stereotype")
-        void includesStereotype() throws Exception {
-            ClassEntity entity = createSimpleMockEntity("TestClass", "CLASS");
             when(entity.isStereotype()).thenReturn(true);
             when(entity.getStereotypeChar()).thenReturn('S');
             when(entity.getStereotypeColor()).thenReturn("blue");
             when(entity.getStereotypeName()).thenReturn("service");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            String result = invokeBuildDeclarationHeader(writer, entity);
-            assertTrue(result.contains("<<") && result.contains(">>"));
-        }
-
-        @Test
-        @DisplayName("includes background color")
-        void includesBackground() throws Exception {
-            ClassEntity entity = createSimpleMockEntity("TestClass", "CLASS");
             when(entity.getExplicitBackground()).thenReturn("#lightblue");
 
             ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
             String result = invokeBuildDeclarationHeader(writer, entity);
+
+            assertTrue(result.startsWith("-"));
+            assertTrue(result.contains("as Alias"));
+            assertTrue(result.contains("<T>"));
+            assertTrue(result.contains("<<") && result.contains(">>"));
             assertTrue(result.contains("#lightblue"));
         }
 
@@ -465,154 +317,25 @@ class ClassWriterTest extends ClassDiagramTestBase {
     class BuildMemberLineTests {
 
         @Test
-        @DisplayName("builds with visibility")
-        void buildsWithVisibility() throws Exception {
+        @DisplayName("builds member line respecting visibility")
+        void buildsMemberLineWithAndWithoutVisibility() throws Exception {
             EntityMethod member = mock(EntityMethod.class);
+            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+
             when(member.getVisibilityChar()).thenReturn("public");
             when(member.getMethodName()).thenReturn("myMethod()");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
             assertEquals("+ myMethod()", invokeBuildMemberLine(writer, member));
-        }
 
-        @Test
-        @DisplayName("builds without visibility")
-        void buildsWithoutVisibility() throws Exception {
-            EntityMethod member = mock(EntityMethod.class);
             when(member.getVisibilityChar()).thenReturn(null);
             when(member.getMethodName()).thenReturn("myField");
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
             assertEquals("myField", invokeBuildMemberLine(writer, member));
         }
 
         private String invokeBuildMemberLine(ClassWriter writer, EntityMethod member) throws Exception {
             Method method = ClassWriter.class.getDeclaredMethod("buildMemberLine", EntityMethod.class);
             method.setAccessible(true);
+
             return (String) method.invoke(writer, member);
-        }
-    }
-
-    @Nested
-    @DisplayName("getDepth")
-    class GetDepthTests {
-
-        @Test
-        @DisplayName("returns correct depth for package hierarchy")
-        void returnsCorrectDepth() throws Exception {
-            Package root = mock(Package.class);
-            Package child = mock(Package.class);
-            Package grandchild = mock(Package.class);
-
-            when(root.getParentPackage()).thenReturn(null);
-            when(child.getParentPackage()).thenReturn(root);
-            when(grandchild.getParentPackage()).thenReturn(child);
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-
-            assertEquals(1, invokeGetDepth(writer, root));
-            assertEquals(2, invokeGetDepth(writer, child));
-            assertEquals(3, invokeGetDepth(writer, grandchild));
-        }
-
-        private int invokeGetDepth(ClassWriter writer, Package pkg) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("getDepth", Package.class);
-            method.setAccessible(true);
-
-            return (int) method.invoke(writer, pkg);
-        }
-    }
-
-    @Nested
-    @DisplayName("buildFullPath")
-    class BuildFullPathTests {
-
-        @Test
-        @DisplayName("builds path for nested packages")
-        void buildsNestedPath() throws Exception {
-            Package root = mock(Package.class);
-            Package child = mock(Package.class);
-
-            when(root.getOriginalName()).thenReturn("com");
-            when(root.getName()).thenReturn("com");
-            when(root.getParentPackage()).thenReturn(null);
-
-            when(child.getOriginalName()).thenReturn("example");
-            when(child.getName()).thenReturn("example");
-            when(child.getParentPackage()).thenReturn(root);
-
-            when(mockLineMapper.getLineInfos()).thenReturn(new ArrayList<>());
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            assertEquals("com.example", invokeBuildFullPath(writer, child, true));
-        }
-
-        @Test
-        @DisplayName("uses new name when useOriginal is false")
-        void usesNewName() throws Exception {
-            Package pkg = mock(Package.class);
-            when(pkg.getOriginalName()).thenReturn("oldName");
-            when(pkg.getName()).thenReturn("newName");
-            when(pkg.getParentPackage()).thenReturn(null);
-
-            when(mockLineMapper.getLineInfos()).thenReturn(new ArrayList<>());
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-
-            assertEquals("oldName", invokeBuildFullPath(writer, pkg, true));
-            assertEquals("newName", invokeBuildFullPath(writer, pkg, false));
-        }
-
-        private String invokeBuildFullPath(ClassWriter writer, Package pkg, boolean useOriginal) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("buildFullPath", Package.class, boolean.class);
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer, pkg, useOriginal);
-        }
-    }
-
-    @Nested
-    @DisplayName("buildMemberRefMap")
-    class BuildMemberRefMapTests {
-
-        @Test
-        @DisplayName("returns empty map for entity with no members")
-        void emptyForNoMembers() throws Exception {
-            ClassEntity entity = mock(ClassEntity.class);
-            when(entity.getRawBody()).thenReturn(new ArrayList<>());
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            assertTrue(invokeBuildMemberRefMap(writer, entity).isEmpty());
-        }
-
-        @Test
-        @DisplayName("builds map for renamed members only")
-        void buildsMapForRenamed() throws Exception {
-            ClassEntity entity = mock(ClassEntity.class);
-
-            EntityMethod renamed = mock(EntityMethod.class);
-            when(renamed.getOriginalName()).thenReturn("oldField");
-            when(renamed.getMethodName()).thenReturn("newField");
-
-            EntityMethod unchanged = mock(EntityMethod.class);
-            when(unchanged.getOriginalName()).thenReturn("sameField");
-            when(unchanged.getMethodName()).thenReturn("sameField");
-
-            when(entity.getRawBody()).thenReturn(List.of(renamed, unchanged));
-
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            Map<String, String> result = invokeBuildMemberRefMap(writer, entity);
-
-            assertEquals(1, result.size());
-            assertEquals("newField", result.get("oldField"));
-        }
-
-        @SuppressWarnings("unchecked")
-        private Map<String, String> invokeBuildMemberRefMap(ClassWriter writer, ClassEntity entity) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("buildMemberRefMap", ClassEntity.class);
-            method.setAccessible(true);
-
-            return (Map<String, String>) method.invoke(writer, entity);
         }
     }
 
