@@ -147,7 +147,7 @@ public class ClassEntityFactory {
                 }
                 case "LOLLIPOP" -> {
                     createLollipop(entity);
-                    return;
+                    continue;
                 }
                 case "NOTE" -> {
                     createNoteEntity(entity);
