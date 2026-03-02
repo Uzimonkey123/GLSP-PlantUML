@@ -1,0 +1,11 @@
+@startuml
+class A
+class B
+class C
+
+A --> B : link1
+note on link : note on link1
+
+B --> C
+note right on link : note right on link
+@enduml

@@ -1,0 +1,5 @@
+@startuml
+class User
+class Order
+interface Serializable
+@enduml

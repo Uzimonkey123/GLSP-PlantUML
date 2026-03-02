@@ -1,0 +1,14 @@
+@startuml
+class User {
+    +name: String
+}
+
+note left of User : This is a simple note
+
+note right of User
+    This is a
+    multiline note
+end note
+
+note "Floating note" as N1
+@enduml

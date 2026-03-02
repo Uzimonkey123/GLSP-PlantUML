@@ -1,0 +1,10 @@
+class User {
+    +name: String
+    +age: int
+}
+
+class Order {
+    +orderId: String
+}
+
+User --> Order

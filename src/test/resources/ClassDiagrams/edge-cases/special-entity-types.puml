@@ -1,0 +1,17 @@
+@startuml
+class User
+class Order
+class Payment
+
+diamond PaymentAssociation
+User -- PaymentAssociation
+PaymentAssociation -- Payment
+
+circle UserInterface
+UserInterface -- User
+
+class Service
+class Client
+Service --() IService
+Client --> IService
+@enduml

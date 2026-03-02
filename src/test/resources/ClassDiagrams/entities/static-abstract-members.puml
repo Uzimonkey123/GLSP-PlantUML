@@ -1,0 +1,16 @@
+@startuml
+abstract class AbstractClass {
+    {static} +CONSTANT: String = "value"
+    {static} -counter: int
+
+    {abstract} +abstractMethod(): void
+    {static} +staticMethod(): int
+
+    +normalMethod(): void
+}
+
+class ConcreteClass extends AbstractClass {
+    {static} +getInstance(): ConcreteClass
+    +abstractMethod(): void
+}
+@enduml

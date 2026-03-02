@@ -1,0 +1,47 @@
+@startuml
+title Self-Referencing Structures
+
+class TreeNode<T> {
+    -value: T
+    -parent: TreeNode<T>
+    -children: List<TreeNode<T>>
+    +addChild(node: TreeNode<T>): void
+    +removeChild(node: TreeNode<T>): void
+    +getRoot(): TreeNode<T>
+}
+
+TreeNode "1" --> "0..1" TreeNode : parent
+TreeNode "1" --> "*" TreeNode : children
+
+class Employee {
+    -name: String
+    -manager: Employee
+    -subordinates: List<Employee>
+    +getManager(): Employee
+    +addSubordinate(emp: Employee): void
+}
+
+Employee "0..*" --o "0..1" Employee : reports to
+
+class LinkedListNode<T> {
+    -data: T
+    -next: LinkedListNode<T>
+    -prev: LinkedListNode<T>
+}
+
+LinkedListNode --> LinkedListNode : next
+LinkedListNode --> LinkedListNode : prev
+
+class Category {
+    -name: String
+    -parent: Category
+    -subcategories: Set<Category>
+}
+
+Category "*" --* "0..1" Category : parent
+
+note right of TreeNode
+    Generic tree structure
+    with parent reference
+end note
+@enduml

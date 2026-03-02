@@ -1,0 +1,27 @@
+@startuml
+class "Class With Spaces" as CWS
+class "Class-With-Dashes" as CWD
+class "Class_With_Underscores"
+
+class GenericClass<T> {
+    +value: T
+    +getValue(): T
+}
+
+class MultiGeneric<K, V> {
+    +get(key: K): V
+}
+
+class EmptyClass
+
+class Controller <<Controller>> {
+    +handle(): void
+}
+
+class Service <<Service>> <<Singleton>>
+
+class RedClass #Red
+class BlueClass #0000FF
+
+A -[hidden]-> B
+@enduml

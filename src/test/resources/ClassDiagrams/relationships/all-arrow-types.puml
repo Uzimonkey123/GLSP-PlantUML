@@ -1,0 +1,29 @@
+@startuml
+class A
+class B
+class C
+class D
+class E
+class F
+class G
+class H
+class I
+class J
+
+A --> B : arrow
+A -- C : line
+A --o D : aggregation
+A --* E : composition
+
+A ..> F : dependency
+A .. G : dashed
+A ..|> H : realization
+
+A --|> I : extends
+A <|-- J : reverse extends
+
+' Different lengths
+K --> L
+K ---> M
+K ----> N
+@enduml

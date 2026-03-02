@@ -1,0 +1,25 @@
+@startuml
+class Person {
+    +name: String
+    +age: int
+}
+
+interface Runnable {
+    +run(): void
+}
+
+abstract class Animal {
+    #species: String
+    +makeSound(): void
+}
+
+enum Color {
+    RED
+    GREEN
+    BLUE
+}
+
+annotation Deprecated {
+    since: String
+}
+@enduml

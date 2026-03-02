@@ -1,0 +1,21 @@
+@startuml
+package "Domain Model" {
+    class User {
+        +id: long
+        +name: String
+    }
+    
+    class Order {
+        +orderId: String
+        +total: double
+    }
+}
+
+package "Services" {
+    class UserService {
+        +findUser(): User
+    }
+}
+
+UserService --> User
+@enduml

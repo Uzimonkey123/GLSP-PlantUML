@@ -1,0 +1,23 @@
+@startuml
+package com.example {
+    package domain {
+        class Entity
+        class ValueObject
+    }
+    
+    package service {
+        package impl {
+            class ServiceImpl
+        }
+        interface Service
+    }
+    
+    package repository {
+        interface Repository
+    }
+}
+
+Service <|.. ServiceImpl
+ServiceImpl --> Repository
+Repository --> Entity
+@enduml

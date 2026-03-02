@@ -1,0 +1,25 @@
+@startuml
+class User {
+    +name: String
+    +email: String
+}
+
+note left of User #Pink
+    Pink colored note
+end note
+
+note right of User #LightBlue : Blue inline note
+
+note top of User : Top note
+
+note bottom of User
+    Bottom note with
+    multiple lines
+end note
+
+note "Floating note with alias" as N1 #Yellow
+
+class Order
+
+N1 .. Order
+@enduml

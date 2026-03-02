@@ -1,0 +1,10 @@
+@startuml
+class Order
+class OrderLine
+class Product
+class Customer
+
+Customer "1" -- "0..*" Order : places >
+Order "1" *-- "1..*" OrderLine : contains
+OrderLine "0..*" --> "1" Product : references
+@enduml

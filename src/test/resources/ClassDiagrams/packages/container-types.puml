@@ -1,0 +1,36 @@
+@startuml
+package "Standard Package" {
+    class A
+}
+
+node "Server Node" {
+    class B
+}
+
+database "Database" {
+    class C
+}
+
+cloud "Cloud Service" {
+    class D
+}
+
+frame "Application Frame" {
+    class E
+}
+
+rectangle "Rectangle Container" {
+    class F
+}
+
+folder "Folder Container" {
+    class G
+}
+
+A --> B
+B --> C
+C --> D
+D --> E
+E --> F
+F --> G
+@enduml

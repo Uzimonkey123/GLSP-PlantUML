@@ -1,0 +1,14 @@
+@startuml
+class Center
+class Top
+class Bottom
+class Left
+class Right
+
+Center -up-> Top : up
+Center -down-> Bottom : down
+Center -left-> Left : left
+Center -right-> Right : right
+
+Top -[hidden]-> Bottom
+@enduml

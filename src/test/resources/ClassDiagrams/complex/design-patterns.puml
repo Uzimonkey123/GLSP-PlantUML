@@ -1,0 +1,99 @@
+@startuml
+title Design Patterns Example
+
+package "Singleton" #AliceBlue {
+    class DatabaseConnection << (S,#FF7700) Singleton >> {
+        {static} -instance: DatabaseConnection
+        -connection: Connection
+        -DatabaseConnection()
+        {static} +getInstance(): DatabaseConnection
+        +getConnection(): Connection
+    }
+}
+
+package "Factory" #MistyRose {
+    interface Vehicle {
+        +drive(): void
+        +getType(): String
+    }
+
+    class Car implements Vehicle {
+        +drive(): void
+        +getType(): String
+    }
+
+    class Motorcycle implements Vehicle {
+        +drive(): void
+        +getType(): String
+    }
+
+    class VehicleFactory {
+        +createVehicle(type: String): Vehicle
+    }
+
+    VehicleFactory ..> Vehicle : creates
+    VehicleFactory ..> Car : creates
+    VehicleFactory ..> Motorcycle : creates
+}
+
+package "Observer" #Honeydew {
+    interface Observer {
+        +update(message: String): void
+    }
+
+    interface Subject {
+        +attach(observer: Observer): void
+        +detach(observer: Observer): void
+        +notifyObservers(): void
+    }
+
+    class ConcreteSubject implements Subject {
+        -observers: List<Observer>
+        -state: String
+        +attach(observer: Observer): void
+        +detach(observer: Observer): void
+        +notifyObservers(): void
+        +setState(state: String): void
+    }
+
+    class ConcreteObserver implements Observer {
+        -name: String
+        +update(message: String): void
+    }
+
+    ConcreteSubject "1" --> "*" Observer : notifies
+}
+
+package "Strategy" #LavenderBlush {
+    interface PaymentStrategy {
+        +pay(amount: double): boolean
+    }
+
+    class CreditCardPayment implements PaymentStrategy {
+        -cardNumber: String
+        +pay(amount: double): boolean
+    }
+
+    class PayPalPayment implements PaymentStrategy {
+        -email: String
+        +pay(amount: double): boolean
+    }
+
+    class ShoppingCart {
+        -items: List<Item>
+        -paymentStrategy: PaymentStrategy
+        +setPaymentStrategy(strategy: PaymentStrategy): void
+        +checkout(): boolean
+    }
+
+    ShoppingCart o--> PaymentStrategy : uses
+}
+
+note bottom of DatabaseConnection
+    Thread-safe lazy
+    initialization
+end note
+
+note "Factory creates appropriate\nvehicle type at runtime" as N1
+VehicleFactory .. N1
+@enduml

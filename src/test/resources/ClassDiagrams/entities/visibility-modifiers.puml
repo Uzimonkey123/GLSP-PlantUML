@@ -1,0 +1,13 @@
+@startuml
+class VisibilityTest {
+    -privateField: String
+    #protectedField: int
+    ~packageField: double
+    +publicField: boolean
+    
+    -privateMethod(): void
+    #protectedMethod(): String
+    ~packageMethod(): int
+    +publicMethod(): boolean
+}
+@enduml

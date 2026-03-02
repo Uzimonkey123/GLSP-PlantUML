@@ -1,0 +1,21 @@
+@startuml
+' Single line comment
+class A
+
+/' Multi-line
+   comment block '/
+
+class B
+
+class C {
+    ' Comment inside class
+    +field: String
+    /' Another
+       multiline '/
+    +method(): void
+}
+
+A --> B
+' Comment between elements
+B --> C
+@enduml

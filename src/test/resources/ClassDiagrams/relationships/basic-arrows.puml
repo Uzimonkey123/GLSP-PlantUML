@@ -1,0 +1,14 @@
+@startuml
+class A
+class B
+class C
+class D
+class E
+class F
+
+A --> B : association
+A --o C : aggregation
+A --* D : composition
+A --|> E : inheritance
+A ..|> F : implementation
+@enduml

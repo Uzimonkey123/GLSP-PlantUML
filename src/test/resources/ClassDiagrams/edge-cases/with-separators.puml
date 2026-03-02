@@ -1,0 +1,17 @@
+@startuml
+class MyClass {
+    .. Fields ..
+    -privateField: String
+    #protectedField: int
+    ~packageField: double
+    +publicField: boolean
+    ==
+    .. Methods ..
+    +publicMethod(): void
+    #protectedMethod(): String
+    --
+    .. Static ..
+    {static} +getInstance(): MyClass
+    {abstract} +abstractMethod(): void
+}
+@enduml

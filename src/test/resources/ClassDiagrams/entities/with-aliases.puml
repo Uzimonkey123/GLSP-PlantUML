@@ -1,0 +1,16 @@
+@startuml
+class "User Account" as UserAccount {
+    +username: String
+    +email: String
+}
+
+class "Shopping Cart" as Cart {
+    +items: List
+    +total: double
+}
+
+interface "Data Access Object" as DAO {
+    +save(): void
+    +find(): Object
+}
+@enduml

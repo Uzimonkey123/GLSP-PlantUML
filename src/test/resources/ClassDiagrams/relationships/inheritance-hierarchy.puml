@@ -1,0 +1,26 @@
+@startuml
+interface Drawable {
+    +draw(): void
+}
+
+abstract class Shape implements Drawable {
+    #x: int
+    #y: int
+    +move(dx: int, dy: int): void
+}
+
+class Circle extends Shape {
+    -radius: double
+    +getArea(): double
+}
+
+class Rectangle extends Shape {
+    -width: double
+    -height: double
+    +getArea(): double
+}
+
+class Square extends Rectangle {
+    +getSide(): double
+}
+@enduml
