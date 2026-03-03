@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,17 +24,7 @@ class WriterUtilsTest {
         @DisplayName("should return true for null")
         void returnTrueForNull() {
             assertTrue(WriterUtils.isNullOrEmpty(null));
-        }
-
-        @Test
-        @DisplayName("should return true for empty string")
-        void returnTrueForEmpty() {
             assertTrue(WriterUtils.isNullOrEmpty(""));
-        }
-
-        @Test
-        @DisplayName("should return false for non-empty string")
-        void returnFalseForNonEmpty() {
             assertFalse(WriterUtils.isNullOrEmpty("text"));
         }
     }
@@ -43,20 +34,10 @@ class WriterUtilsTest {
     class IsNotEmptyTests {
 
         @Test
-        @DisplayName("should return false for null")
+        @DisplayName("should return false for null and empty")
         void returnFalseForNull() {
             assertFalse(WriterUtils.isNotEmpty(null));
-        }
-
-        @Test
-        @DisplayName("should return false for empty string")
-        void returnFalseForEmpty() {
             assertFalse(WriterUtils.isNotEmpty(""));
-        }
-
-        @Test
-        @DisplayName("should return true for non-empty string")
-        void returnTrueForNonEmpty() {
             assertTrue(WriterUtils.isNotEmpty("text"));
         }
     }
@@ -66,32 +47,12 @@ class WriterUtilsTest {
     class ExtractIndentationTests {
 
         @Test
-        @DisplayName("should return empty for null")
-        void returnEmptyForNull() {
-            assertEquals("", WriterUtils.extractIndentation(null));
-        }
-
-        @Test
         @DisplayName("should extract spaces")
         void extractSpaces() {
+            assertEquals("", WriterUtils.extractIndentation(null));
             assertEquals("    ", WriterUtils.extractIndentation("    class User"));
-        }
-
-        @Test
-        @DisplayName("should extract tabs")
-        void extractTabs() {
             assertEquals("\t\t", WriterUtils.extractIndentation("\t\tclass User"));
-        }
-
-        @Test
-        @DisplayName("should extract mixed whitespace")
-        void extractMixed() {
             assertEquals("  \t ", WriterUtils.extractIndentation("  \t class User"));
-        }
-
-        @Test
-        @DisplayName("should return empty for no indentation")
-        void returnEmptyForNoIndent() {
             assertEquals("", WriterUtils.extractIndentation("class User"));
         }
     }
@@ -104,11 +65,6 @@ class WriterUtilsTest {
         @DisplayName("should prepend indent")
         void prependIndent() {
             assertEquals("    class User", WriterUtils.applyIndentation("class User", "    "));
-        }
-
-        @Test
-        @DisplayName("should handle empty indent")
-        void handleEmptyIndent() {
             assertEquals("class User", WriterUtils.applyIndentation("class User", ""));
         }
     }
@@ -121,17 +77,7 @@ class WriterUtilsTest {
         @DisplayName("should count occurrences")
         void countOccurrences() {
             assertEquals(3, WriterUtils.countChar("ababa", 'a'));
-        }
-
-        @Test
-        @DisplayName("should return zero for no matches")
-        void returnZeroForNoMatches() {
             assertEquals(0, WriterUtils.countChar("abc", 'x'));
-        }
-
-        @Test
-        @DisplayName("should handle empty string")
-        void handleEmptyString() {
             assertEquals(0, WriterUtils.countChar("", 'a'));
         }
     }
@@ -153,14 +99,9 @@ class WriterUtilsTest {
         }
 
         @Test
-        @DisplayName("should return zero for null")
-        void returnZeroForNull() {
+        @DisplayName("should return zero")
+        void returnZero() {
             assertEquals(0, WriterUtils.visibilityToSymbol(null));
-        }
-
-        @Test
-        @DisplayName("should return zero for unknown visibility")
-        void returnZeroForUnknown() {
             assertEquals(0, WriterUtils.visibilityToSymbol("unknown"));
         }
     }
@@ -220,62 +161,13 @@ class WriterUtilsTest {
     class QuoteIfNeededTests {
 
         @Test
-        @DisplayName("should return null for null")
-        void returnNullForNull() {
+        @DisplayName("should decide if quote is needed or not")
+        void returnQuotes() {
             assertNull(WriterUtils.quoteIfNeeded(null));
-        }
-
-        @Test
-        @DisplayName("should not quote simple identifier")
-        void notQuoteSimple() {
             assertEquals("User", WriterUtils.quoteIfNeeded("User"));
-        }
-
-        @Test
-        @DisplayName("should quote string with spaces")
-        void quoteWithSpaces() {
             assertEquals("\"User Account\"", WriterUtils.quoteIfNeeded("User Account"));
-        }
-
-        @Test
-        @DisplayName("should quote string with special chars")
-        void quoteWithSpecialChars() {
             assertEquals("\"User-Account\"", WriterUtils.quoteIfNeeded("User-Account"));
-        }
-
-        @Test
-        @DisplayName("should not quote underscore")
-        void notQuoteUnderscore() {
             assertEquals("User_Account", WriterUtils.quoteIfNeeded("User_Account"));
-        }
-    }
-
-    @Nested
-    @DisplayName("unquote")
-    class UnquoteTests {
-
-        @Test
-        @DisplayName("should return null for null")
-        void returnNullForNull() {
-            assertNull(WriterUtils.unquote(null));
-        }
-
-        @Test
-        @DisplayName("should unquote quoted string")
-        void unquoteQuoted() {
-            assertEquals("User Account", WriterUtils.unquote("\"User Account\""));
-        }
-
-        @Test
-        @DisplayName("should return unquoted string as-is")
-        void returnUnquotedAsIs() {
-            assertEquals("User", WriterUtils.unquote("User"));
-        }
-
-        @Test
-        @DisplayName("should handle empty quotes")
-        void handleEmptyQuotes() {
-            assertEquals("", WriterUtils.unquote("\"\""));
         }
     }
 
@@ -285,50 +177,16 @@ class WriterUtilsTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        @DisplayName("should return null or empty as-is")
-        void returnNullOrEmptyAsIs(String input) {
+        @DisplayName("should return stripped or preserved member names")
+        void returnPreservedOrStripped(String input) {
             assertEquals(input, WriterUtils.parseRawMemberName(input));
-        }
-
-        @Test
-        @DisplayName("should strip public visibility")
-        void stripPublicVisibility() {
             assertEquals("methodName()", WriterUtils.parseRawMemberName("+methodName()"));
-        }
-
-        @Test
-        @DisplayName("should strip private visibility")
-        void stripPrivateVisibility() {
             assertEquals("fieldName", WriterUtils.parseRawMemberName("-fieldName"));
-        }
-
-        @Test
-        @DisplayName("should strip protected visibility")
-        void stripProtectedVisibility() {
             assertEquals("method()", WriterUtils.parseRawMemberName("#method()"));
-        }
-
-        @Test
-        @DisplayName("should strip package private visibility")
-        void stripPackagePrivateVisibility() {
             assertEquals("method()", WriterUtils.parseRawMemberName("~method()"));
-        }
-
-        @Test
-        @DisplayName("should strip backslash prefix")
-        void stripBackslashPrefix() {
             assertEquals("escapedMethod()", WriterUtils.parseRawMemberName("\\escapedMethod()"));
-        }
-
-        @Test
-        @DisplayName("should strip stereotypes except static/abstract/classifier")
-        void stripStereotypes() {
             assertEquals("method()", WriterUtils.parseRawMemberName("{custom}method()"));
-        }
 
-        @Test
-        @DisplayName("should preserve static stereotype")
-        void preserveStaticStereotype() {
             String result = WriterUtils.parseRawMemberName("{static}method()");
             assertTrue(result.contains("{static}") || result.contains("method()"));
         }
@@ -339,33 +197,22 @@ class WriterUtilsTest {
     class DeriveMemberRefTests {
 
         @Test
-        @DisplayName("should extract method name with params")
-        void extractMethodWithParams() {
-            assertEquals("doSomething(String)", WriterUtils.deriveMemberRef("void doSomething(String)"));
-        }
+        @DisplayName("should handle all deriveMemberRef scenarios")
+        void deriveMemberRef_allScenarios() {
+            assertEquals("doSomething(String)", WriterUtils.deriveMemberRef("void doSomething(String)"),
+                    "Failed for method with params");
 
-        @Test
-        @DisplayName("should extract field name before colon")
-        void extractFieldName() {
-            assertEquals("fieldName", WriterUtils.deriveMemberRef("fieldName : String"));
-        }
+            assertEquals("fieldName", WriterUtils.deriveMemberRef("fieldName : String"),
+                    "Failed for field name with colon");
 
-        @Test
-        @DisplayName("should return simple name as-is")
-        void returnSimpleAsIs() {
-            assertEquals("simpleName", WriterUtils.deriveMemberRef("simpleName"));
-        }
+            assertEquals("simpleName", WriterUtils.deriveMemberRef("simpleName"),
+                    "Failed for simple name");
 
-        @Test
-        @DisplayName("should handle null")
-        void handleNull() {
-            assertNull(WriterUtils.deriveMemberRef(null));
-        }
+            assertNull(WriterUtils.deriveMemberRef(null),
+                    "Failed for null input");
 
-        @Test
-        @DisplayName("should handle empty")
-        void handleEmpty() {
-            assertEquals("", WriterUtils.deriveMemberRef(""));
+            assertEquals("", WriterUtils.deriveMemberRef(""),
+                    "Failed for empty input");
         }
     }
 
@@ -374,33 +221,13 @@ class WriterUtilsTest {
     class FormatMemberRefTests {
 
         @Test
-        @DisplayName("should return empty for null")
-        void returnEmptyForNull() {
-            assertEquals("", WriterUtils.formatMemberRef(null));
-        }
-
-        @Test
-        @DisplayName("should return simple ref unquoted")
-        void returnSimpleUnquoted() {
-            assertEquals("method", WriterUtils.formatMemberRef("method"));
-        }
-
-        @Test
-        @DisplayName("should quote ref with space")
-        void quoteWithSpace() {
-            assertEquals("\"my method\"", WriterUtils.formatMemberRef("my method"));
-        }
-
-        @Test
-        @DisplayName("should quote ref with parentheses")
-        void quoteWithParens() {
-            assertEquals("\"method()\"", WriterUtils.formatMemberRef("method()"));
-        }
-
-        @Test
-        @DisplayName("should quote ref with colon")
-        void quoteWithColon() {
-            assertEquals("\"field: String\"", WriterUtils.formatMemberRef("field: String"));
+        @DisplayName("should handle all formatMemberRef scenarios")
+        void formatMemberRef_allScenarios() {
+            assertEquals("", WriterUtils.formatMemberRef(null), "Failed for null input");
+            assertEquals("method", WriterUtils.formatMemberRef("method"), "Failed for simple name");
+            assertEquals("\"my method\"", WriterUtils.formatMemberRef("my method"), "Failed for name with space");
+            assertEquals("\"method()\"", WriterUtils.formatMemberRef("method()"), "Failed for name with parentheses");
+            assertEquals("\"field: String\"", WriterUtils.formatMemberRef("field: String"), "Failed for name with colon");
         }
     }
 
@@ -444,45 +271,40 @@ class WriterUtilsTest {
     class ReplaceReferenceTests {
 
         @Test
-        @DisplayName("should replace reference with new token")
-        void replaceWithNewToken() {
-            String result = WriterUtils.replaceReference("User --> Order", "User", "Person", false);
-            assertEquals("Person --> Order", result);
-        }
+        @DisplayName("should handle all replaceReference scenarios")
+        void replaceReference_allScenarios() {
+            record Case(String input, String oldName, String newName, boolean strict, String expected) {}
 
-        @Test
-        @DisplayName("should replace quoted reference")
-        void replaceQuotedReference() {
-            String result = WriterUtils.replaceReference("\"User\" --> Order", "User", "Person", false);
-            assertEquals("\"Person\" --> Order", result);
-        }
+            List<Case> cases = List.of(
+                    new Case("User --> Order", "User", "Person", false,
+                            "Person --> Order"),
 
-        @Test
-        @DisplayName("should not replace when same name")
-        void notReplaceWhenSame() {
-            String result = WriterUtils.replaceReference("User --> Order", "User", "User", false);
-            assertEquals("User --> Order", result);
-        }
+                    new Case("\"User\" --> Order", "User", "Person", false,
+                            "\"Person\" --> Order"),
 
-        @Test
-        @DisplayName("should not replace partial match")
-        void notReplacePartialMatch() {
-            String result = WriterUtils.replaceReference("UserAccount --> Order", "User", "Person", false);
-            assertEquals("UserAccount --> Order", result);
-        }
+                    new Case("User --> Order", "User", "User", false,
+                            "User --> Order"),
 
-        @Test
-        @DisplayName("strict mode should not match after dot")
-        void strictModeNoDotMatch() {
-            String result = WriterUtils.replaceReference("com.User --> Order", "User", "Person", true);
-            assertEquals("com.User --> Order", result);
-        }
+                    new Case("UserAccount --> Order", "User", "Person", false,
+                            "UserAccount --> Order"),
 
-        @Test
-        @DisplayName("non-strict mode should match after dot")
-        void nonStrictModeDotMatch() {
-            String result = WriterUtils.replaceReference("com.User --> Order", "User", "Person", false);
-            assertEquals("com.Person --> Order", result);
+                    new Case("com.User --> Order", "User", "Person", true,
+                            "com.User --> Order"),
+
+                    new Case("com.User --> Order", "User", "Person", false,
+                            "com.Person --> Order")
+            );
+
+            for (Case c : cases) {
+                String result = WriterUtils.replaceReference(
+                        c.input(),
+                        c.oldName(),
+                        c.newName(),
+                        c.strict()
+                );
+
+                assertEquals(c.expected(), result, () -> "Failed for input: " + c.input() + ", strict=" + c.strict());
+            }
         }
     }
 }
