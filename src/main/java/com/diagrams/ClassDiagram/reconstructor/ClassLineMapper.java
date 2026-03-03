@@ -113,6 +113,8 @@ public class ClassLineMapper {
         if (trimmed.startsWith("'")) return LineType.COMMENT;
         if (trimmed.startsWith("/'") && trimmed.endsWith("'/")) return LineType.COMMENT;
 
+        if (containsClassArrow(trimmed)) return LineType.RELATIONSHIP;
+
         String lo = trimmed.toLowerCase();
         switch (lo) {
             case "@startuml" -> { return LineType.START_UML; }

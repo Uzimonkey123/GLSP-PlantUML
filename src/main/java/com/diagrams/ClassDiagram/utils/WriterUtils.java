@@ -64,7 +64,7 @@ public final class WriterUtils {
                 i = idx + oldWord.length();
 
             } else {
-                result.append(text.charAt(idx));
+                result.append(text, i, idx + 1);
                 i = idx + 1;
             }
         }

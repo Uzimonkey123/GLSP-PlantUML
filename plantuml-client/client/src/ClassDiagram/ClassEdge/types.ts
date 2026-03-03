@@ -3,7 +3,7 @@ import { GEdge, GNode, IViewArgs, Point, RenderingContext } from '@eclipse-glsp/
 export const EDGE_CONFIG = {
     handle: {radius: 5, hitRadius: 10},
     parallel: {spacing: 15},
-    selfLoop: {maxSpread: 20, minBulge: 60, bulgeRatio: 0.8},
+    selfLoop: {maxSpread: 25, maxBulge: 40, minBulge: 20},
     curve: {offsetRatio: 0.3},
     qualifier: {padding: 4, lineHeight: 14, charWidth: 6.5, gap: 0},
     noteLink: {baseWidth: 12},
@@ -48,6 +48,8 @@ export interface ClassEdgeArgs {
     targetQualifier?: string;
     parallelIndex?: number;
     parallelTotal?: number;
+    selfLoopIndex?: number;
+    selfLoopTotal?: number;
 }
 
 export interface LinkRenderContext {
@@ -57,14 +59,6 @@ export interface LinkRenderContext {
     args: ClassEdgeArgs;
     renderingContext: RenderingContext;
     viewArgs?: IViewArgs;
-}
-
-export interface CurveData {
-    path: string;
-    startTangent: Point;
-    endTangent: Point;
-    controlPoint1: Point;
-    controlPoint2: Point;
 }
 
 export function getEdgeArgs(edge: GEdge): ClassEdgeArgs {
@@ -81,6 +75,8 @@ export function getEdgeArgs(edge: GEdge): ClassEdgeArgs {
         targetQualifier: args.targetQualifier,
         parallelIndex: args.parallelIndex,
         parallelTotal: args.parallelTotal,
+        selfLoopIndex: args.selfLoopIndex,
+        selfLoopTotal: args.selfLoopTotal,
     };
 }
 

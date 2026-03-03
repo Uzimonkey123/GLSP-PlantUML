@@ -73,7 +73,7 @@ function wrapInEdgeGroup(children: VNode[]): VNode {
 }
 
 function renderSelfLoop(ctx: LinkRenderContext): VNode {
-    const {source, args} = ctx;
+    const {edge, source, args} = ctx;
     const additionals: VNode[] = [];
 
     const x = source.position.x;
@@ -81,26 +81,48 @@ function renderSelfLoop(ctx: LinkRenderContext): VNode {
     const width = source.size.width;
     const height = source.size.height;
 
-    const spread = Math.min(height * 0.25, EDGE_CONFIG.selfLoop.maxSpread);
-    const anchorY1 = y + (args.sourceMember ? CurvedEdgeRenderer.getMemberYOffset(source, args.sourceMember) : height / 2 - spread);
-    const anchorY2 = y + (args.targetMember ? CurvedEdgeRenderer.getMemberYOffset(source, args.targetMember) : height / 2 + spread);
+    const index = args.selfLoopIndex ?? 0;
+    const total = args.selfLoopTotal ?? 1;
+
+    const messageLabel = edge.children?.find(child => child.type === 'label:link') as any;
+    const messageText = messageLabel?.text ?? '';
+    const charWidth = 7;
+    const labelPadding = 12;
+    const labelWidth = messageText.length > 0
+        ? messageText.length * charWidth + labelPadding
+        : 40;
+
+    const baseBulge = 25;
+    const bulgeSpacing = labelWidth + 8;
+    const bulge = baseBulge + (total - 1 - index) * bulgeSpacing;
+
+    const baseSpread = Math.min(height * 0.15, 12);
+    const spreadStep = 8;
+    const spread = baseSpread + (total - 1 - index) * spreadStep;
+
+    const centerY = y + height / 2;
+    const anchorY1 = args.sourceMember
+        ? y + CurvedEdgeRenderer.getMemberYOffset(source, args.sourceMember)
+        : centerY - spread;
+    const anchorY2 = args.targetMember
+        ? y + CurvedEdgeRenderer.getMemberYOffset(source, args.targetMember)
+        : centerY + spread;
     const anchorX = x + width;
 
     const start: Point = {x: anchorX, y: anchorY1};
     const end: Point = {x: anchorX, y: anchorY2};
 
-    const bulge = Math.max(width * EDGE_CONFIG.selfLoop.bulgeRatio, EDGE_CONFIG.selfLoop.minBulge);
     const controlPoint1: Point = {x: anchorX + bulge, y: anchorY1};
     const controlPoint2: Point = {x: anchorX + bulge, y: anchorY2};
 
     const startTangentX = controlPoint1.x - start.x;
     const startTangentY = controlPoint1.y - start.y;
-    const startTangentLen = Math.sqrt(startTangentX ** 2 + startTangentY ** 2);
+    const startTangentLen = Math.hypot(startTangentX, startTangentY) || 1;
     const startAngle = Math.atan2(startTangentY, startTangentX) * 180 / Math.PI;
 
     const endTangentX = end.x - controlPoint2.x;
     const endTangentY = end.y - controlPoint2.y;
-    const endTangentLen = Math.sqrt(endTangentX ** 2 + endTangentY ** 2);
+    const endTangentLen = Math.hypot(endTangentX, endTangentY) || 1;
     const endAngle = Math.atan2(endTangentY, endTangentX) * 180 / Math.PI;
 
     const startHeadSize = ArrowHeadRenderer.getSize(args.headStart) * args.thickness;

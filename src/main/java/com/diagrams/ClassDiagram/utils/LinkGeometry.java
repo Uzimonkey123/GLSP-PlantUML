@@ -258,6 +258,90 @@ public class LinkGeometry {
         }
     }
 
+    public class SelfLoopEdge implements EdgeGeometry {
+        private final GeometryUtils.Point startAnchor;
+        private final GeometryUtils.Point endAnchor;
+        private final GeometryUtils.Point controlPoint1;
+        private final GeometryUtils.Point controlPoint2;
+        private final double bulge;
+        private final int index;
+        private final int totalCount;
+
+        public SelfLoopEdge(ClassLink link, ClassLayout.Size size, int index, int totalCount) {
+            this.index = index;
+            this.totalCount = totalCount;
+
+            ClassEntity entity = link.getEntity1();
+            double x = entity.getX();
+            double y = entity.getY();
+            double width = size.width;
+            double height = size.height;
+
+            String message = link.getMessage() != null ? link.getMessage().getLabel() : "";
+            double charWidth = 7;
+            double labelPadding = 12;
+            double labelWidth = !message.isEmpty()
+                    ? message.length() * charWidth + labelPadding
+                    : 40;
+
+            double baseBulge = 25;
+            double bulgeSpacing = labelWidth + 8;
+            this.bulge = baseBulge + (totalCount - 1 - index) * bulgeSpacing;
+
+            double baseSpread = Math.min(height * 0.15, 12);
+            double spreadStep = 8;
+            double spread = baseSpread + (totalCount - 1 - index) * spreadStep;
+
+            double centerY = y + height / 2;
+            double anchorY1 = centerY - spread;
+            double anchorY2 = centerY + spread;
+            double anchorX = x + width;
+
+            this.startAnchor = new GeometryUtils.Point(anchorX, anchorY1);
+            this.endAnchor = new GeometryUtils.Point(anchorX, anchorY2);
+            this.controlPoint1 = new GeometryUtils.Point(anchorX + bulge, anchorY1);
+            this.controlPoint2 = new GeometryUtils.Point(anchorX + bulge, anchorY2);
+        }
+
+        @Override
+        public GeometryUtils.Point getLabelPosition(int messageLengthChars) {
+            double midY = (startAnchor.y() + endAnchor.y()) / 2;
+            double labelX = startAnchor.x() + bulge - (bulge - 25) / 2;
+
+            return new GeometryUtils.Point(labelX, midY);
+        }
+
+        @Override
+        public GeometryUtils.Point getQuantifierPosition(boolean isSource, double headSize) {
+            GeometryUtils.Point anchor = isSource ? startAnchor : endAnchor;
+            double offsetX = Math.min(bulge * 0.4, 20);
+            double offsetY = isSource ? -10 : 10;
+
+            return new GeometryUtils.Point(anchor.x() + offsetX, anchor.y() + offsetY);
+        }
+
+        @Override
+        public GeometryUtils.Point getMidpoint() {
+            double midY = (startAnchor.y() + endAnchor.y()) / 2;
+
+            return new GeometryUtils.Point(controlPoint1.x(), midY);
+        }
+
+        @Override
+        public GeometryUtils.Vector getDirection() {
+            return new GeometryUtils.Vector(0, 1);
+        }
+
+        @Override
+        public double getLinkXAtY(double y) {
+            return controlPoint1.x();
+        }
+    }
+
+    public EdgeGeometry createSelfLoop(ClassLink link, ClassLayout.Size size, int index, int totalCount) {
+        return new SelfLoopEdge(link, size, index, totalCount);
+    }
+
     public EdgeGeometry create(ClassLink link, ClassLayout.Size srcSize, ClassLayout.Size tgtSize) {
         boolean hasMembers = (link.getSourceMember() != null && !link.getSourceMember().isEmpty())
                 || (link.getTargetMember() != null && !link.getTargetMember().isEmpty());

@@ -33,6 +33,8 @@ public class ClassLinkFactory {
     private final NoteCalculator noteCalculator;
 
     private final Map<String, List<ClassLink>> parallelGroups = new HashMap<>();
+    private final Map<String, List<ClassLink>> selfLoopGroups = new HashMap<>();
+
 
     public ClassLinkFactory(ClassModel model, List<GModelElement> elements,
                             ClassEntityFactory entityFactory, EntityBuild entityBuild) {
@@ -59,6 +61,12 @@ public class ClassLinkFactory {
                     gEdge.getArgs().put("parallelTotal", pInfo[1]);
                 }
 
+                int[] selfLoopInfo = getSelfLoopInfo(link);
+                if (selfLoopInfo != null && element instanceof GEdge gEdge) {
+                    gEdge.getArgs().put("selfLoopIndex", selfLoopInfo[0]);
+                    gEdge.getArgs().put("selfLoopTotal", selfLoopInfo[1]);
+                }
+
                 elements.add(element);
             }
         }
@@ -72,15 +80,23 @@ public class ClassLinkFactory {
 
     private void buildParallelGroups() {
         parallelGroups.clear();
+        selfLoopGroups.clear();
 
         for (ClassLink link : model.links) {
             if (link.getType().equals("INVISIBLE")) continue;
+            if (link.getEntity1() == null || link.getEntity2() == null) continue;
+
+            if (link.getEntity1().getId().equals(link.getEntity2().getId())) {
+                String entityId = link.getEntity1().getId();
+                selfLoopGroups.computeIfAbsent(entityId, k -> new ArrayList<>()).add(link);
+
+                continue;
+            }
 
             boolean hasMembers = (link.getSourceMember() != null && !link.getSourceMember().isEmpty())
                     || (link.getTargetMember() != null && !link.getTargetMember().isEmpty());
 
             if (hasMembers) continue;
-            if (link.getEntity1() == null || link.getEntity2() == null) continue;
 
             String key = canonicalPairKey(link.getEntity1().getId(), link.getEntity2().getId());
             parallelGroups.computeIfAbsent(key, k -> new ArrayList<>()).add(link);
@@ -97,11 +113,25 @@ public class ClassLinkFactory {
 
         if (hasMembers) return null;
         if (link.getEntity1() == null || link.getEntity2() == null) return null;
+        if (link.getEntity1().getId().equals(link.getEntity2().getId())) return null;
 
         String key = canonicalPairKey(link.getEntity1().getId(), link.getEntity2().getId());
         List<ClassLink> group = parallelGroups.get(key);
 
         if (group == null || group.size() <= 1) return null;
+
+        int index = group.indexOf(link);
+        return new int[]{ index, group.size() };
+    }
+
+    private int[] getSelfLoopInfo(ClassLink link) {
+        if (link.getEntity1() == null || link.getEntity2() == null) return null;
+        if (!link.getEntity1().getId().equals(link.getEntity2().getId())) return null;
+
+        String entityId = link.getEntity1().getId();
+        List<ClassLink> group = selfLoopGroups.get(entityId);
+
+        if (group == null) return null;
 
         int index = group.indexOf(link);
         return new int[]{ index, group.size() };
@@ -350,9 +380,17 @@ public class ClassLinkFactory {
         if (link.getEntity1() == null || link.getEntity2() == null) return null;
 
         ClassLayout.Size srcSize = dimensions.get(link.getEntity1().getId());
-        ClassLayout.Size tgtSize = dimensions.get(link.getEntity2().getId());
+        if (srcSize == null) return null;
 
-        if (srcSize == null || tgtSize == null) return null;
+        if (link.getEntity1().getId().equals(link.getEntity2().getId())) {
+            int[] selfLoopInfo = getSelfLoopInfo(link);
+            int index = selfLoopInfo != null ? selfLoopInfo[0] : 0;
+            int total = selfLoopInfo != null ? selfLoopInfo[1] : 1;
+            return linkGeometry.createSelfLoop(link, srcSize, index, total);
+        }
+
+        ClassLayout.Size tgtSize = dimensions.get(link.getEntity2().getId());
+        if (tgtSize == null) return null;
 
         int[] pInfo = getParallelInfo(link);
         if (pInfo != null) {
