@@ -8,10 +8,12 @@ import {
 import PumlEditorProvider from './editor-provider';
 import { RequestExportSvgAction } from 'sprotty';
 import { SyntaxValidator } from "./syntaxValidation";
+import {RequestModelAction} from "@eclipse-glsp/client";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     let server: SocketGlspVscodeServer | undefined;
     let connector: GlspVscodeConnector | undefined;
+    let provider: PumlEditorProvider | undefined;
 
     validateFile(context);
 
@@ -34,12 +36,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         connector = new GlspVscodeConnector({server, logging: true});
 
         // Registering custom editor provider
-        const provider = new PumlEditorProvider(context, connector);
+        provider = new PumlEditorProvider(context, connector);
         const registration = vscode.window.registerCustomEditorProvider(
             'plantuml.glspDiagram',
             provider,
             {
-                webviewOptions: {retainContextWhenHidden: false},
+                webviewOptions: {retainContextWhenHidden: true},
                 supportsMultipleEditorsPerDocument: false
             }
         );
@@ -81,6 +83,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 'plantuml.glspDiagram',
                 vscode.ViewColumn.Beside
             );
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.workspace.onDidSaveTextDocument(async (document) => {
+            vscode.window.showInformationMessage(`File saved: ${document.languageId}`);
+
+            if (document.languageId === 'plantuml' && connector && provider) {
+                const hasPanel = provider.refreshDiagram(document.uri);
+
+                if (hasPanel) {
+                    setTimeout(() => {
+                        connector!.dispatchAction(RequestModelAction.create({
+                            requestId: '',
+                            options: {
+                                sourceUri: document.uri.toString(),
+                                needsClientLayout: true
+                            }
+                        }));
+                    }, 500);
+                }
+            }
         })
     );
 }
