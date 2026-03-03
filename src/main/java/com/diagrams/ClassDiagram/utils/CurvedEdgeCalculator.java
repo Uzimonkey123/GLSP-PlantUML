@@ -13,6 +13,13 @@ public class CurvedEdgeCalculator {
     private final Map<String, Boolean> curveDirectionMap = new HashMap<>();
 
     public record CurveData(GeometryUtils.Point midPoint, double midTangentX, double midTangentY) {
+        public GeometryUtils.Vector tangent() {
+            return new GeometryUtils.Vector(midTangentX, midTangentY);
+        }
+
+        public GeometryUtils.Vector perpendicular() {
+            return new GeometryUtils.Vector(-midTangentY, midTangentX);
+        }
     }
 
     public double getMemberYOffset(ClassLayout.Size size, boolean hasStereotype,
@@ -102,8 +109,7 @@ public class CurvedEdgeCalculator {
         double sourceCenterY = sourceY + sourceSize.height / 2;
         double targetCenterY = targetY + targetSize.height / 2;
 
-        double dy = targetCenterY - sourceCenterY;
-        double perpX = -dy;
+        double perpX = -(targetCenterY - sourceCenterY);
 
         if (flipCurve) {
             perpX = -perpX;
@@ -113,33 +119,27 @@ public class CurvedEdgeCalculator {
     }
 
     public CurveData calculateCurve(GeometryUtils.Point start, GeometryUtils.Point end, boolean flipDirection) {
-        double dx = end.x() - start.x();
-        double dy = end.y() - start.y();
-        double distance = Math.sqrt(dx * dx + dy * dy);
+        GeometryUtils.Vector dir = new GeometryUtils.Vector(start, end);
+        double distance = start.distanceTo(end);
 
-        double perpX = -dy;
-        double perpY = dx;
+        GeometryUtils.Vector perp = dir.perpendicular();
 
         if (flipDirection) {
-            perpX = -perpX;
-            perpY = -perpY;
+            perp = perp.negate();
         }
 
-        double perpLength = Math.sqrt(perpX * perpX + perpY * perpY);
-        double perpNormX = perpX / perpLength;
-        double perpNormY = perpY / perpLength;
+        GeometryUtils.Vector perpNorm = perp.normalize();
 
         double arcHeightRatio = 0.3;
         double arcHeight = distance * arcHeightRatio;
 
         GeometryUtils.Point cp1 = new GeometryUtils.Point(
-                start.x() + dx * 0.25 + perpNormX * arcHeight,
-                start.y() + dy * 0.25 + perpNormY * arcHeight
+                start.x() + dir.dx() * 0.25 + perpNorm.dx() * arcHeight,
+                start.y() + dir.dy() * 0.25 + perpNorm.dy() * arcHeight
         );
-
         GeometryUtils.Point cp2 = new GeometryUtils.Point(
-                start.x() + dx * 0.75 + perpNormX * arcHeight,
-                start.y() + dy * 0.75 + perpNormY * arcHeight
+                start.x() + dir.dx() * 0.75 + perpNorm.dx() * arcHeight,
+                start.y() + dir.dy() * 0.75 + perpNorm.dy() * arcHeight
         );
 
         double t = 0.5;
@@ -152,7 +152,7 @@ public class CurvedEdgeCalculator {
 
         double midTangentX = 3 * (u*u * (cp1.x() - start.x()) + 2*u*t * (cp2.x() - cp1.x()) + t*t * (end.x() - cp2.x()));
         double midTangentY = 3 * (u*u * (cp1.y() - start.y()) + 2*u*t * (cp2.y() - cp1.y()) + t*t * (end.y() - cp2.y()));
-        double midTangentLength = Math.sqrt(midTangentX * midTangentX + midTangentY * midTangentY);
+        double midTangentLength = Math.hypot(midTangentX, midTangentY);
 
         return new CurveData(
                 midPoint,
@@ -162,35 +162,23 @@ public class CurvedEdgeCalculator {
     }
 
     public GeometryUtils.Point calculateLabelPosition(CurveData curveData, double perpOffset) {
-        double perpX = -curveData.midTangentY;
-        double perpY = curveData.midTangentX;
+        GeometryUtils.Vector perp = curveData.tangent().perpendicular();
 
-        return new GeometryUtils.Point(
-                curveData.midPoint.x() + perpX * perpOffset,
-                curveData.midPoint.y() + perpY * perpOffset
-        );
+        return curveData.midPoint.offset(perp, perpOffset);
     }
 
-    public GeometryUtils.Point calculateQuantifierPosition(GeometryUtils.Point anchorPoint, GeometryUtils.Point startPoint, GeometryUtils.Point endPoint,
+    public GeometryUtils.Point calculateQuantifierPosition(GeometryUtils.Point anchor, GeometryUtils.Point start, GeometryUtils.Point end,
                                                            double headSize, boolean isStart) {
-        double dx = endPoint.x() - startPoint.x();
-        double dy = endPoint.y() - startPoint.y();
-        double length = Math.sqrt(dx * dx + dy * dy);
-
-        double unitX = dx / length;
-        double unitY = dy / length;
-
-        double perpX = -unitY;
-        double perpY = unitX;
+        GeometryUtils.Vector dir = new GeometryUtils.Vector(start, end).normalize();
+        GeometryUtils.Vector perp = dir.perpendicular();
 
         double direction = isStart ? 1 : -1;
-
         double lineOffset = 15;
         double perpOffset = 15;
-        return new GeometryUtils.Point(
-                anchorPoint.x() + unitX * direction * (headSize + lineOffset) + perpX * perpOffset,
-                anchorPoint.y() + unitY * direction * (headSize + lineOffset) + perpY * perpOffset
-        );
+
+        return anchor
+                .offset(dir, direction * (headSize + lineOffset))
+                .offset(perp, perpOffset);
     }
 
     private String cleanMemberName(String methodName) {

@@ -257,8 +257,6 @@ public class ClassLinkFactory {
         double minDist = Math.min(Math.min(distToLeft, distToRight), Math.min(distToTop, distToBottom));
 
         double boxX, boxY;
-
-        // TODO: REFACTOR
         if (minDist == distToRight) {
             boxX = anchor.x() + gap;
             boxY = anchor.y() - boxH / 2;
@@ -299,9 +297,7 @@ public class ClassLinkFactory {
                 Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink().getName());
                 double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());
                 labelPos = noteCalculator.adjustLabelForNote(
-                        labelPos, link.getMessage().getLabel(), noteDim,
-                        link.getNotePosition(), linkXAtLabelY
-                );
+                        labelPos, link.getMessage().getLabel(), noteDim, link.getNotePosition(), linkXAtLabelY);
             }
 
             link.getMessage().setX(labelPos.x());
@@ -360,7 +356,7 @@ public class ClassLinkFactory {
 
         int[] pInfo = getParallelInfo(link);
         if (pInfo != null) {
-            int index      = pInfo[0];
+            int index = pInfo[0];
             int totalCount = pInfo[1];
             boolean flipCurve = (index - (totalCount - 1) / 2.0) > 0;
             return linkGeometry.createParallel(link, srcSize, tgtSize, flipCurve, index, totalCount);

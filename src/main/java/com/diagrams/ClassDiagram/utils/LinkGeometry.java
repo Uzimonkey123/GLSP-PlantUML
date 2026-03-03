@@ -7,7 +7,6 @@ import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 public class LinkGeometry {
 
     private final double labelPerpendicularOffset = 15.0;
-    private final double parallelLabelPerpendicularOffset = 65.0;
 
     private final CurvedEdgeCalculator curvedCalculator = new CurvedEdgeCalculator();
 
@@ -48,7 +47,7 @@ public class LinkGeometry {
             GeometryUtils.Point mid = getMidpoint();
             double offset = labelPerpendicularOffset;
 
-            if (Math.abs(direction.dy) > Math.abs(direction.dx)) {
+            if (Math.abs(direction.dy()) > Math.abs(direction.dx())) {
                 double verticalLabelExtraOffset = 2.5;
                 offset += messageLengthChars * verticalLabelExtraOffset;
             }
@@ -73,10 +72,7 @@ public class LinkGeometry {
 
         @Override
         public GeometryUtils.Point getMidpoint() {
-            return new GeometryUtils.Point(
-                    (srcCenter.x() + tgtCenter.x()) / 2,
-                    (srcCenter.y() + tgtCenter.y()) / 2
-            );
+            return srcCenter.midpoint(tgtCenter);
         }
 
         @Override
@@ -86,14 +82,14 @@ public class LinkGeometry {
 
         @Override
         public double getLinkXAtY(double y) {
-            double dy = tgtCenter.y() - srcCenter.y();
+            GeometryUtils.Vector delta = new GeometryUtils.Vector(srcCenter, tgtCenter);
 
-            if (Math.abs(dy) < 0.01) {
+            if (Math.abs(delta.dy()) < 0.01) {
                 return srcCenter.x();
             }
 
-            double t = (y - srcCenter.y()) / dy;
-            return srcCenter.x() + (tgtCenter.x() - srcCenter.x()) * t;
+            double t = (y - srcCenter.y()) / delta.dy();
+            return srcCenter.x() + delta.dx() * t;
         }
     }
 
@@ -176,22 +172,24 @@ public class LinkGeometry {
             double tgtCy = tgt.getY() + tgtSize.height / 2.0;
 
             // Unit perpendicular to the centre→centre direction
-            double dx = tgtCx - srcCx;
-            double dy = tgtCy - srcCy;
-            double len = Math.sqrt(dx * dx + dy * dy);
-            if (len < 0.01) len = 1.0;
-            double perpX = -dy / len;
-            double perpY =  dx / len;
+            GeometryUtils.Point srcCenter = new GeometryUtils.Point(srcCx, srcCy);
+            GeometryUtils.Point tgtCenter = new GeometryUtils.Point(tgtCx, tgtCy);
+
+            GeometryUtils.Vector dir = new GeometryUtils.Vector(srcCenter, tgtCenter).normalize();
+            GeometryUtils.Vector perp = dir.perpendicular();
 
             double spacing = 25.0;
             double middle = (totalCount - 1) / 2.0;
             double offset = (index - middle) * spacing;
 
             // Offset centres
-            double srcOffCx = srcCx + perpX * offset;
-            double srcOffCy = srcCy + perpY * offset;
-            double tgtOffCx = tgtCx + perpX * offset;
-            double tgtOffCy = tgtCy + perpY * offset;
+            GeometryUtils.Point srcOffsetCenter = srcCenter.offset(perp, offset);
+            GeometryUtils.Point tgtOffsetCenter = tgtCenter.offset(perp, offset);
+
+            double srcOffCx = srcOffsetCenter.x();
+            double srcOffCy = srcOffsetCenter.y();
+            double tgtOffCx = tgtOffsetCenter.x();
+            double tgtOffCy = tgtOffsetCenter.y();
 
             // Intersect offset ray with entity rectangle boundary
             this.srcAnchor = entityBoundaryPoint(
@@ -205,29 +203,13 @@ public class LinkGeometry {
             this.curve = curvedCalculator.calculateCurve(srcAnchor, tgtAnchor, flipCurve);
         }
 
-        private GeometryUtils.Point entityBoundaryPoint(
-                double entityX, double w, double h,
-                double fromCx, double fromCy, double toCx, double toCy) {
+        private GeometryUtils.Point entityBoundaryPoint(double entityX, double w, double h,
+                                                        double fromCx, double fromCy, double toCx, double toCy) {
 
-            double dx = toCx - fromCx;
-            double dy = toCy - fromCy;
+            GeometryUtils.Rectangle rect = new GeometryUtils.Rectangle(entityX, fromCy - h / 2.0, w, h);
+            GeometryUtils.Point target = new GeometryUtils.Point(toCx, toCy);
 
-            if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) {
-                return new GeometryUtils.Point(entityX + w, fromCy);
-            }
-
-            double hw = w / 2.0;
-            double hh = h / 2.0;
-            double t;
-
-            if (Math.abs(dx) / hw > Math.abs(dy) / hh) {
-                t = (dx > 0 ? hw : -hw) / dx;
-
-            } else {
-                t = (dy > 0 ? hh : -hh) / dy;
-            }
-
-            return new GeometryUtils.Point(fromCx + t * dx, fromCy + t * dy);
+            return rect.boundaryIntersection(target);
         }
 
         @Override
@@ -236,6 +218,7 @@ public class LinkGeometry {
             double middle = (totalCount - 1) / 2.0;
             double signedPos = (index - middle) * spacing;
 
+            double parallelLabelPerpendicularOffset = 65.0;
             double labelOffset = parallelLabelPerpendicularOffset + Math.abs(signedPos) * 0.4;
             double sign = signedPos >= 0 ? 1.0 : -1.0;
             return curvedCalculator.calculateLabelPosition(curve, sign * labelOffset);
@@ -253,9 +236,10 @@ public class LinkGeometry {
             double extraOffset = Math.abs(signedPos) * 0.4;
             double sign = signedPos >= 0 ? 1.0 : -1.0;
 
-            double perpX = -curve.midTangentY();
-            double perpY =  curve.midTangentX();
-            return base.offset(perpX * sign * extraOffset, perpY * sign * extraOffset);
+            GeometryUtils.Vector perp =
+                    new GeometryUtils.Vector(curve.midTangentX(), curve.midTangentY()).perpendicular();
+
+            return base.offset(perp, sign * extraOffset);
         }
 
         @Override
