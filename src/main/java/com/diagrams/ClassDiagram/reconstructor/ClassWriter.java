@@ -45,9 +45,11 @@ public class ClassWriter {
         lineNamespaceMap = null;
         entityNamespaceMap = null;
 
-        for (int i = 0; i < lineMap.getLineInfos().size(); i++) {
-            System.out.println(lineMap.getLineInfos().get(i));
+        for (int[] range : model.getLinesToDelete()) {
+            changeLine(range[0], range[1], Collections.emptyList());
         }
+
+        model.clearLinesToDelete();
 
         writeEntities();
         updateInheritanceReferences();

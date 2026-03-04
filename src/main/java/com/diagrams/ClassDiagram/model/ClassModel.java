@@ -37,6 +37,8 @@ public class ClassModel {
 
     private boolean isLeftToRight = false;
 
+    private final List<int[]> linesToDelete = new ArrayList<>();
+
     public ClassModel() {}
 
     public void setLineFinder(ClassLineFinder lineFinder) {
@@ -89,5 +91,24 @@ public class ClassModel {
                 .filter(note -> note.getId() != null && note.getId().equals(id))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public ClassLink getLinkById(String id) {
+        return links.stream()
+                .filter(link -> link.getLinkId() != null && link.getLinkId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public void markLinesForDeletion(int start, int end) {
+        linesToDelete.add(new int[]{start, end});
+    }
+
+    public List<int[]> getLinesToDelete() {
+        return linesToDelete;
+    }
+
+    public void clearLinesToDelete() {
+        linesToDelete.clear();
     }
 }
