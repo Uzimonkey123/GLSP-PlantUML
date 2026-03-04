@@ -74,8 +74,8 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "entity:lollipop", GNode, LollipopEntityView);
         configureModelElement(context, "entity:invis", GNode, InvisibleEntityView);
 
-        configureModelElement(context, "link", GEdge, ClassLinkView);
-        configureModelElement(context, "link:note", GEdge, SimpleNoteEdgeView);
+        configureModelElement(context, "link", GEdge, ClassLinkView, {enable: [selectFeature]});
+        configureModelElement(context, "link:note", GEdge, SimpleNoteEdgeView, {enable: [selectFeature]});
 
         configureModelElement(context, "label:entityName", GLabel, EntityLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
         configureModelElement(context, "label:stereotype", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature]});

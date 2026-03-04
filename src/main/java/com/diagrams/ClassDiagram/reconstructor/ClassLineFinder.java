@@ -54,12 +54,25 @@ public class ClassLineFinder {
 
         for (int i = searchFrom; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
+            if (claimedLines.contains(i)) continue;
 
             if (info.type == ClassLineMapper.LineType.RELATIONSHIP
                     && relMatchesName(info.originalText, alias1)
                     && relMatchesName(info.originalText, alias2)) {
                 register(element, i);
                 searchFrom = i + 1;
+                return i;
+            }
+        }
+
+        for (int i = 0; i < searchFrom; i++) {
+            ClassLineMapper.LineInfo info = all.get(i);
+            if (claimedLines.contains(i)) continue;
+
+            if (info.type == ClassLineMapper.LineType.RELATIONSHIP
+                    && relMatchesName(info.originalText, alias1)
+                    && relMatchesName(info.originalText, alias2)) {
+                register(element, i);
                 return i;
             }
         }
@@ -99,6 +112,7 @@ public class ClassLineFinder {
 
         for (int i = searchFrom; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
+            if (claimedLines.contains(i)) continue;
 
             if (info.type == ClassLineMapper.LineType.NOTE) {
                 StringBuilder fullNote = new StringBuilder();
@@ -117,6 +131,30 @@ public class ClassLineFinder {
                 if (!filter || noteText.contains(normalizedText)) {
                     register(element, i);
                     searchFrom = i + 1;
+                    return i;
+                }
+            }
+        }
+
+        for (int i = 0; i < searchFrom; i++) {
+            ClassLineMapper.LineInfo info = all.get(i);
+            if (claimedLines.contains(i)) continue;
+
+            if (info.type == ClassLineMapper.LineType.NOTE) {
+                StringBuilder fullNote = new StringBuilder();
+                fullNote.append(info.originalText.replace("<br>", "\\n").trim());
+
+                for (int j = i + 1; j < all.size(); j++) {
+                    ClassLineMapper.LineInfo body = all.get(j);
+                    if (body.type != ClassLineMapper.LineType.NOTE_BODY) break;
+
+                    fullNote.append("\\n").append(body.originalText.replace("<br>", "\\n").trim());
+                }
+
+                String noteText = fullNote.toString();
+
+                if (!filter || noteText.contains(normalizedText)) {
+                    register(element, i);
                     return i;
                 }
             }
@@ -147,15 +185,34 @@ public class ClassLineFinder {
         return noteStartLine;
     }
 
-    public int findTitleLine()     { return findLineByType(ClassLineMapper.LineType.TITLE); }
-    public int findEndTitleLine()  { return findLineByType(ClassLineMapper.LineType.END_TITLE); }
-    public int findHeaderLine()    { return findLineByType(ClassLineMapper.LineType.HEADER); }
-    public int findEndHeaderLine() { return findLineByType(ClassLineMapper.LineType.END_HEADER); }
-    public int findFooterLine()    { return findLineByType(ClassLineMapper.LineType.FOOTER); }
-    public int findEndFooterLine() { return findLineByType(ClassLineMapper.LineType.END_FOOTER); }
+    public int findTitleLine() {
+        return findLineByType(ClassLineMapper.LineType.TITLE);
+    }
+
+    public int findEndTitleLine() {
+        return findLineByType(ClassLineMapper.LineType.END_TITLE);
+    }
+
+    public int findHeaderLine() {
+        return findLineByType(ClassLineMapper.LineType.HEADER);
+    }
+
+    public int findEndHeaderLine() {
+        return findLineByType(ClassLineMapper.LineType.END_HEADER);
+    }
+
+    public int findFooterLine() {
+        return findLineByType(ClassLineMapper.LineType.FOOTER);
+    }
+
+    public int findEndFooterLine() {
+        return findLineByType(ClassLineMapper.LineType.END_FOOTER);
+    }
 
 
-    public void setPosition(int position) { this.searchFrom = position; }
+    public void setPosition(int position) {
+        this.searchFrom = position;
+    }
 
     static boolean entityMatchesName(String line, String name) {
         if (name == null || name.isEmpty()) return true;
@@ -259,9 +316,7 @@ public class ClassLineFinder {
             remainder = parts.length > 1 ? rest.substring(parts[0].length()).trim() : "";
         }
 
-        Matcher asM = Pattern.compile(
-                "^as\\s+(.*)", Pattern.CASE_INSENSITIVE
-        ).matcher(remainder);
+        Matcher asM = Pattern.compile("^as\\s+(.*)", Pattern.CASE_INSENSITIVE).matcher(remainder);
 
         if (asM.matches()) {
             String aliasPart = asM.group(1).trim();
@@ -281,6 +336,7 @@ public class ClassLineFinder {
         for (ClassLineMapper.LineInfo info : lineMapper.getLineInfos()) {
             if (info.type == type) return info.lineNumber;
         }
+
         return -1;
     }
 
