@@ -202,6 +202,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 }
 
                 EntityMethod bodyItem = new EntityMethod(itemStr);
+                if (itemStr.contains("(") && itemStr.contains(")")) {
+                    bodyItem.setField(true);
+                }
                 body.add(bodyItem);
             }
 
@@ -237,6 +240,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 }
 
                 EntityMethod entityMethod = new EntityMethod(field.toString());
+                entityMethod.setField(true);
                 fields.add(entityMethod);
             }
 

@@ -96,6 +96,7 @@ export class HtmlLabelView extends GLabelView {
         const num = (label as any).args?.numbering as string | undefined;
         const visibility = (label as any).args?.visibility as string | undefined;
         const boxWidth = (label as any).args?.boxWidth as number | undefined;
+        const isField = (label as any).args?.isField ?? false;
         const text = label.text ?? '';
 
         const numLines = num ? TspanConverter(num) : [];
@@ -119,7 +120,7 @@ export class HtmlLabelView extends GLabelView {
             );
         }
 
-        const visibilityShape = renderVisibilityShape(visibility);
+        const visibilityShape = renderVisibilityShape(visibility, isField);
 
         const shapeOffset = boxWidth ? -boxWidth/2 + 3 : 0;
 
@@ -139,7 +140,7 @@ export class HtmlLabelView extends GLabelView {
     }
 }
 
-export function renderVisibilityShape(visibility: string | undefined): VNode | null {
+export function renderVisibilityShape(visibility: string | undefined, isField: boolean | undefined): VNode | null {
     if (!visibility) return null;
 
     const size = 8;
@@ -147,12 +148,19 @@ export function renderVisibilityShape(visibility: string | undefined): VNode | n
 
     switch (visibility) {
         case 'public':
-            return <circle cx={size/2} cy={cy} r={size/2} fill="green" stroke="green" stroke-width="1"/>;
+            return <circle
+                cx={size/2}
+                cy={cy}
+                r={size/2}
+                fill={isField ? "none" : "green"}
+                stroke="green"
+                stroke-width="1"
+            />;
 
         case 'protected':
             return <polygon
                 points={`${size/2},${cy-size/2} ${size},${cy} ${size/2},${cy+size/2} 0,${cy}`}
-                fill="yellow"
+                fill={isField ? "none" : "yellow"}
                 stroke="yellow"
                 stroke-width="1"
             />;
@@ -163,7 +171,7 @@ export function renderVisibilityShape(visibility: string | undefined): VNode | n
                 y={cy-size/2}
                 width={size}
                 height={size}
-                fill="red"
+                fill={isField ? "none" : "red"}
                 stroke="red"
                 stroke-width="1"
             />;
@@ -171,7 +179,7 @@ export function renderVisibilityShape(visibility: string | undefined): VNode | n
         case 'package_private':
             return <polygon
                 points={`${size/2},${cy-size/2} ${size},${cy+size/2} 0,${cy+size/2}`}
-                fill="blue"
+                fill={isField ? "none" : "blue"}
                 stroke="blue"
                 stroke-width="1"
             />;

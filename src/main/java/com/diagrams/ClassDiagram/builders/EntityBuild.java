@@ -102,6 +102,7 @@ public class EntityBuild {
                     .size(width / 2.0, lineHeight)
                     .addArgument("visibility", entity.getFields().get(i).getVisibilityChar())
                     .addArgument("boxWidth", width)
+                    .addArgument("isField", entity.getFields().get(i).isField())
                     .build());
         }
 
@@ -127,6 +128,7 @@ public class EntityBuild {
                     .size(width / 2.0, lineHeight)
                     .addArgument("visibility", entity.getRawBody().get(i).getVisibilityChar())
                     .addArgument("boxWidth", width)
+                    .addArgument("isField", entity.getRawBody().get(i).isField())
                     .build());
         }
 
@@ -220,16 +222,15 @@ public class EntityBuild {
                 .position(pkg.getX(), pkg.getY())
                 .size(width, height);
 
-        double headerX = 50;
+        double headerX = pkg.estimateLabelWidth() / 2.0;
         double headerY = 20;
 
         switch (pkg.getType().toLowerCase()) {
-            case "node" -> { headerY = 25;}
+            case "node", "cloud" -> { headerY = 25;}
             case "folder", "frame" -> {
                 headerX = pkg.estimateLabelWidth() / 2.0;
             }
             case "database" -> { headerY = 14;}
-            case "cloud" -> { headerX = 55; headerY = 25;}
         }
 
         // Add package header with name

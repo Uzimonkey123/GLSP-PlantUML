@@ -56,7 +56,6 @@ export class EntityLabelView extends GLabelView {
         const stereotypeName = (label as any).args?.stereotypeName as string | undefined;
         const stereotypeChar = (label as any).args?.stereotypeChar as string | undefined;
         const stereotypeColor = (label as any).args?.stereotypeColor as string | undefined;
-        const hasStereotypeName = stereotypeName && stereotypeName.length > 0;
         const hasStereotypeChar = stereotypeChar && stereotypeChar.trim().length > 0 && stereotypeChar !== ' ';
         const hasStereotypeColor = stereotypeColor && stereotypeColor.length > 0;
 
@@ -69,7 +68,7 @@ export class EntityLabelView extends GLabelView {
         const isItalic = ['abstract_class', 'interface'].includes(type);
         const visibility = (label as any).args?.visibility as string | undefined;
 
-        const visibilityShape = renderVisibilityShape(visibility);
+        const visibilityShape = renderVisibilityShape(visibility, false);
         const iconRadius = 8;
         const iconRightEdge = -width/2 + iconRadius + 2 + iconRadius;
         const shapeOffset = width ? iconRightEdge + 3 : 0;

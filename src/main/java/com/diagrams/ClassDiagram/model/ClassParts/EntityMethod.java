@@ -2,12 +2,16 @@ package com.diagrams.ClassDiagram.model.ClassParts;
 
 import com.diagrams.ClassDiagram.model.Visibility;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class EntityMethod {
     private String visibilityChar;
     private String methodName;
     private String tip;
     private String tipBackground = "#FFFFCC";
     private final String originalName;
+    private boolean isField = false;
 
     public EntityMethod(String methodName) {
         parse(methodName);
@@ -15,15 +19,38 @@ public class EntityMethod {
     }
 
     private void parse(String raw) {
-        String tempName = raw;
         this.visibilityChar = "";
+        String tempName = raw;
 
-        if (tempName.length() >= 2 && tempName.charAt(0) != tempName.charAt(1)) {
-            this.visibilityChar = Visibility.fromChar(tempName.charAt(0));
+        if (!raw.isEmpty()) {
+            String vis = Visibility.fromChar(raw.charAt(0));
+            if (!vis.isEmpty()) {
+                this.visibilityChar = vis;
+                tempName = raw.substring(1).trim();
+                this.methodName = tempName;
+                removeBracketed();
+
+                return;
+            }
+
+            if (raw.charAt(0) == '\\') {
+                this.methodName = raw.substring(1).trim();
+                removeBracketed();
+
+                return;
+            }
         }
 
-        if (raw.charAt(0) == '\\' || !this.visibilityChar.isEmpty()) {
-            tempName = raw.substring(1).trim();
+        Pattern pattern = Pattern.compile("^((?:\\{(?:static|abstract|classifier)}\\s*)+)([+\\-#~])\\s*(.*)$");
+        Matcher matcher = pattern.matcher(raw);
+
+        if (matcher.matches()) {
+            String modifiers = matcher.group(1);
+            String visChar = matcher.group(2);
+            String rest = matcher.group(3);
+
+            this.visibilityChar = Visibility.fromChar(visChar.charAt(0));
+            tempName = modifiers + rest;
         }
 
         this.methodName = tempName;
@@ -32,7 +59,7 @@ public class EntityMethod {
 
     private void removeBracketed() {
         this.methodName = this.methodName
-                .replaceAll("\\{(?!static\\}|classifier\\}|abstract\\})[^}]*\\}", "")
+                .replaceAll("\\{(?!static}|classifier}|abstract})[^}]*}", "")
                 .trim();
     }
 
@@ -70,5 +97,13 @@ public class EntityMethod {
 
     public String getOriginalName() {
         return originalName;
+    }
+
+    public boolean isField() {
+        return isField;
+    }
+
+    public void setField(boolean isField) {
+        this.isField = isField;
     }
 }
