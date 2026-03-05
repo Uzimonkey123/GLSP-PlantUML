@@ -41,7 +41,6 @@ public class ClassLineFinder {
 
             if (info.type == ClassLineMapper.LineType.RELATIONSHIP
                     && relMatchesName(info.originalText, name)) {
-                register(element, i);
                 return i;
             }
         }

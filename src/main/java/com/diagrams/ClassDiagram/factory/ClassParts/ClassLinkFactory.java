@@ -362,6 +362,7 @@ public class ClassLinkFactory {
                     .findFirst()
                     .orElse(null);
 
+            if (noteEntity == null) continue;
             if (noteEntity.getX() == 0 && noteEntity.getY() == 0) {
                 noteEntity.setX(notePos.x());
                 noteEntity.setY(notePos.y());

@@ -1,5 +1,6 @@
 package com.diagrams.ClassDiagram.handler;
 
+import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
 import com.google.inject.Inject;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
@@ -77,7 +78,7 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
 
                 ClassEntity note = classModel.getClassNoteById(id);
                 if (note != null) {
-                    deleteNote(classModel, note);
+                    deleteNote(classModel, note, id);
                     findAndRemove(root, id);
 
                     continue;
@@ -150,16 +151,81 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
                 model.markLinesForDeletion(link.getSourceLineStart(), link.getSourceLineEnd());
             }
 
+            if (link.hasNoteOnLink()) {
+                ClassEntity note = link.getNoteOnLink();
+
+                if (note.hasLine()) {
+                    model.markLinesForDeletion(note.getSourceLineStart(), note.getSourceLineEnd());
+                }
+
+                model.notes.remove(note);
+                model.entities.remove(note);
+            }
+
             model.links.remove(link);
         }
 
-        private void deleteNote(ClassModel model, ClassEntity note) {
+        private void deleteNote(ClassModel model, ClassEntity note, String id) {
             if (note.hasLine()) {
                 model.markLinesForDeletion(note.getSourceLineStart(), note.getSourceLineEnd());
             }
 
+            if (note.getId().endsWith("-tip")) {
+                clearTipFromMember(model, note.getId());
+            }
+
+            if (note.getId().startsWith("note-link")) {
+                clearNotesFromLink(model, note);
+            }
+
             model.notes.remove(note);
             model.entities.remove(note);
+        }
+
+        private void clearNotesFromLink(ClassModel model, ClassEntity note) {
+            for (ClassLink link : model.links) {
+                if (link.hasNoteOnLink() && link.getNoteOnLink().getId().equals(note.getId())) {
+
+                    if (link.getNoteOnLink().hasLine()) {
+                        model.markLinesForDeletion(note.getSourceLineStart(), note.getSourceLineEnd());
+                    }
+
+                    model.notes.remove(note);
+                    model.entities.remove(note);
+                }
+            }
+        }
+
+        private void clearTipFromMember(ClassModel model, String tipId) {
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("^(.+)-(field|method)-(\\d+)-tip$")
+                    .matcher(tipId);
+
+            if (!m.matches()) return;
+
+            String parentId = m.group(1);
+            String memberType = m.group(2);
+            int memberIndex = Integer.parseInt(m.group(3));
+
+            ClassEntity parent = model.getClassEntityById(parentId);
+            if (parent == null) return;
+
+            List<EntityMethod> members = memberType.equals("field")
+                    ? parent.getFields()
+                    : parent.getMethods();
+
+            if (memberIndex >= 0 && memberIndex < members.size()) {
+                members.get(memberIndex).setTip(null);
+            }
+
+            for (EntityMethod bodyItem : parent.getRawBody()) {
+                if (memberIndex >= 0 && memberIndex < members.size()) {
+                    String memberName = members.get(memberIndex).getMethodName();
+                    if (bodyItem.getMethodName().equals(memberName)) {
+                        bodyItem.setTip(null);
+                    }
+                }
+            }
         }
 
         private boolean findAndRemove(GModelElement parent, String id) {
