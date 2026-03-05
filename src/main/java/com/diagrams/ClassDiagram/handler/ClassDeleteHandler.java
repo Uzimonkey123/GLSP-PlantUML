@@ -78,7 +78,7 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
 
                 ClassEntity note = classModel.getClassNoteById(id);
                 if (note != null) {
-                    deleteNote(classModel, note, id);
+                    deleteNote(classModel, note);
                     findAndRemove(root, id);
 
                     continue;
@@ -165,8 +165,8 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             model.links.remove(link);
         }
 
-        private void deleteNote(ClassModel model, ClassEntity note, String id) {
-            if (note.hasLine()) {
+        private void deleteNote(ClassModel model, ClassEntity note) {
+             if (note.hasLine()) {
                 model.markLinesForDeletion(note.getSourceLineStart(), note.getSourceLineEnd());
             }
 

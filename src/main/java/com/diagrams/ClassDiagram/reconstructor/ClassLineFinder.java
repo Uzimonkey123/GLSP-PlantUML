@@ -111,7 +111,7 @@ public class ClassLineFinder {
 
         for (int i = searchFrom; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
-            if (claimedLines.contains(i)) continue;
+            //if (claimedLines.contains(i)) continue;
 
             if (info.type == ClassLineMapper.LineType.NOTE) {
                 StringBuilder fullNote = new StringBuilder();
@@ -120,7 +120,7 @@ public class ClassLineFinder {
                 // Append all NOTE_BODY lines
                 for (int j = i + 1; j < all.size(); j++) {
                     ClassLineMapper.LineInfo body = all.get(j);
-                    if (body.type != ClassLineMapper.LineType.NOTE_BODY) break;
+                    //if (body.type != ClassLineMapper.LineType.NOTE_BODY) break;
 
                     fullNote.append("\\n").append(body.originalText.replace("<br>", "\\n").trim());
                 }
