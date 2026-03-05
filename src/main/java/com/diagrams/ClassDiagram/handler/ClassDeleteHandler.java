@@ -178,6 +178,14 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
                 clearNotesFromLink(model, note);
             }
 
+            for (ClassLink link : model.links) {
+                if (link.getEntity1() == note || link.getEntity2() == note) {
+                    if (link.hasLine()) {
+                        model.markLinesForDeletion(link.getSourceLineStart(), link.getSourceLineEnd());
+                    }
+                }
+            }
+
             model.notes.remove(note);
             model.entities.remove(note);
         }

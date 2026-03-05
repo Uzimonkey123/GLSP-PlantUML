@@ -388,6 +388,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         int endLine   = lineFinder.findNoteEndLine(startLine, noteEntity);
         addMapperInfo(noteEntity, startLine, endLine, lineMapper);
 
+        if (startLine != -1 && endLine != -1) {
+            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(startLine).originalText);
+            noteEntity.setAlias(alias);
+        }
+
         if (parentPackage != null) {
             parentPackage.addEntity(noteEntity);
         }

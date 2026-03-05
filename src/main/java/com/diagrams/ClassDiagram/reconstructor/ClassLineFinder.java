@@ -292,6 +292,15 @@ public class ClassLineFinder {
         if (line == null) return null;
         String trimmed = line.trim();
 
+        Matcher noteAlias = Pattern.compile(
+                "^note\\s+.*?\\bas\\s+(\\w+)",
+                Pattern.CASE_INSENSITIVE
+        ).matcher(trimmed);
+
+        if (noteAlias.find()) {
+            return noteAlias.group(1);
+        }
+
         Matcher m = Pattern.compile(
                 "^(?:abstract\\s+)?(?:class|interface|enum|annotation)\\s+(.*)",
                 Pattern.CASE_INSENSITIVE
@@ -306,12 +315,12 @@ public class ClassLineFinder {
         if (rest.startsWith("\"")) {
             int end = rest.indexOf('"', 1);
             if (end < 0) return null;
-            name      = rest.substring(1, end);
+            name = rest.substring(1, end);
             remainder = rest.substring(end + 1).trim();
 
         } else {
             String[] parts = rest.split("[\\s{#<]", 2);
-            name      = parts[0];
+            name = parts[0];
             remainder = parts.length > 1 ? rest.substring(parts[0].length()).trim() : "";
         }
 
