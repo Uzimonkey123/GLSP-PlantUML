@@ -302,7 +302,7 @@ public class ClassLineFinder {
         }
 
         Matcher m = Pattern.compile(
-                "^(?:abstract\\s+)?(?:class|interface|enum|annotation)\\s+(.*)",
+                "^(?:abstract\\s+)?(?:class|interface|diamond|circle|enum|annotation)\\s+(.*)",
                 Pattern.CASE_INSENSITIVE
         ).matcher(trimmed);
 

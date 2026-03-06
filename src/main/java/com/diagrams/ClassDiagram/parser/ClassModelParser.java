@@ -347,6 +347,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         int line = lineFinder.findEntityLine(name, circleEntity);
         addMapperInfo(circleEntity, line, lineMapper);
 
+        if (line != -1) {
+            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(line).originalText);
+            circleEntity.setAlias(alias);
+        }
+
         if (parentPackage != null) {
             parentPackage.addEntity(circleEntity);
         }
@@ -366,6 +371,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         int line = lineFinder.findEntityLine(name, diamondEntity);
         addMapperInfo(diamondEntity, line, lineMapper);
+
+        if (line != -1) {
+            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(line).originalText);
+           diamondEntity.setAlias(alias);
+        }
 
         if (parentPackage != null) {
             parentPackage.addEntity(diamondEntity);
