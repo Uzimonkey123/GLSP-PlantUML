@@ -248,15 +248,6 @@ public class EntityBuild {
         header.add(nameLabel.build());
         packageContainer.add(header.build());
 
-        if (pkg.getAnchorX() >= 0) {
-            GNodeBuilder anchor = new GNodeBuilder("entity:invis")
-                    .id(pkg.getAnchorId())
-                    .position(pkg.getAnchorX(), pkg.getAnchorY())
-                    .size(1, 1);
-
-            packageContainer.add(anchor.build());
-        }
-
         packageContainer.addArgument("background", pkg.getBackground());
         packageContainer.addArgument("depth", String.valueOf(pkg.getDepth()));
         packageContainer.addArgument("isTopLevel", String.valueOf(pkg.isTopLevel()));
@@ -264,6 +255,17 @@ public class EntityBuild {
         packageContainer.addArgument("labelWidth", String.valueOf((int) pkg.estimateLabelWidth()));
 
         return packageContainer.build();
+    }
+
+    public GModelElement buildPackageAnchor(Package pkg) {
+        double absoluteX = pkg.getX() + pkg.getAnchorX();
+        double absoluteY = pkg.getY() + pkg.getAnchorY();
+
+        return new GNodeBuilder("entity:invis")
+                .id(pkg.getAnchorId())
+                .position(absoluteX, absoluteY)
+                .size(1, 1)
+                .build();
     }
 
     public void buildPageDetails(List<GModelElement> elements, ClassModel model,

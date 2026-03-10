@@ -95,6 +95,8 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
                 model.markLinesForDeletion(entity.getSourceLineStart(), entity.getSourceLineEnd());
             }
 
+            Set<ClassEntity> associationPointsToDelete = new HashSet<>();
+
             Iterator<ClassLink> linkIter = model.links.iterator();
             while (linkIter.hasNext()) {
                 ClassLink link = linkIter.next();
@@ -104,12 +106,79 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
                         model.markLinesForDeletion(link.getSourceLineStart(), link.getSourceLineEnd());
                     }
 
+                    ClassEntity other = (link.getEntity1() == entity) ? link.getEntity2() : link.getEntity1();
+                    if ("ASSOCIATION_POINT".equals(other.getType())) {
+                        if (!link.getType().contains("DASHED")) {
+                            associationPointsToDelete.add(other);
+
+                        } else {
+                            markAssociationClassLineForDeletion(model, other, entity);
+                        }
+                    }
+
                     linkIter.remove();
                 }
             }
 
+            for (ClassEntity assocPoint : associationPointsToDelete) {
+                deleteAssociationPoint(model, assocPoint);
+            }
+
             model.entities.remove(entity);
             deleteNotesReferencingEntity(model, entity);
+        }
+
+        private void markAssociationClassLineForDeletion(ClassModel model, ClassEntity assocPoint, ClassEntity assocClass) {
+            ClassLineMapper lineMapper = model.getLineMapper();
+            if (lineMapper == null) return;
+
+            String assocClassName = assocClass.getName();
+            String assocClassAlias = assocClass.getAlias();
+
+            for (ClassLineMapper.LineInfo info : lineMapper.getLineInfos()) {
+                if (info.type != ClassLineMapper.LineType.RELATIONSHIP) continue;
+
+                String line = info.originalText;
+
+                if (line.contains("..") && line.contains("(") && line.contains(")")) {
+                    boolean referencesAssocClass = line.contains(".. " + assocClassName)
+                            || line.contains(".." + assocClassName)
+                            || line.contains(".. \"" + assocClassName + "\"");
+
+                    if (assocClassAlias != null && !assocClassAlias.isEmpty()) {
+                        referencesAssocClass = referencesAssocClass
+                                || line.contains(".. " + assocClassAlias)
+                                || line.contains(".." + assocClassAlias);
+                    }
+
+                    if (referencesAssocClass) {
+                        model.markLinesForDeletion(info.lineNumber, info.lineNumber);
+
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void deleteAssociationPoint(ClassModel model, ClassEntity assocPoint) {
+            if (assocPoint.hasLine()) {
+                model.markLinesForDeletion(assocPoint.getSourceLineStart(), assocPoint.getSourceLineEnd());
+            }
+
+            Iterator<ClassLink> linkIter = model.links.iterator();
+            while (linkIter.hasNext()) {
+                ClassLink link = linkIter.next();
+
+                if (link.getEntity1() == assocPoint || link.getEntity2() == assocPoint) {
+                    if (link.hasLine()) {
+                        model.markLinesForDeletion(link.getSourceLineStart(), link.getSourceLineEnd());
+                    }
+
+                    linkIter.remove();
+                }
+            }
+
+            model.entities.remove(assocPoint);
         }
 
         private void deleteNotesReferencingEntity(ClassModel model, ClassEntity entity) {

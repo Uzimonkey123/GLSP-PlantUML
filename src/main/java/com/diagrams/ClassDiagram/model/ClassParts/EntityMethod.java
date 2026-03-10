@@ -22,6 +22,12 @@ public class EntityMethod {
         this.visibilityChar = "";
         String tempName = raw;
 
+        if (isSeparatorLine(raw)) {
+            this.methodName = raw;
+
+            return;
+        }
+
         if (!raw.isEmpty()) {
             String vis = Visibility.fromChar(raw.charAt(0));
             if (!vis.isEmpty()) {
@@ -55,6 +61,13 @@ public class EntityMethod {
 
         this.methodName = tempName;
         removeBracketed();
+    }
+
+    private boolean isSeparatorLine(String raw) {
+        return raw.startsWith("--") ||
+                raw.startsWith("..") ||
+                raw.startsWith("==") ||
+                raw.startsWith("__");
     }
 
     private void removeBracketed() {

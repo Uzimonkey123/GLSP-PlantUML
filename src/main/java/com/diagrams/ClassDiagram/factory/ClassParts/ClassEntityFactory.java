@@ -438,6 +438,10 @@ public class ClassEntityFactory {
             );
 
             elements.add(packageElement);
+
+            if (pkg.getAnchorX() >= 0) {
+                elements.add(entityBuild.buildPackageAnchor(pkg));
+            }
         }
     }
 }

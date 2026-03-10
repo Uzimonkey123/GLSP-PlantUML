@@ -100,6 +100,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         model.setMapper(lineMapper);
         model.setLineFinder(lineFinder);
+        for (int i = 0; i < lineMapper.getLineInfos().size(); i++) {
+            System.out.println(lineMapper.getLineInfos().get(i));
+        }
         return model;
     }
 
@@ -203,7 +206,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
                 EntityMethod bodyItem = new EntityMethod(itemStr);
                 if (itemStr.contains("(") && itemStr.contains(")")) {
-                    bodyItem.setField(true);
+                    bodyItem.setField(false);
                 }
                 body.add(bodyItem);
             }
@@ -220,6 +223,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
                 }
 
                 EntityMethod entityMethod = new EntityMethod(method.toString());
+                entityMethod.setField(false);
                 methods.add(entityMethod);
             }
 
