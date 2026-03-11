@@ -32,6 +32,11 @@ public class SequenceWriter {
     public void write() throws IOException {
         newLines.clear();
 
+        for (int[] range : model.getLinesToDelete()) {
+            changeLine(range[0], range[1], Collections.emptyList());
+        }
+        model.clearLinesToDelete();
+
         writeParticipant();
         writeMessage();
         writeAnchor();

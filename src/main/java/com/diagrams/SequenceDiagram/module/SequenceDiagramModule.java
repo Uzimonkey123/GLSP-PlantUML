@@ -3,6 +3,7 @@ package com.diagrams.SequenceDiagram.module;
 import com.diagrams.SequenceDiagram.SequenceDiagramConfiguration;
 import com.GLSPPlantUML.handlers.CustomLabelEdit;
 import com.GLSPPlantUML.handlers.IgnoreComputeBoundsHandler;
+import com.diagrams.SequenceDiagram.handler.SequenceDeleteHandler;
 import com.diagrams.SequenceDiagram.validator.SequenceLabelValidator;
 import com.diagrams.SequenceDiagram.factory.SequenceModelFactory;
 import com.GLSPPlantUML.handlers.SetDirtyStateHandler;
@@ -11,8 +12,6 @@ import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.diagrams.SequenceDiagram.parser.SequenceModelParser;
 import com.diagrams.SequenceDiagram.state.SequenceModelState;
 import com.diagrams.SequenceDiagram.storage.SequenceModelStorage;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import org.eclipse.glsp.server.actions.ActionHandler;
 import org.eclipse.glsp.server.di.MultiBinding;
@@ -66,6 +65,7 @@ public class SequenceDiagramModule extends DiagramModule {
     protected void configureOperationHandlers(MultiBinding<OperationHandler<?>> mb) {
         super.configureOperationHandlers(mb);
         mb.add(CustomLabelEdit.class);
+        mb.add(SequenceDeleteHandler.class);
     }
 
     @Override

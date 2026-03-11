@@ -94,7 +94,7 @@ export const SequenceDiagramModule = new FeatureModule(
         configureModelElement(context, "edge:delay", GEdge, SequenceMessageDelay);
         configureModelElement(context, "edge:divider", GEdge, SequenceMessageDivider);
         configureModelElement(context, "edge:ref", GEdge, ReferenceEdgeView);
-        configureModelElement(context, "edge:notes", GEdge, NoteEdgeView, { disable: [selectFeature]});
+        configureModelElement(context, "edge:notes", GEdge, NoteEdgeView);
         configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:participant", GLabel, ParticipantLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
 

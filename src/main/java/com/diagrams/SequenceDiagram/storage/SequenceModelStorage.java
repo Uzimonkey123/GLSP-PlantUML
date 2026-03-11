@@ -2,16 +2,16 @@ package com.diagrams.SequenceDiagram.storage;
 
 import com.GLSPPlantUML.storage.AbstractPlantUMLStorage;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
-import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceAnchor;
-import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceGroup;
-import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceMessage;
-import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;
 import com.diagrams.SequenceDiagram.reconstructor.SequenceWriter;
 import com.diagrams.SequenceDiagram.state.SequenceModelState;
 import org.eclipse.glsp.server.actions.SaveModelAction;
 import org.eclipse.glsp.server.features.core.model.RequestModelAction;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class SequenceModelStorage extends AbstractPlantUMLStorage<SequenceModel, SequenceModelState> {
 
@@ -34,11 +34,9 @@ public class SequenceModelStorage extends AbstractPlantUMLStorage<SequenceModel,
             SequenceWriter writer = new SequenceWriter(model, sourceUri);
             writer.write();
 
-            // Clear modification flags // TODO: Add rest
-            model.participants.forEach(SequenceNode::clearModified);
-            model.messages.forEach(SequenceMessage::clearModified);
-            model.anchors.forEach(SequenceAnchor::clearModified);
-            model.groups.forEach(SequenceGroup::clearModified);
+            File file = new File(URI.create(sourceUri));
+            String newSource = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            model.relocateAllElements(newSource);
 
         } catch (IOException e) {
             System.err.println("Error: Failed to save model: " + e.getMessage());
