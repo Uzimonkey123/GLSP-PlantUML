@@ -1,0 +1,34 @@
+@startuml
+title Par Fragment (Parallel)
+
+participant Client
+participant Orchestrator
+participant ServiceA
+participant ServiceB
+participant ServiceC
+
+Client -> Orchestrator : aggregateData()
+activate Orchestrator
+
+par Parallel Execution
+    Orchestrator -> ServiceA : getDataA()
+    activate ServiceA
+    ServiceA --> Orchestrator : dataA
+    deactivate ServiceA
+else
+    Orchestrator -> ServiceB : getDataB()
+    activate ServiceB
+    ServiceB --> Orchestrator : dataB
+    deactivate ServiceB
+else
+    Orchestrator -> ServiceC : getDataC()
+    activate ServiceC
+    ServiceC --> Orchestrator : dataC
+    deactivate ServiceC
+end
+
+Orchestrator -> Orchestrator : mergeResults(dataA, dataB, dataC)
+Orchestrator --> Client : aggregatedData
+deactivate Orchestrator
+
+@enduml

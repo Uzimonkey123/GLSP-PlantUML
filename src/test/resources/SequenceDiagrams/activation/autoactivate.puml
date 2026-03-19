@@ -1,0 +1,26 @@
+@startuml
+title Autoactivate
+
+autoactivate on
+
+participant Client
+participant Server
+participant Database
+
+Client -> Server : request()
+Server -> Database : query()
+Database --> Server : data
+Server --> Client : response
+
+Client -> Server : anotherRequest()
+Server -> Server : selfCall()
+Server --> Client : anotherResponse
+
+autoactivate off
+
+Client -> Server : noAutoActivation()
+Server -> Database : stillNoAuto()
+Database --> Server : result
+Server --> Client : done
+
+@enduml

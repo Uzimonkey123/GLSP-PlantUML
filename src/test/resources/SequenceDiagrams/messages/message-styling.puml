@@ -1,0 +1,26 @@
+@startuml
+title Message Styling
+
+participant A
+participant B
+participant C
+
+A -> B : Normal message
+A -[#red]> B : Red arrow
+A -[#green]> B : Green arrow
+A -[#blue]> B : Blue arrow
+
+A -[#orange]>> B : Orange async
+A -[#purple]--> B : Purple dotted
+
+A -[#FF5500]> B : Hex color
+
+A -> B : <b>Bold label</b>
+A -> B : <i>Italic label</i>
+A -> B : <u>Underlined</u>
+A -> B : <s>Strikethrough</s>
+A -> B : <color:red>Red text</color>
+A -> B : <back:yellow>Yellow background</back>
+A -> B : <size:18>Larger text</size>
+
+@enduml

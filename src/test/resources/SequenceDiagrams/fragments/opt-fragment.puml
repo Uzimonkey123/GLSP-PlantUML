@@ -1,0 +1,31 @@
+@startuml
+title Opt Fragment (Optional)
+
+participant User
+participant App
+participant NotificationService
+participant Analytics
+
+User -> App : completeAction()
+activate App
+
+App -> App : processAction()
+
+opt user has notifications enabled
+    App -> NotificationService : sendNotification(userId, message)
+    activate NotificationService
+    NotificationService --> App : sent
+    deactivate NotificationService
+end
+
+opt analytics tracking enabled
+    App -> Analytics : trackEvent("action_completed")
+    activate Analytics
+    Analytics --> App : tracked
+    deactivate Analytics
+end
+
+App --> User : actionResult
+deactivate App
+
+@enduml

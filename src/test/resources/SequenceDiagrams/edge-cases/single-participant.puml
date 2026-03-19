@@ -1,0 +1,14 @@
+@startuml
+title Single Participant Self-Processing
+
+participant Processor
+
+Processor -> Processor : initialize()
+activate Processor
+Processor -> Processor : loadConfig()
+Processor -> Processor : validate()
+Processor -> Processor : execute()
+Processor -> Processor : cleanup()
+deactivate Processor
+
+@enduml

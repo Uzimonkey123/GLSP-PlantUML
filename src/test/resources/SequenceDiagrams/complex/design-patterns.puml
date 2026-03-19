@@ -1,0 +1,36 @@
+@startuml
+title Observer Pattern Sequence
+
+participant Subject
+participant ConcreteSubject
+participant Observer
+participant ConcreteObserverA
+participant ConcreteObserverB
+
+Subject -> ConcreteSubject : setState(newState)
+activate ConcreteSubject
+
+ConcreteSubject -> ConcreteSubject : state = newState
+ConcreteSubject -> Subject : notifyObservers()
+activate Subject
+
+Subject -> ConcreteObserverA : update()
+activate ConcreteObserverA
+ConcreteObserverA -> ConcreteSubject : getState()
+ConcreteSubject --> ConcreteObserverA : state
+ConcreteObserverA --> Subject : done
+deactivate ConcreteObserverA
+
+Subject -> ConcreteObserverB : update()
+activate ConcreteObserverB
+ConcreteObserverB -> ConcreteSubject : getState()
+ConcreteSubject --> ConcreteObserverB : state
+ConcreteObserverB --> Subject : done
+deactivate ConcreteObserverB
+
+Subject --> ConcreteSubject : notified
+deactivate Subject
+
+deactivate ConcreteSubject
+
+@enduml

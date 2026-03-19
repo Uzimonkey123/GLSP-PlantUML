@@ -1,0 +1,76 @@
+@startuml
+title Full Feature Sequence Diagram
+autonumber
+
+actor User
+participant "Web Browser" as Browser
+participant "API Gateway" as Gateway
+database "Database" as DB
+queue "Message Queue" as Queue
+collections "Cache Cluster" as Cache
+
+== Initialization ==
+
+User -> Browser : Open Application
+activate Browser
+Browser -> Gateway : GET /api/init
+activate Gateway
+
+Gateway -> Cache : checkCache("init")
+activate Cache
+Cache --> Gateway : miss
+deactivate Cache
+
+Gateway -> DB : SELECT config FROM settings
+activate DB
+DB --> Gateway : configData
+deactivate DB
+
+Gateway -> Cache : setCache("init", configData)
+activate Cache
+Cache --> Gateway : ok
+deactivate Cache
+
+Gateway --> Browser : 200 OK {config}
+deactivate Gateway
+
+== User Action ==
+
+User -> Browser : Submit Form
+Browser -> Gateway : POST /api/submit
+activate Gateway
+
+alt Valid Data
+    Gateway -> DB : INSERT INTO records
+    activate DB
+    DB --> Gateway : success
+    deactivate DB
+    
+    Gateway -> Queue : publish(event)
+    activate Queue
+    Queue --> Gateway : ack
+    deactivate Queue
+    
+    Gateway --> Browser : 201 Created
+else Invalid Data
+    Gateway --> Browser : 400 Bad Request
+end
+
+deactivate Gateway
+
+opt Refresh Required
+    Browser -> Browser : refreshUI()
+end
+
+Browser --> User : Display Result
+deactivate Browser
+
+note right of Gateway
+    API Gateway handles
+    all routing and
+    authentication
+end note
+
+note over DB, Cache : Data layer components
+
+@enduml

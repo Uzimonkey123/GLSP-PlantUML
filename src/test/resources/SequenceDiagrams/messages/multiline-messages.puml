@@ -1,0 +1,15 @@
+@startuml
+title Multiline Message Labels
+
+participant Client
+participant Server
+
+Client -> Server : This is line one\nThis is line two\nThis is line three
+
+Server --> Client : Response with\nmultiple lines\nof text
+
+Client -> Server : process(\n  param1,\n  param2,\n  param3\n)
+
+Server --> Client : {\n  "status": "ok",\n  "data": {...}\n}
+
+@enduml

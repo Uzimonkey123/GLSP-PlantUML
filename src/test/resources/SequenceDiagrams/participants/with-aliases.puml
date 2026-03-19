@@ -1,0 +1,25 @@
+@startuml
+title Participants with Aliases
+
+participant "User Interface Layer" as UI
+participant "Business Logic Layer" as BLL
+participant "Data Access Layer" as DAL
+participant "External Service API" as ExtAPI
+
+actor "End User" as User
+database "PostgreSQL Database" as DB
+
+User -> UI : submitForm(data)
+UI -> BLL : processRequest(formData)
+BLL -> DAL : findEntity(id)
+DAL -> DB : SELECT * FROM entities
+DB --> DAL : resultSet
+DAL --> BLL : entity
+
+BLL -> ExtAPI : validateExternal(entity)
+ExtAPI --> BLL : validationResult
+
+BLL --> UI : processedResult
+UI --> User : displayResult()
+
+@enduml

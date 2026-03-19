@@ -1,0 +1,51 @@
+@startuml
+title Nested Combined Fragments
+
+participant Client
+participant Service
+participant Database
+
+Client -> Service : processRequest()
+activate Service
+
+loop for each item in batch
+    alt item.type == "A"
+        Service -> Database : processTypeA(item)
+        activate Database
+        
+        opt hasSubItems
+            loop for each subItem
+                Database -> Database : processSubItem(subItem)
+            end
+        end
+        
+        Database --> Service : resultA
+        deactivate Database
+        
+    else item.type == "B"
+        Service -> Database : processTypeB(item)
+        activate Database
+        
+        critical Transaction Required
+            Database -> Database : beginTransaction()
+            Database -> Database : executeUpdates()
+            
+            alt success
+                Database -> Database : commit()
+            else failure
+                Database -> Database : rollback()
+            end
+        end
+        
+        Database --> Service : resultB
+        deactivate Database
+        
+    else default
+        Service -> Service : logUnknownType(item)
+    end
+end
+
+Service --> Client : batchResult
+deactivate Service
+
+@enduml

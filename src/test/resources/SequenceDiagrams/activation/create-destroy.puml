@@ -1,0 +1,41 @@
+@startuml
+title Participant Create and Destroy
+
+participant Client
+participant Factory
+
+Client -> Factory : createWorker()
+activate Factory
+
+create participant Worker
+Factory -> Worker : new()
+activate Worker
+
+Worker --> Factory : ready
+Factory --> Client : workerRef
+deactivate Factory
+
+Client -> Worker : doWork()
+Worker --> Client : result
+
+Client -> Worker : moreWork()
+Worker --> Client : moreResult
+
+Client -> Worker : shutdown()
+destroy Worker
+
+Client -> Factory : createAnotherWorker()
+activate Factory
+
+create participant "Worker2" as W2
+Factory -> W2 : new()
+activate W2
+W2 --> Factory : ready
+Factory --> Client : worker2Ref
+deactivate Factory
+
+Client -> W2 : work()
+W2 --> Client : done
+destroy W2
+
+@enduml

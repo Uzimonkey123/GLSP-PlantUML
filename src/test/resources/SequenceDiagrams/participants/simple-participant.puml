@@ -1,0 +1,13 @@
+@startuml
+title Simple Participants
+
+participant Alice
+participant Bob
+participant Charlie
+
+Alice -> Bob : Hello
+Bob -> Charlie : Hi
+Charlie --> Bob : Hey
+Bob --> Alice : Greetings
+
+@enduml

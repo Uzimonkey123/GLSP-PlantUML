@@ -1,0 +1,16 @@
+@startuml
+title Basic Messages
+
+participant Client
+participant Server
+
+Client -> Server : request()
+Server --> Client : response()
+
+Client -> Server : getData(id)
+Server --> Client : data
+
+Client -> Server : postData(payload)
+Server --> Client : confirmation
+
+@enduml

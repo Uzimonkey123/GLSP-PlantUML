@@ -1,0 +1,14 @@
+@startuml
+title Explicit Participant Ordering
+
+participant Third order 3
+participant Fourth order 4
+participant First order 1
+participant Second order 2
+
+Third -> First : message1()
+First -> Fourth : message2()
+Fourth -> Second : message3()
+Second -> Third : message4()
+
+@enduml

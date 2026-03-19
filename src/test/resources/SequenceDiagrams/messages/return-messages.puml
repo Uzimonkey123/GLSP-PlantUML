@@ -1,0 +1,27 @@
+@startuml
+title Return Messages
+
+participant Client
+participant Server
+participant Database
+
+Client -> Server : request()
+activate Server
+
+Server -> Database : query()
+activate Database
+return resultSet
+
+Server -> Server : process()
+
+return response
+
+' Using return keyword for cleaner syntax
+Client -> Server : anotherRequest()
+activate Server
+Server -> Database : anotherQuery()
+activate Database
+return data
+return processedData
+
+@enduml

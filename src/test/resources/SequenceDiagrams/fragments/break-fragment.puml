@@ -1,0 +1,43 @@
+@startuml
+title Break Fragment
+
+participant Client
+participant Validator
+participant Processor
+participant Database
+
+Client -> Validator : validateAndProcess(data)
+activate Validator
+
+Validator -> Validator : checkFormat(data)
+
+break data format invalid
+    Validator --> Client : 400 Bad Request: Invalid format
+end
+
+Validator -> Validator : checkBusinessRules(data)
+
+break business rule violation
+    Validator --> Client : 422 Unprocessable: Rule violation
+end
+
+Validator -> Processor : process(data)
+activate Processor
+
+Processor -> Database : save(data)
+activate Database
+
+break database error
+    Database --> Processor : error
+    Processor --> Validator : failure
+    Validator --> Client : 500 Internal Error
+end
+
+Database --> Processor : saved
+deactivate Database
+Processor --> Validator : success
+deactivate Processor
+Validator --> Client : 200 OK
+deactivate Validator
+
+@enduml

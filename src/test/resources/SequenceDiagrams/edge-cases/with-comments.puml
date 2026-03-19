@@ -1,0 +1,21 @@
+@startuml
+' This is a single-line comment
+
+/' This is a
+   multi-line
+   comment '/
+
+participant Bob
+
+' Comment before message
+Alice -> Bob : Hello
+Bob --> Alice : Hi ' inline comment after message
+
+/' Another
+   block comment
+   in the middle '/
+
+Alice -> Bob : Goodbye
+
+' Final comment
+@enduml

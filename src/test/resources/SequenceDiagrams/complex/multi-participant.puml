@@ -1,0 +1,46 @@
+@startuml
+title Multi-Participant Communication
+
+participant Client
+participant LoadBalancer
+participant Server1
+participant Server2
+participant Server3
+participant Cache
+participant Database
+participant Logger
+
+Client -> LoadBalancer : request()
+activate LoadBalancer
+
+LoadBalancer -> Server1 : forward(request)
+activate Server1
+
+Server1 -> Cache : get(key)
+activate Cache
+Cache --> Server1 : null
+deactivate Cache
+
+Server1 -> Database : query(sql)
+activate Database
+
+par Parallel Logging
+    Server1 -> Logger : log(INFO, "Query started")
+    Logger --> Server1 : ok
+end
+
+Database --> Server1 : resultSet
+deactivate Database
+
+Server1 -> Cache : set(key, resultSet)
+activate Cache
+Cache --> Server1 : ok
+deactivate Cache
+
+Server1 --> LoadBalancer : response
+deactivate Server1
+
+LoadBalancer --> Client : response
+deactivate LoadBalancer
+
+@enduml

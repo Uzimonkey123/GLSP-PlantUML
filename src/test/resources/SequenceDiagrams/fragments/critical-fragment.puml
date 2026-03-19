@@ -1,0 +1,35 @@
+@startuml
+title Critical Fragment (Atomic Region)
+
+participant Client
+participant TransactionManager
+participant AccountService
+participant Database
+
+Client -> TransactionManager : transfer(fromAcc, toAcc, amount)
+activate TransactionManager
+
+TransactionManager -> AccountService : validateAccounts(fromAcc, toAcc)
+activate AccountService
+AccountService --> TransactionManager : valid
+deactivate AccountService
+
+critical Atomic Transaction
+    TransactionManager -> Database : beginTransaction()
+    activate Database
+    
+    TransactionManager -> Database : debit(fromAcc, amount)
+    Database --> TransactionManager : debited
+    
+    TransactionManager -> Database : credit(toAcc, amount)
+    Database --> TransactionManager : credited
+    
+    TransactionManager -> Database : commit()
+    Database --> TransactionManager : committed
+    deactivate Database
+end
+
+TransactionManager --> Client : transferComplete
+deactivate TransactionManager
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+title Notes Across Participants
+
+participant Frontend
+participant Backend
+participant Database
+participant Cache
+
+note over Frontend : Single participant note
+
+note over Frontend, Backend : Note spanning two participants
+
+note over Frontend, Database
+    This note spans across
+    multiple participants
+    from Frontend to Database
+end note
+
+Frontend -> Backend : request()
+Backend -> Database : query()
+
+note over Backend, Cache
+    These components form
+    the data access layer
+end note
+
+Database --> Backend : data
+Backend -> Cache : store(data)
+Cache --> Backend : ok
+Backend --> Frontend : response
+
+note over Frontend, Cache : End-to-end flow complete
+
+@enduml

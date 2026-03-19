@@ -1,0 +1,29 @@
+@startuml
+title Basic Notes
+
+participant Alice
+participant Bob
+participant Charlie
+
+note left of Alice : Note on the left
+
+note right of Bob : Note on the right
+
+Alice -> Bob : message1
+
+note left of Alice
+    Multi-line note
+    on the left side
+    of Alice
+end note
+
+Bob -> Charlie : message2
+
+note right of Charlie
+    This is a longer
+    multi-line note that
+    provides more context
+    about the interaction
+end note
+
+@enduml

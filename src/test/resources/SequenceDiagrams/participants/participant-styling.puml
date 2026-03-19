@@ -1,0 +1,20 @@
+@startuml
+title Participant Styling
+
+participant Alice #LightBlue
+participant Bob #PaleGreen
+participant "Styled Charlie" as Charlie #Pink
+
+actor User #Yellow
+database DB #LightGray
+
+User -> Alice : request()
+Alice -> Bob : forward()
+Bob -> Charlie : process()
+Charlie -> DB : store()
+DB --> Charlie : ok
+Charlie --> Bob : done
+Bob --> Alice : result
+Alice --> User : response
+
+@enduml

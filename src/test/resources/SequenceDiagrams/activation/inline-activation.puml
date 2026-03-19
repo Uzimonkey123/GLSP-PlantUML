@@ -1,0 +1,23 @@
+@startuml
+title Inline Activation Shorthand
+
+participant Client
+participant Server
+participant Database
+
+Client -> Server ++ : request()
+Server -> Database ++ : query()
+Database --> Server -- : data
+Server --> Client -- : response
+
+Client -> Server ++ : multiLevel()
+Server -> Server ++ : innerProcess()
+Server -> Database ++ : innerQuery()
+Database --> Server -- : result
+Server --> Server -- : processed
+Server --> Client -- : finalResponse
+
+Client -> Server ++ : createTemp()
+Server -> Server !! : destroyAfterUse()
+
+@enduml

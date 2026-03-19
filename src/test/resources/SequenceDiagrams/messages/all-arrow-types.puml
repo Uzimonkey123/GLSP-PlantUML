@@ -1,0 +1,35 @@
+@startuml
+title All Arrow Types
+
+participant A
+participant B
+participant C
+
+A -> B : Synchronous message
+A ->> B : Asynchronous message (thin)
+A --> B : Dotted response
+A -->> B : Dotted async
+
+A ->x B : Lost message
+A -\ B : Half arrow top
+A -/ B : Half arrow bottom
+
+A ->o B : Arrow with circle end
+A o-> B : Circle at start
+
+A <-> B : Bidirectional
+A <--> B : Bidirectional dotted
+
+A -[#red]> B : Colored arrow
+A -[#blue]>> B : Colored async
+
+' Different line styles
+A -> B : Normal
+A --> B : Dotted
+A ->> B : Thin arrowhead
+A -->> B : Dotted thin
+
+' Short arrows (within same participant group)
+A -> A : Self message
+
+@enduml

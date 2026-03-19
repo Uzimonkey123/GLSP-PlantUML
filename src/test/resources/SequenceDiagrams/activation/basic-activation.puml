@@ -1,0 +1,20 @@
+@startuml
+title Basic Activation
+
+participant Client
+participant Server
+participant Database
+
+Client -> Server : request()
+activate Server
+
+Server -> Database : query()
+activate Database
+
+Database --> Server : result
+deactivate Database
+
+Server --> Client : response
+deactivate Server
+
+@enduml

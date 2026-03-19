@@ -1,0 +1,25 @@
+@startuml
+title Reference Fragment
+
+participant Client
+participant AuthService
+participant OrderService
+participant PaymentService
+
+Client -> AuthService : login()
+AuthService --> Client : token
+
+ref over Client, AuthService : See Authentication Diagram
+
+Client -> OrderService : createOrder()
+activate OrderService
+
+ref over OrderService, PaymentService
+    Payment Processing
+    See payment-flow.puml
+end ref
+
+OrderService --> Client : orderConfirmation
+deactivate OrderService
+
+@enduml

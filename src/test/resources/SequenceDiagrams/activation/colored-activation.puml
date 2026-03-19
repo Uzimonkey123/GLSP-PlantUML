@@ -1,0 +1,39 @@
+@startuml
+title Colored Activation
+
+participant Client
+participant Gateway
+participant Service
+participant Database
+
+Client -> Gateway : request()
+activate Gateway #LightBlue
+
+Gateway -> Service : process()
+activate Service #PaleGreen
+
+Service -> Database : read()
+activate Database #LightGray
+Database --> Service : data
+deactivate Database
+
+Service -> Database : write()
+activate Database #Pink
+Database --> Service : ok
+deactivate Database
+
+Service --> Gateway : result
+deactivate Service
+
+Gateway --> Client : response
+deactivate Gateway
+
+Client -> Service : directCall()
+activate Service #Yellow
+Service -> Service : selfProcess()
+activate Service #Orange
+deactivate Service
+Service --> Client : done
+deactivate Service
+
+@enduml

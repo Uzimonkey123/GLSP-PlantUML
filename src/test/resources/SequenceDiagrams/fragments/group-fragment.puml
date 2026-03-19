@@ -1,0 +1,47 @@
+@startuml
+title Group Fragment
+
+participant Client
+participant Server
+participant Auth
+participant Service
+participant Database
+
+Client -> Server : request()
+activate Server
+
+group Authentication Phase
+    Server -> Auth : validateToken(token)
+    activate Auth
+    Auth -> Auth : decodeToken()
+    Auth -> Auth : checkExpiry()
+    Auth --> Server : valid
+    deactivate Auth
+end
+
+group Authorization Phase
+    Server -> Auth : checkPermissions(user, resource)
+    activate Auth
+    Auth -> Database : getUserRoles(userId)
+    activate Database
+    Database --> Auth : roles
+    deactivate Database
+    Auth --> Server : authorized
+    deactivate Auth
+end
+
+group Business Logic Phase
+    Server -> Service : processRequest()
+    activate Service
+    Service -> Database : executeQuery()
+    activate Database
+    Database --> Service : result
+    deactivate Database
+    Service --> Server : processed
+    deactivate Service
+end
+
+Server --> Client : response
+deactivate Server
+
+@enduml

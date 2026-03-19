@@ -1,0 +1,19 @@
+@startuml
+title Special Characters: "Quotes" & <Brackets> and Ěščřžýáíé
+
+participant "User's Browser" as User
+participant "API/Gateway" as API
+participant "DB<Server>" as DB
+
+User -> API : request("data & more")
+API -> DB : SELECT * FROM "users" WHERE name='O''Brien'
+DB --> API : {id: 1, name: "José García"}
+API --> User : response<UserDTO>
+
+note right of User
+    Special chars: <>&"'
+    Czech: ěščřžýáíé
+    Math: ∑∏∫√∞
+end note
+
+@enduml

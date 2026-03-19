@@ -1,0 +1,37 @@
+@startuml
+title Colored Participant Boxes
+
+box "Client Layer" #LightBlue
+    actor User
+    participant Browser
+end box
+
+box "Application Layer" #LightGreen
+    participant Controller
+    participant Service
+end box
+
+box "Infrastructure" #LightPink
+    database PostgreSQL
+    queue RabbitMQ
+    collections Redis
+end box
+
+User -> Browser : action()
+Browser -> Controller : httpRequest()
+Controller -> Service : businessLogic()
+
+Service -> PostgreSQL : query()
+PostgreSQL --> Service : data
+
+Service -> Redis : cache()
+Redis --> Service : ok
+
+Service -> RabbitMQ : publish()
+RabbitMQ --> Service : ack
+
+Service --> Controller : result
+Controller --> Browser : httpResponse()
+Browser --> User : display()
+
+@enduml

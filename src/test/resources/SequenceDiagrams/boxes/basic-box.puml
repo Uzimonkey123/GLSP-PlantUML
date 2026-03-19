@@ -1,0 +1,32 @@
+@startuml
+title Basic Participant Boxes
+
+box "Frontend"
+    participant Browser
+    participant MobileApp
+end box
+
+box "Backend"
+    participant APIGateway
+    participant Service
+end box
+
+box "Data Layer"
+    database Database
+    collections Cache
+end box
+
+Browser -> APIGateway : webRequest()
+MobileApp -> APIGateway : mobileRequest()
+
+APIGateway -> Service : process()
+Service -> Database : query()
+Database --> Service : data
+Service -> Cache : store()
+Cache --> Service : ok
+Service --> APIGateway : result
+
+APIGateway --> Browser : webResponse
+APIGateway --> MobileApp : mobileResponse
+
+@enduml

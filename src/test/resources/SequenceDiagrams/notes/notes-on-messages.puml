@@ -1,0 +1,31 @@
+@startuml
+title Notes on Messages
+
+participant Client
+participant Server
+participant Database
+
+Client -> Server : login(user, pass)
+note right : Authentication request\nwith credentials
+
+Server -> Database : findUser(user)
+note left : Query user table
+
+Database --> Server : userRecord
+note right : Returns null if not found
+
+Server --> Client : authToken
+note left
+    JWT token containing:
+    - userId
+    - roles
+    - expiry
+end note
+
+Client -> Server : getData(token)
+note right : Token in Authorization header
+
+Server --> Client : data
+note left : Paginated response
+
+@enduml

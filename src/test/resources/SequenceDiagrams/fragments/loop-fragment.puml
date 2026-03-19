@@ -1,0 +1,40 @@
+@startuml
+title Loop Fragment (Iteration)
+
+participant BatchProcessor
+participant ItemProcessor
+participant Database
+participant Logger
+
+BatchProcessor -> Database : getItems()
+activate BatchProcessor
+activate Database
+Database --> BatchProcessor : items[]
+deactivate Database
+
+loop for each item in items
+    BatchProcessor -> ItemProcessor : process(item)
+    activate ItemProcessor
+    
+    ItemProcessor -> Database : updateStatus(item.id, "processing")
+    activate Database
+    Database --> ItemProcessor : ok
+    deactivate Database
+    
+    ItemProcessor -> ItemProcessor : doWork(item)
+    
+    ItemProcessor -> Database : updateStatus(item.id, "completed")
+    activate Database
+    Database --> ItemProcessor : ok
+    deactivate Database
+    
+    ItemProcessor --> BatchProcessor : result
+    deactivate ItemProcessor
+    
+    BatchProcessor -> Logger : log("Processed: " + item.id)
+end
+
+BatchProcessor -> Logger : log("Batch complete")
+deactivate BatchProcessor
+
+@enduml

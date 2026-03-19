@@ -1,0 +1,34 @@
+@startuml
+title Autonumber Examples
+
+participant A
+participant B
+participant C
+
+autonumber
+A -> B : First message
+B -> C : Second message
+C --> B : Third message
+B --> A : Fourth message
+
+autonumber 10
+A -> B : Starts at 10
+B -> C : Number 11
+
+autonumber 20 10
+A -> B : Starts at 20
+B -> C : Increment by 10 (30)
+C -> A : Next is 40
+
+autonumber stop
+A -> B : No number
+B -> C : Still no number
+
+autonumber resume
+C -> A : Resumes numbering
+
+autonumber "<b>[000]"
+A -> B : Formatted 001
+B -> C : Formatted 002
+
+@enduml

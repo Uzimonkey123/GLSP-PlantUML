@@ -1,0 +1,25 @@
+@startuml
+title Self Messages (Reflexive)
+
+participant Service
+
+Service -> Service : initialize()
+activate Service
+
+Service -> Service : loadConfiguration()
+Service -> Service : validateConfig()
+
+Service -> Service : startProcessing()
+activate Service #DarkSalmon
+
+Service -> Service : processItem(1)
+Service -> Service : processItem(2)
+Service -> Service : processItem(3)
+
+deactivate Service
+
+Service -> Service : cleanup()
+Service -> Service : shutdown()
+deactivate Service
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+
+header Page Header
+footer Page %page% of %lastpage%
+
+title Diagram with Header and Footer
+
+mainframe sd Authentication Flow
+
+participant User
+participant System
+participant Database
+
+User -> System : login(credentials)
+System -> Database : validateCredentials()
+Database --> System : valid
+System --> User : authToken
+
+@enduml

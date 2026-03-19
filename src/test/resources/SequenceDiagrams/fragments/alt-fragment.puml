@@ -1,0 +1,28 @@
+@startuml
+title Alt Fragment (Conditional)
+
+participant Client
+participant Server
+participant Database
+
+Client -> Server : authenticate(credentials)
+activate Server
+
+Server -> Database : findUser(username)
+activate Database
+Database --> Server : user
+deactivate Database
+
+alt user exists AND password matches
+    Server -> Server : createSession()
+    Server --> Client : 200 OK {token}
+else user exists BUT password wrong
+    Server -> Server : incrementFailedAttempts()
+    Server --> Client : 401 Unauthorized
+else user does not exist
+    Server --> Client : 404 Not Found
+end
+
+deactivate Server
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+title Participant Stereotypes
+
+participant "Alice" as A <<Human>>
+participant "API Server" as API <<Service>>
+participant "Order Handler" as OH <<Controller>>
+database "PostgreSQL" as DB <<Database>>
+queue "Kafka" as Q <<MessageBroker>>
+
+A -> API : placeOrder()
+API -> OH : handleOrder()
+OH -> DB : saveOrder()
+DB --> OH : orderId
+OH -> Q : publishEvent()
+Q --> OH : ack
+OH --> API : confirmation
+API --> A : orderPlaced
+
+@enduml
