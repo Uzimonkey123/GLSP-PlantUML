@@ -7,10 +7,10 @@ import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 
 public class NoteBuild {
-    public GModelElement buildNote(SequenceNote note, String source, String target,
+    public GModelElement buildNote(String msgId, SequenceNote note, String source, String target,
                                    double x1, double x2, double y1, double y2) {
         return new GEdgeBuilder("edge:notes")
-                .id("msg-" + note.getId())
+                .id(msgId + "-note")
                 .sourceId(source)
                 .targetId(target)
                 .addArgument("x1", x1)

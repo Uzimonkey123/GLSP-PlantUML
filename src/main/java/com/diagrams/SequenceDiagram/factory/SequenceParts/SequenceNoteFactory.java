@@ -91,7 +91,7 @@ public class SequenceNoteFactory {
             double y1 = messagesYPos.get(msgIndex) - noteYOffset;
             double y2 = messagesYPos.get(msgIndex) + noteXOffset;
 
-            elements.add(noteBuild.buildNote(note, source, target, x1, x2, y1, y2));
+            elements.add(noteBuild.buildNote(msg.getMsgId(), note, source, target, x1, x2, y1, y2));
             elements.add(noteBuild.buildNoteLabel(note, x1, x2, labelYPos));
         }
     }
