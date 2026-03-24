@@ -137,10 +137,9 @@ class LineFinderTest extends SequenceDiagramTestBase {
         void findReference() {
             createFinder("fragments/ref-fragment.puml");
 
-            assertAll(
-                    () -> assertTrue(lineFinder.findReferenceLine("ref", new Object()) >= 0),
-                    () -> assertTrue(lineFinder.findReferenceLine("Client", new Object()) >= 0)
-            );
+            assertTrue(lineFinder.findReferenceLine("ref", new Object()) >= 0);
+            lineFinder.resetSearch();
+            assertTrue(lineFinder.findReferenceLine("Client", new Object()) >= 0);
         }
     }
 
