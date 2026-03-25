@@ -3,7 +3,7 @@ package com.diagrams.SequenceDiagram.parser;
 import com.GLSPPlantUML.parser.PlantUMLParser;
 import com.diagrams.SequenceDiagram.reconstructor.LineMapper;
 import com.diagrams.SequenceDiagram.reconstructor.SourceElement;
-import com.diagrams.SequenceDiagram.utils.ErrorMessage;
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.state.SequenceModelState;
 import com.diagrams.SequenceDiagram.reconstructor.LineFinder;

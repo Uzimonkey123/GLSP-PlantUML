@@ -1,5 +1,6 @@
 package com.diagrams.ClassDiagram.factory;
 
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.factory.ClassParts.ClassEntityFactory;
 import com.diagrams.ClassDiagram.factory.ClassParts.ClassLinkFactory;
@@ -15,6 +16,7 @@ import org.eclipse.glsp.server.features.core.model.GModelFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ClassModelFactory implements GModelFactory {
 
@@ -26,6 +28,13 @@ public class ClassModelFactory implements GModelFactory {
     @Override
     public void createGModel() {
         elements.clear();
+
+        Optional<ErrorMessage> error = modelState.getError();
+        if (error.isPresent()) {
+            // If there is error present, parsing failed, set message and render diagram
+            errorHandler(error);
+            return;
+        }
 
         model = modelState.getModel();
         EntityBuild entityBuild = new EntityBuild();
@@ -42,6 +51,19 @@ public class ClassModelFactory implements GModelFactory {
                 .build();
 
         // Update model state
+        modelState.updateRoot(newGModel);
+        modelState.getRoot().setRevision(-1);
+    }
+
+    private void errorHandler(Optional<ErrorMessage> error) {
+        ErrorMessage errorMessage = error.get();
+        elements.add(errorMessage.buildError());
+
+        GGraph newGModel = new GGraphBuilder()
+                .id("class-diagram")
+                .addAll(elements)
+                .build();
+
         modelState.updateRoot(newGModel);
         modelState.getRoot().setRevision(-1);
     }

@@ -2,7 +2,7 @@ package com.diagrams.SequenceDiagram.factory;
 
 import com.diagrams.SequenceDiagram.builders.NodeBuild;
 import com.diagrams.SequenceDiagram.factory.SequenceParts.*;
-import com.diagrams.SequenceDiagram.utils.ErrorMessage;
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.state.SequenceModelState;
 import com.diagrams.SequenceDiagram.utils.NodeGap;

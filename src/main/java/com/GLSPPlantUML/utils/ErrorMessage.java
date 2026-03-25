@@ -1,4 +1,4 @@
-package com.diagrams.SequenceDiagram.utils;
+package com.GLSPPlantUML.utils;
 
 import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;

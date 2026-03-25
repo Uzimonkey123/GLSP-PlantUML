@@ -2,7 +2,7 @@ package com.diagrams.ClassDiagram.state;
 
 import com.GLSPPlantUML.state.PlantUMLModelState;
 import com.diagrams.ClassDiagram.model.ClassModel;
-import com.diagrams.SequenceDiagram.utils.ErrorMessage;
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.google.inject.Inject;
 import org.eclipse.glsp.server.model.DefaultGModelState;
 

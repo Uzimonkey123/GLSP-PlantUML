@@ -1,7 +1,7 @@
 package com.diagrams.SequenceDiagram.state;
 
 import com.GLSPPlantUML.state.PlantUMLModelState;
-import com.diagrams.SequenceDiagram.utils.ErrorMessage;
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.google.inject.Inject;
 import org.eclipse.glsp.server.model.DefaultGModelState;

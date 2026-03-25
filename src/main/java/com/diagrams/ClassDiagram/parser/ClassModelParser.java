@@ -1,6 +1,7 @@
 package com.diagrams.ClassDiagram.parser;
 
 import com.GLSPPlantUML.parser.PlantUMLParser;
+import com.GLSPPlantUML.utils.ErrorMessage;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
@@ -19,6 +20,7 @@ import net.sourceforge.plantuml.classdiagram.ClassDiagram;
 import net.sourceforge.plantuml.core.Diagram;
 import net.sourceforge.plantuml.decoration.symbol.USymbol;
 import net.sourceforge.plantuml.decoration.symbol.USymbols;
+import net.sourceforge.plantuml.error.PSystemError;
 import net.sourceforge.plantuml.klimt.UStroke;
 import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.skin.VisibilityModifier;
@@ -77,6 +79,11 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         for (BlockUml block : blocks) {
             Diagram d = block.getDiagram();
+            if (d instanceof PSystemError) {
+                String error = String.join("<br>", ((PSystemError) d).getPureAsciiFormatted());
+                modelState.setError(new ErrorMessage(error));
+                return model;
+            }
 
             if (d instanceof ClassDiagram cd) {
                 classDiagram = cd;

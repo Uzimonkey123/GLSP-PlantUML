@@ -1,4 +1,4 @@
-package com.diagrams.SequenceDiagram.utils;
+package com.GLSPPlantUML.utils;
 
 public record ValidationRequest(
         String context

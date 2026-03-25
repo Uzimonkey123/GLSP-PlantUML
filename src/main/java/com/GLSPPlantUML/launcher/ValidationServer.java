@@ -1,7 +1,7 @@
 package com.GLSPPlantUML.launcher;
 
-import com.diagrams.SequenceDiagram.utils.ErrorRecord;
-import com.diagrams.SequenceDiagram.utils.ValidationRequest;
+import com.GLSPPlantUML.utils.ErrorRecord;
+import com.GLSPPlantUML.utils.ValidationRequest;
 import com.GLSPPlantUML.validators.ErrorValidator;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;

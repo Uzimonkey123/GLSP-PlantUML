@@ -1,6 +1,6 @@
 package com.GLSPPlantUML.validators;
 
-import com.diagrams.SequenceDiagram.utils.ErrorRecord;
+import com.GLSPPlantUML.utils.ErrorRecord;
 import net.sourceforge.plantuml.BlockUml;
 import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.core.Diagram;
