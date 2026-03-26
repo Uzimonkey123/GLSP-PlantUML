@@ -24,6 +24,7 @@ import {
 
 import {PlantUmlGLSPDiagramWidget} from "../plantuml-diagram-widget";
 import {PlantUmlStartup} from "../plantuml-startup";
+import {PlantUmlToolPalette} from "../plantuml-tool-palette";
 import {BrEditLabelUI, HtmlLabelView} from "../utils-common";
 
 import {Container} from "inversify";
@@ -62,8 +63,10 @@ export const ClassDiagramModule = new FeatureModule(
         bindOrRebind(context, GLSPDiagramWidgetFactory).toFactory(context => () => context.container.get<PlantUmlGLSPDiagramWidget>(GLSPDiagramWidget));
         bindAsService(context, TYPES.ICommandPaletteActionProvider, RevealNamedElementActionProvider);
         bindAsService(context, TYPES.IContextMenuItemProvider, DeleteElementContextMenuItemProvider);
-        bindAsService(context, TYPES.IDiagramStartup, PlantUmlStartup);
         bindOrRebind(context, TYPES.IUIExtension).to(BrEditLabelUI).inSingletonScope().whenTargetNamed(EditLabelUI.ID);
+
+        bind(PlantUmlToolPalette).toSelf().inSingletonScope();
+        bind(TYPES.IDiagramStartup).toService(PlantUmlToolPalette);
 
         configureDefaultModelElements(context);
         configureModelElement(context, "entity", GNode, EntityView);
@@ -86,6 +89,7 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "label:note", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
         configureModelElement(context, "label:invis", GLabel, HiddenLabelView);
         configureModelElement(context, "label:link", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature]});
+        configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
 
         configureModelElement(context, 'package-folder', GCompartment, PackageFolderView);
         configureModelElement(context, 'package-rectangle', GCompartment, PackageRectangleView);

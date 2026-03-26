@@ -29,8 +29,8 @@ import {
     EditLabelUI
 } from '@eclipse-glsp/client';
 import {
-    VSCODE_DEFAULT_MODULES, 
-    GLSPDiagramWidget,      
+    VSCODE_DEFAULT_MODULES,
+    GLSPDiagramWidget,
     GLSPDiagramWidgetFactory
 } from '@eclipse-glsp/vscode-integration-webview';
 import {
@@ -62,6 +62,7 @@ import {
 
 import { PlantUmlStartup } from '../plantuml-startup';
 import { PlantUmlGLSPDiagramWidget } from '../plantuml-diagram-widget';
+import { PlantUmlToolPalette } from '../plantuml-tool-palette';
 import '../../css/diagram.css';
 import 'sprotty/css/sprotty.css';
 import 'sprotty/css/edit-label.css';
@@ -76,12 +77,14 @@ export const SequenceDiagramModule = new FeatureModule(
         bindOrRebind(context, GLSPDiagramWidgetFactory).toFactory(context => () => context.container.get<PlantUmlGLSPDiagramWidget>(GLSPDiagramWidget));
         bindAsService(context, TYPES.ICommandPaletteActionProvider, RevealNamedElementActionProvider);
         bindAsService(context, TYPES.IContextMenuItemProvider, DeleteElementContextMenuItemProvider);
-        bindAsService(context, TYPES.IDiagramStartup, PlantUmlStartup);
         bindOrRebind(context, TYPES.IUIExtension).to(BrEditLabelUI).inSingletonScope().whenTargetNamed(EditLabelUI.ID);
+
+        bind(PlantUmlToolPalette).toSelf().inSingletonScope();
+        bind(TYPES.IDiagramStartup).toService(PlantUmlToolPalette);
 
         configureDefaultModelElements(context);
         overrideModelElement(context, DefaultTypes.GRAPH, GGraph, GLSPProjectionView);
-        overrideModelElement(context, DefaultTypes.EDGE, GEdge, SequenceMessageEdgeView);
+        overrideModelElement(context, DefaultTypes.EDGE, GEdge, SequenceMessageEdgeView, { enable: [selectFeature], disable: [moveFeature] });
         configureModelElement(context, "PARTICIPANT", GNode, RectangularNodeView);
         configureModelElement(context, "ACTOR", GNode, ActorNodeView);
         configureModelElement(context, "BOUNDARY", GNode, BoundaryNodeView);
