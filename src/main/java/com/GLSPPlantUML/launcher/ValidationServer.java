@@ -2,7 +2,7 @@ package com.GLSPPlantUML.launcher;
 
 import com.GLSPPlantUML.utils.ErrorRecord;
 import com.GLSPPlantUML.utils.ValidationRequest;
-import com.GLSPPlantUML.validators.ErrorValidator;
+import com.GLSPPlantUML.validators.CompositeValidator;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
@@ -15,12 +15,12 @@ import java.nio.charset.StandardCharsets;
 
 @Singleton
 public class ValidationServer {
-    private final ErrorValidator errorValidator;
+    private final CompositeValidator compositeValidator;
     private HttpServer server;
     private final Gson gson = new Gson();
 
-    public ValidationServer(ErrorValidator validationService) {
-        this.errorValidator = validationService;
+    public ValidationServer(CompositeValidator compositeValidator) {
+        this.compositeValidator = compositeValidator;
     }
 
     public void start() throws IOException {
@@ -65,8 +65,14 @@ public class ValidationServer {
                 String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
                 ValidationRequest req = gson.fromJson(body, ValidationRequest.class);
 
-                // Validate and respond
-                ErrorRecord result = errorValidator.checkErrors(req.context());
+                ErrorRecord result;
+                if (req.diagramType() != null && !req.diagramType().isEmpty()) {
+                    result = compositeValidator.validate(req.context(), req.diagramType());
+                    
+                } else {
+                    result = compositeValidator.validate(req.context());
+                }
+
                 sendJson(exchange, 200, result);
 
             } catch (Exception e) {
