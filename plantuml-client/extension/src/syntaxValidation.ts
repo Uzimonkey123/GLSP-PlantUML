@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import parseDiagramType from "./diagramTypeParser";
 
 export interface ValidationResult {
     hasError: boolean;
@@ -26,7 +27,10 @@ export class SyntaxValidator {
         // Wait 500ms after last typing to handle error
         this.timeouts.set(key, setTimeout(async () => {
             try {
-                const requestBody = { context: document.getText() };
+                const requestBody = {
+                    context: document.getText(),
+                    diagramType: await parseDiagramType(document)
+                };
 
                 const response = await fetch(this.serverUrl, {
                     method: 'POST',

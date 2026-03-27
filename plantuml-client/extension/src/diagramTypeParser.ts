@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-export default async function parseDiagramType(document: vscode.CustomDocument) {
+export default async function parseDiagramType(document: { uri: vscode.Uri }) {
     try {
         const fileContent = await vscode.workspace.fs.readFile(document.uri);
         const content = new TextDecoder().decode(fileContent);
