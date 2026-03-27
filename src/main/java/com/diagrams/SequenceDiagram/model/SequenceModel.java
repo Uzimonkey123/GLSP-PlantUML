@@ -2,7 +2,7 @@ package com.diagrams.SequenceDiagram.model;
 
 import com.diagrams.SequenceDiagram.model.SequenceParts.*;
 import com.diagrams.SequenceDiagram.reconstructor.LineMapper;
-import com.diagrams.SequenceDiagram.model.SequenceParts.*;
+import com.diagrams.SequenceDiagram.utils.ElementRelocator;
 
 import java.util.*;
 
@@ -39,6 +39,19 @@ public class SequenceModel {
 
     LineMapper lineMapper;
 
+    private final List<int[]> linesToDelete = new ArrayList<>();
+    private final List<LineModification> lineModifications = new ArrayList<>();
+
+    public static class LineModification {
+        public final int lineNumber;
+        public final String marker;
+
+        public LineModification(int lineNumber, String marker) {
+            this.lineNumber = lineNumber;
+            this.marker = marker;
+        }
+    }
+
     public SequenceModel() {}
 
     public void setMapper(LineMapper lineMapper) {
@@ -47,6 +60,27 @@ public class SequenceModel {
 
     public LineMapper getLineMapper() {
         return lineMapper;
+    }
+
+
+    public void markLinesForDeletion(int start, int end) {
+        linesToDelete.add(new int[]{start, end});
+    }
+
+    public List<int[]> getLinesToDelete() {
+        return linesToDelete;
+    }
+
+    public void clearLinesToDelete() {
+        linesToDelete.clear();
+    }
+
+    public void markLineForMarkerRemoval(int lineNumber, String marker) {
+        lineModifications.add(new LineModification(lineNumber, marker));
+    }
+
+    public void relocateAllElements(String newSourceText) {
+        new ElementRelocator(this).relocateAll(newSourceText);
     }
 
     public SequenceNode getNode(String id) {
@@ -75,13 +109,6 @@ public class SequenceModel {
         }
 
         return current;
-    }
-
-    public Collection<SequenceGroup> reversedGroups() {
-        List<SequenceGroup> reversedList = new ArrayList<>(this.groups);
-        Collections.reverse(reversedList);
-
-        return reversedList;
     }
 
     public Collection<SequenceEnglober> reversedEnglobers() {

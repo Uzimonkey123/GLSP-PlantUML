@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class SequenceNode extends SourceElement {
     private final String id;
@@ -96,6 +97,57 @@ public class SequenceNode extends SourceElement {
 
     public void addLifeEvent(SequenceLifeEvent lifeEvent) {
         this.lifeEvents.add(lifeEvent);
+    }
+
+    public boolean removeLifeEvent(SequenceLifeEvent lifeEvent) {
+        return this.lifeEvents.remove(lifeEvent);
+    }
+
+    public void shiftLifeEventIndices(Set<Integer> removedIndices) {
+        for (SequenceLifeEvent le : lifeEvents) {
+            int startShift = 0;
+            int endShift = 0;
+
+            for (int removed : removedIndices) {
+                if (removed < le.getStartMessage()) startShift++;
+                if (removed < le.getEndMessage()) endShift++;
+            }
+
+            le.setStartMessage(le.getStartMessage() - startShift);
+            le.setEndMessage(le.getEndMessage() - endShift);
+        }
+
+        if (destroyIndex >= 0) {
+            int shift = 0;
+            for (int removed : removedIndices) {
+                if (removed < destroyIndex) shift++;
+            }
+
+            destroyIndex = destroyIndex - shift;
+        }
+
+        if (createdIndex > 0) {
+            int shift = 0;
+            for (int removed : removedIndices) {
+                if (removed < createdIndex) shift++;
+            }
+
+            createdIndex = createdIndex - shift;
+        }
+    }
+
+    public SequenceLifeEvent getLifeEventByStartMessage(int startMessage) {
+        return this.lifeEvents.stream()
+                .filter(le -> le.getStartMessage() == startMessage)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public SequenceLifeEvent getLifeEventByEndMessage(int endMessage) {
+        return this.lifeEvents.stream()
+                .filter(le -> le.getEndMessage() == endMessage)
+                .findFirst()
+                .orElse(null);
     }
 
     public Optional<SequenceLifeEvent> getLifeEventAt(int messageIndex) {

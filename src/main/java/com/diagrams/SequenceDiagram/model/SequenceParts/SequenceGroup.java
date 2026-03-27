@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SequenceGroup extends SourceElement {
-    private final int startIndex;
+    private int startIndex;
     private int endIndex = -1;
     private String label;
     private String comment = "";
@@ -135,6 +135,14 @@ public class SequenceGroup extends SourceElement {
             separatorLabel.set(i, text);
             setModified();
         }
+    }
+
+    public void setStartIndex(int startIndex) {
+        this.startIndex = startIndex;
+    }
+
+    public void clearSeparatorList() {
+        separatorList.clear();
     }
 
     public void addSeparatorLineNumber(int lineNumber) {
