@@ -60,7 +60,6 @@ import {
     MainframeView
 } from "./sequence-node-views";
 
-import { PlantUmlStartup } from '../plantuml-startup';
 import { PlantUmlGLSPDiagramWidget } from '../plantuml-diagram-widget';
 import { PlantUmlToolPalette } from '../plantuml-tool-palette';
 import '../../css/diagram.css';

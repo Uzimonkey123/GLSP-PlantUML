@@ -23,7 +23,6 @@ import {
 } from "@eclipse-glsp/vscode-integration-webview";
 
 import {PlantUmlGLSPDiagramWidget} from "../plantuml-diagram-widget";
-import {PlantUmlStartup} from "../plantuml-startup";
 import {PlantUmlToolPalette} from "../plantuml-tool-palette";
 import {BrEditLabelUI, HtmlLabelView} from "../utils-common";
 
