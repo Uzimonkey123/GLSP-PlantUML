@@ -1,3 +1,10 @@
+/*
+ * File: MapperInfo.java
+ * Author: Norman Babiak
+ * Description: Maps model elements to their source line positions.
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.utils;
 
 import com.diagrams.ClassDiagram.reconstructor.ClassLineMapper;

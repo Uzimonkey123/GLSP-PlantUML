@@ -1,3 +1,10 @@
+/*
+ * File: ClassDiagramConfiguration.java
+ * Author: Norman Babiak
+ * Description: Configuration file for class diagram, containing shapes and edge types
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram;
 
 import org.eclipse.glsp.server.diagram.BaseDiagramConfiguration;

@@ -1,3 +1,10 @@
+/*
+ * File: ClassLink.java
+ * Author: Norman Babiak
+ * Description: Member representation of the methods, fields and raw body in class diagram
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.model.ClassParts;
 
 import com.diagrams.ClassDiagram.reconstructor.SourceElement;
@@ -11,8 +18,8 @@ public class ClassLink extends SourceElement {
     private int length;
     private final String decorator1;
     private final String decorator2;
-    private ClassLabel quantifier1;
-    private ClassLabel quantifier2;
+    private final ClassLabel quantifier1;
+    private final ClassLabel quantifier2;
 
     private String sourceMember = null;
     private String targetMember = null;
@@ -43,6 +50,9 @@ public class ClassLink extends SourceElement {
         this.quantifier2 = new ClassLabel(0, 0, "link-quant2-" + linkId, quantifier2);
     }
 
+    /**
+     * Removal of unnecessary parts of the message parsed from PlantUML
+     */
     private void cleanMessage(String message) {
         if (this.message == null) {
             this.message = new ClassLabel(0, 0, "link-label-" + this.linkId, "");

@@ -1,3 +1,10 @@
+/*
+ * File: ClassEntity.java
+ * Author: Norman Babiak
+ * Description: Entity representation of the class diagram
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.model.ClassParts;
 
 import com.diagrams.ClassDiagram.model.NodePosition;

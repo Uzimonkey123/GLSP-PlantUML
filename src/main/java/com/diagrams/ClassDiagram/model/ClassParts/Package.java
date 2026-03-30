@@ -1,3 +1,10 @@
+/*
+ * File: Package.java
+ * Author: Norman Babiak
+ * Description: Package representation in class diagram
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.model.ClassParts;
 
 import com.diagrams.ClassDiagram.model.NodePosition;
@@ -20,7 +27,7 @@ public class Package extends NodePosition {
     private double anchorY = -1;
     private double anchorSumX = 0, anchorSumY = 0;
     private int anchorCount = 0;
-    private String originalName;
+    private final String originalName;
 
 
     public Package(String id, String name, String type) {
@@ -211,6 +218,9 @@ public class Package extends NodePosition {
         anchorCount++;
     }
 
+    /**
+     * Anchor position for package links
+     */
     public void finalizeAnchor() {
         double cx = getX() + width / 2;
         double cy = getY() + height / 2;

@@ -1,3 +1,10 @@
+/*
+ * File: Visibility.java
+ * Author: Norman Babiak
+ * Description: Helper method to get visibility from member/entity into internal model representation
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.model;
 
 public enum Visibility {

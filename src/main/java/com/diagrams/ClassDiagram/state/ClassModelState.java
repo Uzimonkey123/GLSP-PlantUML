@@ -1,3 +1,10 @@
+/*
+ * File: ClassModelState.java
+ * Author: Norman Babiak
+ * Description: Stores state of the model for the whole relation of the connected client
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.state;
 
 import com.GLSPPlantUML.state.PlantUMLModelState;
@@ -13,7 +20,7 @@ public class ClassModelState extends DefaultGModelState implements PlantUMLModel
     @Inject
     private ClassModel model = new ClassModel();
     private String sourceUri;
-    private ErrorMessage error = null;
+    private ErrorMessage error = null; // In case of error, stores the message and the built-in ready GLabel
 
     public ClassModel getModel() {
         return model;

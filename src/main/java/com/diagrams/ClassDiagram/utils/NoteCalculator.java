@@ -1,3 +1,10 @@
+/*
+ * File: NoteCalculator.java
+ * Author: Norman Babiak
+ * Description: Calculates note dimensions and positions relative to link labels.
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.utils;
 
 public class NoteCalculator {
@@ -25,6 +32,9 @@ public class NoteCalculator {
         return new GeometryUtils.Dimensions(width, height);
     }
 
+    /**
+     * Shifts the link label position to make room for the note box, pushing it away, so they don't overlap.
+     */
     public GeometryUtils.Point adjustLabelForNote(GeometryUtils.Point labelPos, String message,
                                                   GeometryUtils.Dimensions noteDim,
                                                   String notePosition, double linkXAtLabelY) {
@@ -51,6 +61,9 @@ public class NoteCalculator {
         };
     }
 
+    /**
+     * Calculates where to place the note box itself, anchored relative to the label position.
+     */
     public GeometryUtils.Point calculateNotePosition(GeometryUtils.Point labelPos, String message,
                                                      GeometryUtils.Dimensions noteDim,
                                                      String notePosition, double linkXAtLabelY) {
@@ -76,6 +89,7 @@ public class NoteCalculator {
             );
         };
 
+        // Prevent note from crossing over the link line
         if (notePos.x() < linkXAtLabelY) {
             notePos = notePos.offset(linkXAtLabelY - notePos.x() + safetyMargin, 0);
         }

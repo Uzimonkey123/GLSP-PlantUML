@@ -1,3 +1,10 @@
+/*
+ * File: LinkGeometry.java
+ * Author: Norman Babiak
+ * Description: Strategy-based edge geometry for link label and quantifier positioning.
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.utils;
 
 import com.diagrams.ClassDiagram.factory.ClassLayout;
@@ -10,6 +17,9 @@ public class LinkGeometry {
 
     private final CurvedEdgeCalculator curvedCalculator = new CurvedEdgeCalculator();
 
+    /**
+     * Interface for calculating label, quantifier, midpoint positions on different edge types
+     */
     public interface EdgeGeometry {
         GeometryUtils.Point getLabelPosition(int messageLengthChars);
         GeometryUtils.Point getQuantifierPosition(boolean isSource, double headSize);
@@ -18,6 +28,9 @@ public class LinkGeometry {
         double getLinkXAtY(double y);
     }
 
+    /**
+     * Direct line between entities, no members specified either. Label is positioned from midpoint of the line
+     */
     public class StraightEdge implements EdgeGeometry {
         private final GeometryUtils.Point srcCenter;
         private final GeometryUtils.Point tgtCenter;
@@ -47,6 +60,7 @@ public class LinkGeometry {
             GeometryUtils.Point mid = getMidpoint();
             double offset = labelPerpendicularOffset;
 
+            // Mostly-vertical edges need extra offset so the label clears the line
             if (Math.abs(direction.dy()) > Math.abs(direction.dx())) {
                 double verticalLabelExtraOffset = 2.5;
                 offset += messageLengthChars * verticalLabelExtraOffset;
@@ -93,6 +107,10 @@ public class LinkGeometry {
         }
     }
 
+    /**
+     * Bézier curve anchored to specific members in member-to-member links. Curves alternate if between the two same entities
+     * from right and left. Label again at the midpoint and pushed
+     */
     public class CurvedEdge implements EdgeGeometry {
         private final GeometryUtils.Point srcAnchor;
         private final GeometryUtils.Point tgtAnchor;
@@ -151,6 +169,11 @@ public class LinkGeometry {
         }
     }
 
+    /**
+     * Curved and offset-ed edge for multiple links between the same entities. Start and end are shifted according to
+     * how many lines are between the entities, while they as well change in matter of curved/straight depending on where
+     * they are
+     */
     public class ParallelEdge implements EdgeGeometry {
         private final GeometryUtils.Point srcAnchor;
         private final GeometryUtils.Point tgtAnchor;
@@ -193,19 +216,16 @@ public class LinkGeometry {
 
             // Intersect offset ray with entity rectangle boundary
             this.srcAnchor = entityBoundaryPoint(
-                    src.getX(), srcSize.width, srcSize.height,
-                    srcOffCx, srcOffCy, tgtOffCx, tgtOffCy);
+                    src.getX(), srcSize.width, srcSize.height, srcOffCy, tgtOffCx, tgtOffCy);
 
             this.tgtAnchor = entityBoundaryPoint(
-                    tgt.getX(), tgtSize.width, tgtSize.height,
-                    tgtOffCx, tgtOffCy, srcOffCx, srcOffCy);
+                    tgt.getX(), tgtSize.width, tgtSize.height, tgtOffCy, srcOffCx, srcOffCy);
 
             this.curve = curvedCalculator.calculateCurve(srcAnchor, tgtAnchor, flipCurve);
         }
 
-        private GeometryUtils.Point entityBoundaryPoint(double entityX, double w, double h,
-                                                        double fromCx, double fromCy, double toCx, double toCy) {
-
+        private GeometryUtils.Point entityBoundaryPoint(double entityX, double w, double h, double fromCy, double toCx,
+                                                        double toCy) {
             GeometryUtils.Rectangle rect = new GeometryUtils.Rectangle(entityX, fromCy - h / 2.0, w, h);
             GeometryUtils.Point target = new GeometryUtils.Point(toCx, toCy);
 
@@ -258,19 +278,16 @@ public class LinkGeometry {
         }
     }
 
+    /**
+     * Link between the same entity, made as a loop to the right
+     */
     public class SelfLoopEdge implements EdgeGeometry {
         private final GeometryUtils.Point startAnchor;
         private final GeometryUtils.Point endAnchor;
         private final GeometryUtils.Point controlPoint1;
-        private final GeometryUtils.Point controlPoint2;
         private final double bulge;
-        private final int index;
-        private final int totalCount;
 
         public SelfLoopEdge(ClassLink link, ClassLayout.Size size, int index, int totalCount) {
-            this.index = index;
-            this.totalCount = totalCount;
-
             ClassEntity entity = link.getEntity1();
             double x = entity.getX();
             double y = entity.getY();
@@ -300,7 +317,6 @@ public class LinkGeometry {
             this.startAnchor = new GeometryUtils.Point(anchorX, anchorY1);
             this.endAnchor = new GeometryUtils.Point(anchorX, anchorY2);
             this.controlPoint1 = new GeometryUtils.Point(anchorX + bulge, anchorY1);
-            this.controlPoint2 = new GeometryUtils.Point(anchorX + bulge, anchorY2);
         }
 
         @Override

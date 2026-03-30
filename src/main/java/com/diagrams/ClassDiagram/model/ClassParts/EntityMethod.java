@@ -1,3 +1,10 @@
+/*
+ * File: EntityMethod.java
+ * Author: Norman Babiak
+ * Description: Member representation of the methods, fields and raw body in class diagram
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.model.ClassParts;
 
 import com.diagrams.ClassDiagram.model.Visibility;
@@ -18,6 +25,9 @@ public class EntityMethod {
         this.originalName = methodName;
     }
 
+    /**
+     * Parses name of the member by removing visibility, and other modifiers
+     */
     private void parse(String raw) {
         this.visibilityChar = "";
         String tempName = raw;

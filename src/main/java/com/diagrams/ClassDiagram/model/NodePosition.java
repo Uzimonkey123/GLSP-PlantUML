@@ -1,3 +1,10 @@
+/*
+ * File: NodePosition.java
+ * Author: Norman Babiak
+ * Description: Class for setting modified for given elements and their position on the canvas
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.model;
 
 import com.diagrams.ClassDiagram.reconstructor.SourceElement;

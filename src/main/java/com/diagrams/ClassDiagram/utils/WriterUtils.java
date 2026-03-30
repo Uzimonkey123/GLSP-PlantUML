@@ -1,3 +1,10 @@
+/*
+ * File: WriterUtils.java
+ * Author: Norman Babiak
+ * Description: Utility methods for writing source file after save
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.utils;
 
 import java.util.Map;
@@ -41,6 +48,10 @@ public final class WriterUtils {
         return count;
     }
 
+    /**
+     * Replaces occurrences of oldWord only when surrounded by non-identifier characters. Prevents "User"
+     * from matching inside "UserService".
+     */
     public static String replaceWordBoundary(String text, String oldWord, String replacement) {
         StringBuilder result = new StringBuilder();
         int i = 0;
@@ -49,12 +60,12 @@ public final class WriterUtils {
             int idx = text.indexOf(oldWord, i);
             if (idx < 0) {
                 result.append(text.substring(i));
+
                 break;
             }
 
             char before = idx > 0 ? text.charAt(idx - 1) : ' ';
-            char after = idx + oldWord.length() < text.length()
-                    ? text.charAt(idx + oldWord.length()) : ' ';
+            char after = idx + oldWord.length() < text.length() ? text.charAt(idx + oldWord.length()) : ' ';
 
             boolean ok = !Character.isLetterOrDigit(before) && before != '_'
                     && !Character.isLetterOrDigit(after) && after != '_';
@@ -104,6 +115,9 @@ public final class WriterUtils {
         };
     }
 
+    /**
+     * Converts a link decorator enum value to its PlantUML arrow symbol.
+    */
     public static String decoratorSymbol(String dec, boolean left) {
         if (dec == null || dec.isEmpty()) return "";
 
@@ -146,6 +160,10 @@ public final class WriterUtils {
         };
     }
 
+    /**
+     * Extracts the reference part of a member declaration, stripping return types and keeping only method
+     * name + params or field name.
+     */
     public static String deriveMemberRef(String methodName) {
         if (methodName == null || methodName.isEmpty()) return methodName;
         String temp = methodName.trim();
@@ -174,6 +192,9 @@ public final class WriterUtils {
         return temp;
     }
 
+    /**
+     * Strips member name until just the base of it remains without any visibility modifiers etc.
+     */
     public static String parseRawMemberName(String raw) {
         if (raw == null || raw.isEmpty()) return raw;
         String tempName = raw;
@@ -207,6 +228,9 @@ public final class WriterUtils {
         return ref;
     }
 
+    /**
+     * Replaces Entity::oldRef with Entity::newRef for a given entity token.
+     */
     public static String replaceMemberRefsForToken(String text, String token, Map<String, String> refMap) {
         for (var refEntry : refMap.entrySet()) {
             String oldRef = refEntry.getKey();
@@ -218,6 +242,10 @@ public final class WriterUtils {
         return text;
     }
 
+    /**
+     * Replaces entity name references using regex word boundaries. If strict, dots are also treated as
+     * boundary characters
+     */
     public static String replaceReference(String current, String oldName, String newToken, boolean strict) {
         if (oldName.equals(newToken)) return current;
 

@@ -1,3 +1,10 @@
+/*
+ * File: ClassLabel.java
+ * Author: Norman Babiak
+ * Description: Label representation of text in diagram
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.model.ClassParts;
 
 import com.diagrams.ClassDiagram.model.NodePosition;

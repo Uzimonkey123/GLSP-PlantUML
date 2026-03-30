@@ -1,3 +1,10 @@
+/*
+ * File: ClassModelStorage.java
+ * Author: Norman Babiak
+ * Description: Storage for the model, handles loading and saving of the diagram
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.storage;
 
 import com.GLSPPlantUML.storage.AbstractPlantUMLStorage;
@@ -18,7 +25,6 @@ public class ClassModelStorage extends AbstractPlantUMLStorage<ClassModel, Class
     @Override
     public void loadSourceModel(RequestModelAction action) {
         super.loadSourceModel(action);
-        ClassModel model = modelState.getModel();
     }
 
     @Override
@@ -27,10 +33,12 @@ public class ClassModelStorage extends AbstractPlantUMLStorage<ClassModel, Class
             String sourceUri = modelState.getSourceUri();
             if (sourceUri == null || sourceUri.isEmpty()) {
                 System.err.println("Error save: No source URI");
+
                 return;
             }
 
             ClassModel model = modelState.getModel();
+            // In case of save of the file, rewrites changed contents into the file
             ClassWriter writer = new ClassWriter(model, sourceUri);
             writer.write();
 

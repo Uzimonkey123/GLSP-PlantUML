@@ -1,3 +1,10 @@
+/*
+ * File: GeometryUtils.java
+ * Author: Norman Babiak
+ * Description: Geometry primitives for edge calculations.
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.utils;
 
 public class GeometryUtils {
@@ -51,6 +58,9 @@ public class GeometryUtils {
             return new Point(x + width / 2, y + height / 2);
         }
 
+        /**
+         * Finds the point where a ray from the rectangle's center toward the target crosses the rectangle boundary.
+         */
         public Point boundaryIntersection(Point target) {
             Point c = center();
             double dx = target.x() - c.x();
