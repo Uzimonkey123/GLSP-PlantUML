@@ -1,3 +1,10 @@
+/*
+ * File: TipsHandler.java
+ * Author: Norman Babiak
+ * Description: Attaches PlantUML tips to matching members
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.parser;
 
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
@@ -12,6 +19,10 @@ import java.util.Map;
 
 public class TipsHandler {
 
+    /**
+     * Applies tooltip content from a TIPS entity to matching member of the target entity. Searches methods, fields,
+     * and rawBody since PlantUML doesn't distinguish where the tip attaches.
+     */
     public void applyTipsToEntity(Entity tipsEntity, ClassEntity targetEntity) {
         Map<String, Display> tips = tipsEntity.getTips();
         if (targetEntity == null) {
@@ -42,6 +53,10 @@ public class TipsHandler {
         }
     }
 
+    /**
+     * Matches a member signature against a tip key. If the tip key has no parentheses but the member does,
+     * compares by method name only
+     */
     private boolean matchesMemberSignature(String memberSignature, String tipKey) {
         String cleanedMember = cleanSignature(memberSignature);
         String cleanedTip = cleanSignature(tipKey);
@@ -54,10 +69,13 @@ public class TipsHandler {
         return cleanedMember.equals(cleanedTip);
     }
 
+    /**
+     * Normalizes member signature for comparison
+     */
     private String cleanSignature(String signature) {
         String cleaned = signature.trim()
                 .replaceFirst("^[+\\-#~]\\s*", "")
-                .replaceAll("\\{[^}]+\\}\\s*", "");
+                .replaceAll("\\{[^}]+}\\s*", "");
 
         if (!cleaned.contains("(")) {
             String[] parts = cleaned.split("\\s+");
@@ -71,6 +89,7 @@ public class TipsHandler {
             return cleaned;
         }
 
+        // Extract method name
         String beforeParen = cleaned.substring(0, parenStart).trim();
         String params = cleaned.substring(parenStart + 1, parenEnd).trim();
 
@@ -81,6 +100,7 @@ public class TipsHandler {
             return methodName + "()";
         }
 
+        // Keep only first token of each param (the type, dropping the name)
         StringBuilder normalized = new StringBuilder();
         String[] paramList = params.split(",");
         for (int i = 0; i < paramList.length; i++) {

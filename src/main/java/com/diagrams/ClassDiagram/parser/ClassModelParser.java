@@ -1,3 +1,10 @@
+/*
+ * File: ClassModelParser.java
+ * Author: Norman Babiak
+ * Description: Parser to internal model from PlantUML public API
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.parser;
 
 import com.GLSPPlantUML.parser.PlantUMLParser;
@@ -5,9 +12,9 @@ import com.GLSPPlantUML.utils.ErrorMessage;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
-import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
 import com.diagrams.ClassDiagram.model.ClassParts.Package;
-import com.diagrams.ClassDiagram.model.Visibility;
+import com.diagrams.ClassDiagram.parser.handlers.EntityHandlerContext;
+import com.diagrams.ClassDiagram.parser.handlers.EntityHandlerRegistry;
 import com.diagrams.ClassDiagram.reconstructor.ClassLineFinder;
 import com.diagrams.ClassDiagram.reconstructor.ClassLineMapper;
 import com.diagrams.ClassDiagram.state.ClassModelState;
@@ -23,8 +30,6 @@ import net.sourceforge.plantuml.decoration.symbol.USymbols;
 import net.sourceforge.plantuml.error.PSystemError;
 import net.sourceforge.plantuml.klimt.UStroke;
 import net.sourceforge.plantuml.klimt.color.ColorType;
-import net.sourceforge.plantuml.skin.VisibilityModifier;
-import net.sourceforge.plantuml.text.Guillemet;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +57,8 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
     private ClassLineFinder lineFinder;
     private final Map<Object, Integer> elementToLineMap = new HashMap<>();
 
+    private EntityHandlerRegistry handlerRegistry;
+
     @Override
     public ClassModel parse(File file) throws IOException {
         String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
@@ -66,6 +73,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         // Create mapper and finder from the original text
         lineMapper = new ClassLineMapper(originalText, model);
         lineFinder = new ClassLineFinder(lineMapper, elementToLineMap);
+
+        EntityHandlerContext ctx = new EntityHandlerContext(model, lineMapper, lineFinder, entityMapping);
+        handlerRegistry = new EntityHandlerRegistry(ctx);
 
         // Prepare text for PlantUML
         String text = originalText;
@@ -107,12 +117,12 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         model.setMapper(lineMapper);
         model.setLineFinder(lineFinder);
-        for (int i = 0; i < lineMapper.getLineInfos().size(); i++) {
-            System.out.println(lineMapper.getLineInfos().get(i));
-        }
         return model;
     }
 
+    /**
+     * Method to handle entities and packages recursively, skipping hidden or removed ones
+     */
     private void processEntityRecursively(Entity entity, Package parentPackage) {
         for (Entity group : entity.groups()) {
             if (!group.isHidden() && !group.isRemoved()) {
@@ -169,279 +179,12 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private void handleEntity(Entity entity, Package parentPackage) {
         String id = "ent-" + entityCounter++;
-        String type = entity.getLeafType().toString();
-
-        if (type.equals("TIPS")) {
-            return;
-        }
-
-        switch (type) {
-            case "POINT_FOR_ASSOCIATION" -> {
-                handleAssociationPoint(entity, id, parentPackage);
-                return;
-            }
-            case "CIRCLE", "DESCRIPTION" -> {
-                handleCircleEntity(entity, id, parentPackage);
-                return;
-            }
-            case "STATE_CHOICE", "ASSOCIATION" -> {
-                handleDiamondEntity(entity, id, parentPackage);
-                return;
-            }
-            case "LOLLIPOP_FULL" -> {
-                handleLollipop(entity, id, parentPackage);
-                return;
-            }
-            case "NOTE" -> {
-                handleNoteEntity(entity, id, parentPackage);
-                return;
-            }
-        }
-
-        String name = String.join("<br>", entity.getDisplay());
-
-        List<EntityMethod> body = new ArrayList<>();
-        List<EntityMethod> methods = new ArrayList<>();
-        List<EntityMethod> fields = new ArrayList<>();
-
-        try {
-            for (CharSequence item : entity.getBodier().getRawBody()) {
-                String itemStr = item.toString();
-                if (itemStr.isEmpty() || itemStr.isBlank()) {
-                    continue;
-                }
-
-                EntityMethod bodyItem = new EntityMethod(itemStr);
-                if (itemStr.contains("(") && itemStr.contains(")")) {
-                    bodyItem.setField(false);
-                }
-                body.add(bodyItem);
-            }
-
-        } catch (Exception e) {
-            System.err.println("WARNING: Cannot get raw body for " + name);
-        }
-
-        try {
-            for (CharSequence method : entity.getBodier().getMethodsToDisplay()) {
-                String itemStr = method.toString();
-                if (itemStr.isEmpty() || itemStr.isBlank()) {
-                    continue;
-                }
-
-                EntityMethod entityMethod = new EntityMethod(method.toString());
-                entityMethod.setField(false);
-                methods.add(entityMethod);
-            }
-
-        } catch (UnsupportedOperationException e) {
-            for (EntityMethod item : body) {
-                String itemStr = item.getMethodName();
-                if (itemStr.contains("(") && itemStr.contains(")")) {
-                    methods.add(item);
-                }
-            }
-        }
-
-        try {
-            for (CharSequence field : entity.getBodier().getFieldsToDisplay()) {
-                String itemStr = field.toString();
-                if (itemStr.isEmpty() || itemStr.isBlank()) {
-                    continue;
-                }
-
-                EntityMethod entityMethod = new EntityMethod(field.toString());
-                entityMethod.setField(true);
-                fields.add(entityMethod);
-            }
-
-        } catch (UnsupportedOperationException e) {
-            for (EntityMethod item : body) {
-                String itemStr = item.getMethodName();
-                if (!itemStr.contains("(") || !itemStr.contains(")")) {
-                    fields.add(item);
-                }
-            }
-        }
-
-        ClassEntity newEntity = new ClassEntity(0, 0, id, name, type, methods, fields, body);
-        model.entities.add(newEntity);
-        entityMapping.put(entity, newEntity);
-
-        int line = lineFinder.findEntityLine(name, newEntity);
-        if (line >= 0) {
-            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(line).originalText);
-
-            if (alias != null && !alias.isEmpty() && !alias.equals(name)) {
-                newEntity.setAlias(alias);
-            }
-
-            int endLine = line;
-            if (opensBlock(line)) {
-                endLine = findBlockEnd(line);
-            }
-
-            addMapperInfo(newEntity, line, endLine, lineMapper);
-
-        } else {
-            addMapperInfo(newEntity, -1, lineMapper);
-        }
-
-        if (entity.getColors().getColor(ColorType.BACK) != null) {
-            newEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
-        }
-
-        if (entity.getVisibilityModifier() != null) {
-            handleEntityVisibility(newEntity, entity);
-        }
-
-        if (entity.getStereotype() != null) {
-            handleEntityStereotype(newEntity, entity);
-        }
-
-        if (entity.getGeneric() != null) {
-            newEntity.setGeneric(entity.getGeneric());
-        }
-
-        if (parentPackage != null) {
-            parentPackage.addEntity(newEntity);
-        }
-
-        System.err.println(newEntity);
+        handlerRegistry.handle(entity, id, parentPackage);
     }
 
-    private void handleLollipop(Entity entity, String id, Package parentPackage) {
-        String type = "LOLLIPOP";
-        String name = String.join("<br>", entity.getDisplay());
-
-        ClassEntity lollipop = new ClassEntity(0, 0, id, name, type);
-        model.entities.add(lollipop);
-        entityMapping.put(entity, lollipop);
-
-        if (entity.getColors().getColor(ColorType.BACK) != null) {
-            lollipop.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
-        }
-
-        int line = lineFinder.findEntityLine(name, lollipop);
-        addMapperInfo(lollipop, line, lineMapper);
-
-        if (parentPackage != null) {
-            parentPackage.addEntity(lollipop);
-        }
-    }
-
-    private void handleAssociationPoint(Entity entity, String id, Package parentPackage) {
-        String type = "ASSOCIATION_POINT";
-        String name = "";
-
-        ClassEntity pointEntity = new ClassEntity(0, 0, id, name, type);
-        model.entities.add(pointEntity);
-        entityMapping.put(entity, pointEntity);
-
-        if (parentPackage != null) {
-            parentPackage.addEntity(pointEntity);
-        }
-    }
-
-    private void handleCircleEntity(Entity entity, String id, Package parentPackage) {
-        String type = "CIRCLE";
-        String name = String.join("<br>", entity.getDisplay());
-
-        ClassEntity circleEntity = new ClassEntity(0, 0, id, name, type);
-        model.entities.add(circleEntity);
-        entityMapping.put(entity, circleEntity);
-
-        if (entity.getColors().getColor(ColorType.BACK) != null) {
-            circleEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
-        }
-
-        int line = lineFinder.findEntityLine(name, circleEntity);
-        addMapperInfo(circleEntity, line, lineMapper);
-
-        if (line != -1) {
-            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(line).originalText);
-            circleEntity.setAlias(alias);
-        }
-
-        if (parentPackage != null) {
-            parentPackage.addEntity(circleEntity);
-        }
-    }
-
-    private void handleDiamondEntity(Entity entity, String id, Package parentPackage) {
-        String type = "DIAMOND";
-        String name = String.join("<br>", entity.getName());
-
-        ClassEntity diamondEntity = new ClassEntity(0, 0, id, name, type);
-        model.entities.add(diamondEntity);
-        entityMapping.put(entity, diamondEntity);
-
-        if (entity.getColors().getColor(ColorType.BACK) != null) {
-            diamondEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
-        }
-
-        int line = lineFinder.findEntityLine(name, diamondEntity);
-        addMapperInfo(diamondEntity, line, lineMapper);
-
-        if (line != -1) {
-            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(line).originalText);
-           diamondEntity.setAlias(alias);
-        }
-
-        if (parentPackage != null) {
-            parentPackage.addEntity(diamondEntity);
-        }
-    }
-
-    private void handleNoteEntity(Entity entity, String id, Package parentPackage) {
-        String type = "NOTE";
-        String name = String.join("<br>", entity.getDisplay());
-
-        ClassEntity noteEntity = new ClassEntity(0, 0, id, name, type);
-        model.entities.add(noteEntity);
-        entityMapping.put(entity, noteEntity);
-
-        if (entity.getColors().getColor(ColorType.BACK) != null) {
-            noteEntity.setBackground(entity.getColors().getColor(ColorType.BACK).asString());
-        }
-
-        int startLine = lineFinder.findNoteLine(name, noteEntity);
-        int endLine   = lineFinder.findNoteEndLine(startLine, noteEntity);
-        addMapperInfo(noteEntity, startLine, endLine, lineMapper);
-
-        if (startLine != -1 && endLine != -1) {
-            String alias = ClassLineFinder.extractAlias(lineMapper.getLineInfo(startLine).originalText);
-            noteEntity.setAlias(alias);
-        }
-
-        if (parentPackage != null) {
-            parentPackage.addEntity(noteEntity);
-        }
-    }
-
-    private void handleEntityVisibility(ClassEntity newEntity, Entity entity) {
-        String visibility = switch(entity.getVisibilityModifier()) {
-            case VisibilityModifier.PRIVATE_METHOD -> "-";
-            case VisibilityModifier.PROTECTED_METHOD -> "#";
-            case VisibilityModifier.PACKAGE_PRIVATE_METHOD -> "~";
-            case VisibilityModifier.PUBLIC_METHOD -> "+";
-            default -> "";
-        };
-
-        if (!visibility.isEmpty()) {
-            newEntity.setVisibility(Visibility.fromChar(visibility.charAt(0)));
-        }
-    }
-
-    private void handleEntityStereotype(ClassEntity newEntity, Entity entity) {
-        newEntity.setStereotype(true);
-        newEntity.setStereotypeName(entity.getStereotype().getLabel(Guillemet.DOUBLE_COMPARATOR));
-        newEntity.setStereotype(entity.getStereotype().getCharacter());
-        if (entity.getStereotype().getHtmlColor() != null) {
-            newEntity.setStereotypeColor(entity.getStereotype().getHtmlColor().asString());
-        }
-    }
-
+    /**
+     * Returns entities for link if they are entity, if they are package, they create an empty entity for package links
+     */
     private ClassEntity resolveEntity(Entity entity) {
         ClassEntity classEntity = entityMapping.get(entity);
         if (classEntity != null) return classEntity;
@@ -474,6 +217,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             return;
         }
 
+        // Tip entities are handled different, due to the link for the member of the entity
         if (isLeafType(linkEntity1, "TIPS")) {
             tipsHandler.applyTipsToEntity(linkEntity1, entityMapping.get(linkEntity2));
             return;
@@ -503,6 +247,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
             message = "";
         }
 
+        // Parse basic setup for the link
         int length = link.getLength();
         String decorator1 = link.getType().getDecor1().toString();
         String decorator2 = link.getType().getDecor2().toString();
@@ -547,6 +292,7 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         int line = lineFinder.findRelationshipLine(alias1, alias2, newLink);
         addMapperInfo(newLink, line, lineMapper);
 
+        // Create note entity if there is one attached to the link
         if (link.getNote() != null) {
             String noteText = String.join("<br>", link.getNote().getDisplay());
             String noteId = "note-" + id;
@@ -568,7 +314,6 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
         model.links.add(newLink);
         linkAttributes(newLink, link);
-        System.err.println(newLink);
     }
 
     private void linkAttributes(ClassLink newLink, Link link) {
@@ -581,27 +326,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         newLink.setThickness(stroke.getThickness());
     }
 
-    private boolean opensBlock(int line) {
-        String text = lineMapper.getLineInfo(line).originalText.trim();
-        return text.endsWith("{");
-    }
-
-    private int findBlockEnd(int startLine) {
-        List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
-        int depth = 0;
-        for (int i = startLine; i < all.size(); i++) {
-            for (char c : all.get(i).originalText.toCharArray()) {
-                if (c == '{') depth++;
-                else if (c == '}') {
-                    depth--;
-                    if (depth == 0) return i;
-                }
-            }
-        }
-
-        return startLine;
-    }
-
+    /**
+     * Method to distinguish between note links and notes connected with multiple links to other entities
+     */
     private void markNoteLinks() {
         Map<String, Integer> noteConnections = new HashMap<>();
 
