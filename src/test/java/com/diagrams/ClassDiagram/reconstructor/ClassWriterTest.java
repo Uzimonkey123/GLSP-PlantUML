@@ -4,6 +4,7 @@ import com.diagrams.ClassDiagram.ClassDiagramTestBase;
 import com.diagrams.ClassDiagram.model.ClassModel;
 import com.diagrams.ClassDiagram.model.ClassParts.*;
 import com.diagrams.ClassDiagram.parser.ClassModelParser;
+import com.diagrams.ClassDiagram.reconstructor.writers.EntityWriter;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -179,23 +180,16 @@ class ClassWriterTest extends ClassDiagramTestBase {
             ClassEntity entity = mock(ClassEntity.class);
             when(entity.getName()).thenReturn("MyName");
 
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+            WriterContext ctx = new WriterContext(mockModel, testFile.toFile());
 
             when(entity.getAlias()).thenReturn("MyAlias");
-            assertEquals("MyAlias", invokeGetNewToken(writer, entity));
+            assertEquals("MyAlias", ctx.getNewToken(entity));
 
             when(entity.getAlias()).thenReturn(null);
-            assertEquals("MyName", invokeGetNewToken(writer, entity));
+            assertEquals("MyName", ctx.getNewToken(entity));
 
             when(entity.getAlias()).thenReturn("");
-            assertEquals("MyName", invokeGetNewToken(writer, entity));
-        }
-
-        private String invokeGetNewToken(ClassWriter writer, ClassEntity entity) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("getNewToken", ClassEntity.class);
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer, entity);
+            assertEquals("MyName", ctx.getNewToken(entity));
         }
     }
 
@@ -209,9 +203,9 @@ class ClassWriterTest extends ClassDiagramTestBase {
             ClassEntity entity = mock(ClassEntity.class);
             when(entity.getAlias()).thenReturn("MyAlias");
 
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+            WriterContext ctx = new WriterContext(mockModel, testFile.toFile());
 
-            assertEquals("MyAlias", invokeGetEntityToken(writer, entity));
+            assertEquals("MyAlias", ctx.getEntityToken(entity));
         }
 
         @Test
@@ -220,23 +214,16 @@ class ClassWriterTest extends ClassDiagramTestBase {
             ClassEntity entity = mock(ClassEntity.class);
             when(entity.getAlias()).thenReturn(null);
 
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+            WriterContext ctx = new WriterContext(mockModel, testFile.toFile());
 
             when(entity.getName()).thenReturn("My Class");
-            assertEquals("\"My Class\"", invokeGetEntityToken(writer, entity));
+            assertEquals("\"My Class\"", ctx.getEntityToken(entity));
 
             when(entity.getName()).thenReturn("My-Class");
-            assertEquals("\"My-Class\"", invokeGetEntityToken(writer, entity));
+            assertEquals("\"My-Class\"", ctx.getEntityToken(entity));
 
             when(entity.getName()).thenReturn("MyClass");
-            assertEquals("MyClass", invokeGetEntityToken(writer, entity));
-        }
-
-        private String invokeGetEntityToken(ClassWriter writer, ClassEntity entity) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("getEntityToken", ClassEntity.class);
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer, entity);
+            assertEquals("MyClass", ctx.getEntityToken(entity));
         }
     }
 
@@ -247,32 +234,25 @@ class ClassWriterTest extends ClassDiagramTestBase {
         @Test
         @DisplayName("detects separator configuration correctly")
         void detectsSeparatorConfiguration() throws Exception {
-            ClassWriter writer;
+            WriterContext ctx;
 
             when(mockLineMapper.getLineInfos()).thenReturn(new ArrayList<>());
-            writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            assertEquals(".", invokeDetectSeparator(writer));
+            ctx = new WriterContext(mockModel, testFile.toFile());
+            assertEquals(".", ctx.detectSeparator());
 
             ClassLineMapper.LineInfo custom = new ClassLineMapper.LineInfo(
                     0, "set separator ::", ClassLineMapper.LineType.UNKNOWN
             );
             when(mockLineMapper.getLineInfos()).thenReturn(List.of(custom));
-            writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            assertEquals("::", invokeDetectSeparator(writer));
+            ctx = new WriterContext(mockModel, testFile.toFile());
+            assertEquals("::", ctx.detectSeparator());
 
             ClassLineMapper.LineInfo none = new ClassLineMapper.LineInfo(
                     0, "set separator none", ClassLineMapper.LineType.UNKNOWN
             );
             when(mockLineMapper.getLineInfos()).thenReturn(List.of(none));
-            writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            assertEquals(".", invokeDetectSeparator(writer));
-        }
-
-        private String invokeDetectSeparator(ClassWriter writer) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("detectSeparator");
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer);
+            ctx = new WriterContext(mockModel, testFile.toFile());
+            assertEquals(".", ctx.detectSeparator());
         }
     }
 
@@ -294,21 +274,18 @@ class ClassWriterTest extends ClassDiagramTestBase {
             when(entity.getStereotypeName()).thenReturn("service");
             when(entity.getExplicitBackground()).thenReturn("#lightblue");
 
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
-            String result = invokeBuildDeclarationHeader(writer, entity);
+            WriterContext ctx = new WriterContext(mockModel, testFile.toFile());
+            EntityWriter entityWriter = new EntityWriter(ctx);
+
+            Method method = EntityWriter.class.getDeclaredMethod("buildDeclarationHeader", ClassEntity.class);
+            method.setAccessible(true);
+            String result = (String) method.invoke(entityWriter, entity);
 
             assertTrue(result.startsWith("-"));
             assertTrue(result.contains("as Alias"));
             assertTrue(result.contains("<T>"));
             assertTrue(result.contains("<<") && result.contains(">>"));
             assertTrue(result.contains("#lightblue"));
-        }
-
-        private String invokeBuildDeclarationHeader(ClassWriter writer, ClassEntity entity) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("buildDeclarationHeader", ClassEntity.class);
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer, entity);
         }
     }
 
@@ -320,22 +297,20 @@ class ClassWriterTest extends ClassDiagramTestBase {
         @DisplayName("builds member line respecting visibility")
         void buildsMemberLineWithAndWithoutVisibility() throws Exception {
             EntityMethod member = mock(EntityMethod.class);
-            ClassWriter writer = new ClassWriter(mockModel, testFile.toUri().toString());
+
+            WriterContext ctx = new WriterContext(mockModel, testFile.toFile());
+            EntityWriter entityWriter = new EntityWriter(ctx);
+
+            Method method = EntityWriter.class.getDeclaredMethod("buildMemberLine", EntityMethod.class);
+            method.setAccessible(true);
 
             when(member.getVisibilityChar()).thenReturn("public");
             when(member.getMethodName()).thenReturn("myMethod()");
-            assertEquals("+ myMethod()", invokeBuildMemberLine(writer, member));
+            assertEquals("+ myMethod()", method.invoke(entityWriter, member));
 
             when(member.getVisibilityChar()).thenReturn(null);
             when(member.getMethodName()).thenReturn("myField");
-            assertEquals("myField", invokeBuildMemberLine(writer, member));
-        }
-
-        private String invokeBuildMemberLine(ClassWriter writer, EntityMethod member) throws Exception {
-            Method method = ClassWriter.class.getDeclaredMethod("buildMemberLine", EntityMethod.class);
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer, member);
+            assertEquals("myField", method.invoke(entityWriter, member));
         }
     }
 

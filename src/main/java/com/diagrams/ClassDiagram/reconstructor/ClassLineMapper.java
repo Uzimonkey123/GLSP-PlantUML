@@ -1,7 +1,13 @@
+/*
+ * File: ClassLineMapper.java
+ * Author: Norman Babiak
+ * Description: Classifies each line of PlantUML source into a LineType for the parser and writer.
+ * Date: 1.4.2026
+ */
+
 package com.diagrams.ClassDiagram.reconstructor;
 
 import com.diagrams.ClassDiagram.model.ClassModel;
-import com.diagrams.SequenceDiagram.utils.NewLine;
 
 import java.util.ArrayList;
 import java.util.ArrayDeque;
@@ -11,10 +17,14 @@ import java.util.List;
 public class ClassLineMapper {
     private final List<LineInfo> lineInfos;
 
+    /**
+     * Walks every line in the source text and assigns a LineType.
+     */
     public ClassLineMapper(String sourceText, ClassModel model) {
         this.lineInfos = new ArrayList<>();
         String[] lines = sourceText.split("\n", -1);
 
+        // blockStack tracks whether we're inside an entity body { ... }
         Deque<Boolean> blockStack = new ArrayDeque<>();
         boolean insideMultiLineComment = false;
         boolean insideNote = false;
@@ -29,6 +39,7 @@ public class ClassLineMapper {
                 continue;
             }
 
+            // Multi-line comment
             if (insideMultiLineComment) {
                 lineInfos.add(new LineInfo(i, original, LineType.COMMENT));
                 if (trimmed.endsWith("'/")) insideMultiLineComment = false;
@@ -41,6 +52,7 @@ public class ClassLineMapper {
                 continue;
             }
 
+            // Multi-line note body
             if (insideNote) {
                 String lo = trimmed.toLowerCase();
                 if (lo.equals("end note") || lo.equals("endnote")
@@ -58,12 +70,14 @@ public class ClassLineMapper {
 
             LineType type = determineType(trimmed);
 
+            // Unknown lines inside an entity block are treated as members
             if (type == LineType.UNKNOWN
                     && !blockStack.isEmpty()
                     && Boolean.TRUE.equals(blockStack.peek())) {
                 type = LineType.MEMBER;
             }
 
+            // Multi-line note start
             if (type == LineType.NOTE_MULTILINE_START) {
                 insideNote = true;
                 type = LineType.NOTE;
@@ -102,9 +116,13 @@ public class ClassLineMapper {
         return null;
     }
 
+    /**
+     * Classifies a single line by its content. First standalone members, comments, arrows, then keywords, separators
+     */
     private static LineType determineType(String trimmed) {
         if (trimmed.isEmpty()) return LineType.EMPTY;
 
+        // Standalone member, so not confuse with relationship
         if (trimmed.matches("[A-Za-z0-9_<>]+\\s*:\\s*.+") && !trimmed.contains("::")) {
             return LineType.MEMBER;
         }
@@ -129,6 +147,7 @@ public class ClassLineMapper {
             case "end footer" -> { return LineType.END_FOOTER; }
         }
 
+        // Strip visibility prefixes to get the actual keyword
         String firstWord = trimmed.split("\\s+", 2)[0].toLowerCase();
         while (!firstWord.isEmpty() && "-#~+".indexOf(firstWord.charAt(0)) >= 0) {
             firstWord = firstWord.substring(1);
@@ -142,6 +161,7 @@ public class ClassLineMapper {
                  "dataclass", "entity", "exception", "metaclass",
                  "protocol", "record", "stereotype", "struct",
                  "diamond", "circle", "()", "<>" -> {
+                // "diamond -- Foo" is a relationship
                 if (lineLooksLikeRelationship(trimmed)) return LineType.RELATIONSHIP;
                 if (hasInlineBody(trimmed)) return LineType.ENTITY_INLINE;
                 return LineType.ENTITY_DECLARATION;
@@ -154,6 +174,7 @@ public class ClassLineMapper {
             }
 
             case "note", "hnote", "rnote" -> {
+                // Single-line note and multi-line note start
                 if (isCompletedNote(trimmed)) return LineType.NOTE;
                 return LineType.NOTE_MULTILINE_START;
             }
@@ -167,11 +188,15 @@ public class ClassLineMapper {
 
         if (isSeparatorLine(trimmed)) return LineType.SEPARATOR;
 
+        // Final arrow check
         if (containsClassArrow(trimmed)) return LineType.RELATIONSHIP;
 
         return LineType.UNKNOWN;
     }
 
+    /**
+     * Detects "diamond -- Foo" which starts with an entity keyword but is actually a relationship.
+     */
     private static boolean lineLooksLikeRelationship(String line) {
         String trimmed = line.trim();
         if (trimmed.startsWith("diamond") || trimmed.startsWith("<>")) {
@@ -194,10 +219,14 @@ public class ClassLineMapper {
             return true;
         }
 
+        // Strip :: so "note of Foo::bar" doesn't falsely match the colon
         String stripped = trimmed.replace("::", "");
         return stripped.contains(":");
     }
 
+    /**
+     * Separator lines
+     */
     private static boolean isSeparatorLine(String trimmed) {
         return (trimmed.startsWith("--") && trimmed.endsWith("--"))
                 || (trimmed.startsWith("__") && trimmed.endsWith("__"))
@@ -205,10 +234,15 @@ public class ClassLineMapper {
                 || (trimmed.startsWith("==") && trimmed.endsWith("=="));
     }
 
+    /**
+     * Detects PlantUML class diagram arrows by regex
+     */
     private static boolean containsClassArrow(String line) {
+        // Remove quoted strings and bracket color specs to avoid matching inside them
         String s = line.replaceAll("\"[^\"]*\"", "");
         s = s.replaceAll("\\[[^]]*:[^]]*]", "");
 
+        // Build regex for multi-character arrows with optional decorators and directions
         String dec = "[<>|*o#x^{}+]*";
         String lineSeg = "[-.]+";
         String modifier = "(?:\\[[^]]*])?";
@@ -229,7 +263,8 @@ public class ClassLineMapper {
             return true;
         }
 
-        return s.matches(".*\\s[-\\.]\\s.*");
+        // Fallback on minimal arrow
+        return s.matches(".*\\s[-.]\\s.*");
     }
 
     public static class LineInfo {

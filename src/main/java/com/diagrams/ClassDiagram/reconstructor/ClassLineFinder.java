@@ -1,9 +1,17 @@
+/*
+ * File: ClassLineFinder.java
+ * Author: Norman Babiak
+ * Description: Locates model elements in the PlantUML source by line type and content matching.
+ * Date: 1.4.2026
+ */
+
 package com.diagrams.ClassDiagram.reconstructor;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,9 +28,34 @@ public class ClassLineFinder {
         this.claimedLines = new HashSet<>();
     }
 
+    /**
+     * Searches forward from searchFrom, then wraps around from 0, returning the first unclaimed line that matches the predicate.
+     */
+    private int searchWithWrap(Predicate<ClassLineMapper.LineInfo> matcher, Object element) {
+        List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
+
+        for (int i = searchFrom; i < all.size(); i++) {
+            if (!claimedLines.contains(i) && matcher.test(all.get(i))) {
+                register(element, i);
+                searchFrom = i + 1;
+                return i;
+            }
+        }
+
+        for (int i = 0; i < searchFrom; i++) {
+            if (!claimedLines.contains(i) && matcher.test(all.get(i))) {
+                register(element, i);
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     public int findEntityLine(String name, Object element) {
         List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
 
+        // look for entity declarations
         for (int i = 0; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
             if (claimedLines.contains(i)) continue;
@@ -35,12 +68,12 @@ public class ClassLineFinder {
             }
         }
 
+        // entity might only appear in a relationship line
         for (int i = 0; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
             if (claimedLines.contains(i)) continue;
 
-            if (info.type == ClassLineMapper.LineType.RELATIONSHIP
-                    && relMatchesName(info.originalText, name)) {
+            if (info.type == ClassLineMapper.LineType.RELATIONSHIP && relMatchesName(info.originalText, name)) {
                 return i;
             }
         }
@@ -49,34 +82,10 @@ public class ClassLineFinder {
     }
 
     public int findRelationshipLine(String alias1, String alias2, Object element) {
-        List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
-
-        for (int i = searchFrom; i < all.size(); i++) {
-            ClassLineMapper.LineInfo info = all.get(i);
-            if (claimedLines.contains(i)) continue;
-
-            if (info.type == ClassLineMapper.LineType.RELATIONSHIP
-                    && relMatchesName(info.originalText, alias1)
-                    && relMatchesName(info.originalText, alias2)) {
-                register(element, i);
-                searchFrom = i + 1;
-                return i;
-            }
-        }
-
-        for (int i = 0; i < searchFrom; i++) {
-            ClassLineMapper.LineInfo info = all.get(i);
-            if (claimedLines.contains(i)) continue;
-
-            if (info.type == ClassLineMapper.LineType.RELATIONSHIP
-                    && relMatchesName(info.originalText, alias1)
-                    && relMatchesName(info.originalText, alias2)) {
-                register(element, i);
-                return i;
-            }
-        }
-
-        return -1;
+        return searchWithWrap(info ->
+                info.type == ClassLineMapper.LineType.RELATIONSHIP
+                        && relMatchesName(info.originalText, alias1)
+                        && relMatchesName(info.originalText, alias2), element);
     }
 
     public int findPackageLine(String name, Object element) {
@@ -85,13 +94,12 @@ public class ClassLineFinder {
         for (int i = 0; i < all.size(); i++) {
             ClassLineMapper.LineInfo info = all.get(i);
 
-            if (info.type == ClassLineMapper.LineType.PACKAGE_DECLARATION
-                    && packageMatchesName(info.originalText, name)) {
+            if (info.type == ClassLineMapper.LineType.PACKAGE_DECLARATION && packageMatchesName(info.originalText, name)) {
                 register(element, i);
                 return i;
             }
 
-            // Also check entity declaration lines for implicit packages
+            // Implicit packages
             if ((info.type == ClassLineMapper.LineType.ENTITY_DECLARATION
                     || info.type == ClassLineMapper.LineType.ENTITY_INLINE)
                     && implicitPackageMatchesName(info.originalText, name)) {
@@ -99,67 +107,38 @@ public class ClassLineFinder {
                 return i;
             }
         }
+
         return -1;
     }
 
     public int findNoteLine(String text, Object element) {
-        List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
         boolean filter = text != null && !text.isEmpty();
-
-        // normalize search text for comparison
+        // Normalize <br> to \n for comparison since source uses \n and model uses <br>
         String normalizedText = filter ? text.replace("<br>", "\\n").trim() : null;
 
-        for (int i = searchFrom; i < all.size(); i++) {
-            ClassLineMapper.LineInfo info = all.get(i);
-            //if (claimedLines.contains(i)) continue;
+        return searchWithWrap(info -> {
+            if (info.type != ClassLineMapper.LineType.NOTE) return false;
 
-            if (info.type == ClassLineMapper.LineType.NOTE) {
-                StringBuilder fullNote = new StringBuilder();
-                fullNote.append(info.originalText.replace("<br>", "\\n").trim());
+            // Build the full note content by concatenating all following lines
+            String noteText = buildFullNoteText(info);
+            return !filter || noteText.contains(normalizedText);
+        }, element);
+    }
 
-                // Append all NOTE_BODY lines
-                for (int j = i + 1; j < all.size(); j++) {
-                    ClassLineMapper.LineInfo body = all.get(j);
-                    //if (body.type != ClassLineMapper.LineType.NOTE_BODY) break;
+    /**
+     * Join the note header line with all following lines to build the full note text for content matching.
+     */
+    private String buildFullNoteText(ClassLineMapper.LineInfo noteInfo) {
+        List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
+        StringBuilder fullNote = new StringBuilder();
+        fullNote.append(noteInfo.originalText.replace("<br>", "\\n").trim());
 
-                    fullNote.append("\\n").append(body.originalText.replace("<br>", "\\n").trim());
-                }
-
-                String noteText = fullNote.toString();
-
-                if (!filter || noteText.contains(normalizedText)) {
-                    register(element, i);
-                    searchFrom = i + 1;
-                    return i;
-                }
-            }
+        for (int j = noteInfo.lineNumber + 1; j < all.size(); j++) {
+            ClassLineMapper.LineInfo body = all.get(j);
+            fullNote.append("\\n").append(body.originalText.replace("<br>", "\\n").trim());
         }
 
-        for (int i = 0; i < searchFrom; i++) {
-            ClassLineMapper.LineInfo info = all.get(i);
-            if (claimedLines.contains(i)) continue;
-
-            if (info.type == ClassLineMapper.LineType.NOTE) {
-                StringBuilder fullNote = new StringBuilder();
-                fullNote.append(info.originalText.replace("<br>", "\\n").trim());
-
-                for (int j = i + 1; j < all.size(); j++) {
-                    ClassLineMapper.LineInfo body = all.get(j);
-                    if (body.type != ClassLineMapper.LineType.NOTE_BODY) break;
-
-                    fullNote.append("\\n").append(body.originalText.replace("<br>", "\\n").trim());
-                }
-
-                String noteText = fullNote.toString();
-
-                if (!filter || noteText.contains(normalizedText)) {
-                    register(element, i);
-                    return i;
-                }
-            }
-        }
-
-        return -1;
+        return fullNote.toString();
     }
 
     public int findNoteEndLine(int noteStartLine, Object element) {
@@ -174,13 +153,14 @@ public class ClassLineFinder {
                 return i;
             }
 
+            // Hit another note before finding end note this was a single-line note
             if (info.type == ClassLineMapper.LineType.NOTE) {
                 break;
             }
         }
 
+        // Single-line note: start and end are the same line
         register(element, noteStartLine);
-
         return noteStartLine;
     }
 
@@ -208,7 +188,6 @@ public class ClassLineFinder {
         return findLineByType(ClassLineMapper.LineType.END_FOOTER);
     }
 
-
     public void setPosition(int position) {
         this.searchFrom = position;
     }
@@ -216,10 +195,9 @@ public class ClassLineFinder {
     static boolean entityMatchesName(String line, String name) {
         if (name == null || name.isEmpty()) return true;
 
-        // Strip generic type params <...>
+        // Strip generic type params so "Container<T>" matches "Container"
         String stripped = line.replaceAll("<[^>]*>", "");
 
-        // Quoted form
         if (stripped.contains("\"" + name + "\"")) return true;
 
         return wordBoundaryContains(stripped, name);
@@ -228,12 +206,11 @@ public class ClassLineFinder {
     static boolean relMatchesName(String line, String name) {
         if (name == null || name.isEmpty()) return true;
 
-        // Strip relationship label: ' : something'
         String haystack = line.replaceAll(" : .*$", "");
 
-        // Quoted form: "name"
         if (haystack.contains("\"" + name + "\"")) return true;
 
+        // Strip all quoted strings to avoid matching inside labels
         String stripped = haystack.replaceAll("\"[^\"]*\"", "");
         return wordBoundaryContains(stripped, name);
     }
@@ -260,10 +237,12 @@ public class ClassLineFinder {
         String[] parts = dotted.split("\\.");
         if (parts.length <= 1) return false;
 
+        // Check individual segments
         for (int i = 0; i < parts.length - 1; i++) {
             if (parts[i].equals(pkgName)) return true;
         }
 
+        // Check prefixes
         for (int i = 1; i < parts.length; i++) {
             String prefix = String.join(".", java.util.Arrays.copyOfRange(parts, 0, i));
             if (prefix.equals(pkgName)) return true;
@@ -272,6 +251,10 @@ public class ClassLineFinder {
         return false;
     }
 
+    /**
+     * Checks if word appears in text surrounded by non-identifier characters. Prevents "User" from matching
+     * inside "UserService".
+     */
     private static boolean wordBoundaryContains(String text, String word) {
         int idx = text.indexOf(word);
 
@@ -288,10 +271,14 @@ public class ClassLineFinder {
         return false;
     }
 
+    /**
+     * Extracts the alias, or name if no alias
+     */
     public static String extractAlias(String line) {
         if (line == null) return null;
         String trimmed = line.trim();
 
+        // Note alias
         Matcher noteAlias = Pattern.compile(
                 "^note\\s+.*?\\bas\\s+(\\w+)",
                 Pattern.CASE_INSENSITIVE
@@ -301,6 +288,7 @@ public class ClassLineFinder {
             return noteAlias.group(1);
         }
 
+        // Entity declaration
         Matcher m = Pattern.compile(
                 "^(?:abstract\\s+)?(?:class|interface|diamond|circle|enum|annotation)\\s+(.*)",
                 Pattern.CASE_INSENSITIVE
@@ -313,12 +301,14 @@ public class ClassLineFinder {
         String remainder;
 
         if (rest.startsWith("\"")) {
+            // Quoted name
             int end = rest.indexOf('"', 1);
             if (end < 0) return null;
             name = rest.substring(1, end);
             remainder = rest.substring(end + 1).trim();
 
         } else {
+            // Unquoted name
             String[] parts = rest.split("[\\s{#<]", 2);
             name = parts[0];
             remainder = parts.length > 1 ? rest.substring(parts[0].length()).trim() : "";
@@ -333,6 +323,7 @@ public class ClassLineFinder {
 
             } else {
                 String tok = aliasPart.split("[\\s{#]", 2)[0];
+
                 return tok.isEmpty() ? name : tok;
             }
         }
