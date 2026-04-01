@@ -2,7 +2,7 @@
  * File: LinkGeometry.java
  * Author: Norman Babiak
  * Description: Strategy-based edge geometry for link label and quantifier positioning.
- * Date: 30.3.2026
+ * Date: 31.3.2026
  */
 
 package com.diagrams.ClassDiagram.utils;
@@ -66,6 +66,7 @@ public class LinkGeometry {
                 offset += messageLengthChars * verticalLabelExtraOffset;
             }
 
+            // Negate perpendicular so label sits on the readable side
             return mid.offset(perpendicular.negate(), offset);
         }
 
@@ -74,6 +75,7 @@ public class LinkGeometry {
             GeometryUtils.Point anchor = isSource ? srcCenter : tgtCenter;
             ClassLayout.Size size = isSource ? srcSize : tgtSize;
 
+            // Place past the entity boundary + arrow head + padding
             double quantifierLineOffset = 15.0;
             double distance = (size.width / 2) + headSize + quantifierLineOffset;
             GeometryUtils.Vector dir = isSource ? direction : direction.negate();
@@ -98,10 +100,12 @@ public class LinkGeometry {
         public double getLinkXAtY(double y) {
             GeometryUtils.Vector delta = new GeometryUtils.Vector(srcCenter, tgtCenter);
 
+            // Horizontal line
             if (Math.abs(delta.dy()) < 0.01) {
                 return srcCenter.x();
             }
 
+            // Get X  at the given Y of the line
             double t = (y - srcCenter.y()) / delta.dy();
             return srcCenter.x() + delta.dx() * t;
         }
@@ -126,6 +130,7 @@ public class LinkGeometry {
             boolean curveToRight = curvedCalculator.shouldCurveToRight(
                     src.getY(), tgt.getY(), srcSize, tgtSize, flip);
 
+            // Anchor at the specific member's Y offset on the left/right edge
             this.srcAnchor = curvedCalculator.calculateMemberAnchorPoint(
                     src.getX(), src.getY(), srcSize,
                     src.getStereotypeName() != null,
@@ -201,6 +206,7 @@ public class LinkGeometry {
             GeometryUtils.Vector dir = new GeometryUtils.Vector(srcCenter, tgtCenter).normalize();
             GeometryUtils.Vector perp = dir.perpendicular();
 
+            // Spread edges symmetrically
             double spacing = 25.0;
             double middle = (totalCount - 1) / 2.0;
             double offset = (index - middle) * spacing;
@@ -226,6 +232,7 @@ public class LinkGeometry {
 
         private GeometryUtils.Point entityBoundaryPoint(double entityX, double w, double h, double fromCy, double toCx,
                                                         double toCy) {
+            // Build rectangle centered vertically on the offset center, not the entity's actual Y
             GeometryUtils.Rectangle rect = new GeometryUtils.Rectangle(entityX, fromCy - h / 2.0, w, h);
             GeometryUtils.Point target = new GeometryUtils.Point(toCx, toCy);
 
@@ -294,6 +301,7 @@ public class LinkGeometry {
             double width = size.width;
             double height = size.height;
 
+            // Scale bulge width to fit the label text inside the loop arc
             String message = link.getMessage() != null ? link.getMessage().getLabel() : "";
             double charWidth = 7;
             double labelPadding = 12;
@@ -301,6 +309,7 @@ public class LinkGeometry {
                     ? message.length() * charWidth + labelPadding
                     : 40;
 
+            // Outer loops are bigger
             double baseBulge = 25;
             double bulgeSpacing = labelWidth + 8;
             this.bulge = baseBulge + (totalCount - 1 - index) * bulgeSpacing;
@@ -316,6 +325,7 @@ public class LinkGeometry {
 
             this.startAnchor = new GeometryUtils.Point(anchorX, anchorY1);
             this.endAnchor = new GeometryUtils.Point(anchorX, anchorY2);
+            // Control point extends horizontally
             this.controlPoint1 = new GeometryUtils.Point(anchorX + bulge, anchorY1);
         }
 
@@ -330,6 +340,7 @@ public class LinkGeometry {
         @Override
         public GeometryUtils.Point getQuantifierPosition(boolean isSource, double headSize) {
             GeometryUtils.Point anchor = isSource ? startAnchor : endAnchor;
+            // Offset diagonally toward the bulge
             double offsetX = Math.min(bulge * 0.4, 20);
             double offsetY = isSource ? -10 : 10;
 

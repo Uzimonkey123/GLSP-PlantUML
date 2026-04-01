@@ -1,3 +1,10 @@
+/*
+ * File: ChangeBoundsHandler.java
+ * Author: Norman Babiak
+ * Description: Handler for updating position of elements after edit on client side
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.handler;
 
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
@@ -63,30 +70,24 @@ public class ChangeBoundsHandler implements OperationHandler<ChangeBoundsOperati
                     ClassLabel label;
                     ClassEntity note;
 
+                    // Update entity position
                     if (entity != null) {
                         oldPositions.put(elementId, new NodePosition(entity.getX(), entity.getY()));
                         entity.setX(newPosition.getX());
                         entity.setY(newPosition.getY());
 
-                        System.out.println("Updated position for " + entity.getName() +
-                                " to (" + newPosition.getX() + ", " + newPosition.getY() + ")");
-
+                    // Update label position
                     } else if ((label = modelState.getModel().getClassLabelById(elementId)) != null) {
                         oldPositions.put(elementId, new NodePosition(label.getX(), label.getY()));
                         label.setX(newPosition.getX());
                         label.setY(newPosition.getY());
                         label.setModified(true);
 
-                        System.out.println("Updated label position to (" +
-                                newPosition.getX() + ", " + newPosition.getY() + ")");
-
+                    // Update note position
                     } else if ((note = modelState.getModel().getClassNoteById(elementId)) != null) {
                         oldPositions.put(elementId, new NodePosition(note.getX(), note.getY()));
                         note.setX(newPosition.getX());
                         note.setY(newPosition.getY());
-
-                        System.out.println("Updated note position to (" +
-                                newPosition.getX() + ", " + newPosition.getY() + ")");
                     }
                 }
             }

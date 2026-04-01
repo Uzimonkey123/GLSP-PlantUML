@@ -1,3 +1,10 @@
+/*
+ * File: ClassLinkFactory.java
+ * Author: Norman Babiak
+ * Description: Creates GModel edge elements and positions labels for class diagram links.
+ * Date: 31.3.2026
+ */
+
 package com.diagrams.ClassDiagram.factory.ClassParts;
 
 import com.GLSPPlantUML.utils.WidthCalculator;
@@ -14,7 +21,6 @@ import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import org.eclipse.glsp.graph.GEdge;
 import org.eclipse.glsp.graph.GModelElement;
-import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +62,7 @@ public class ClassLinkFactory {
                 GModelElement element = linkBuild.buildLink(link);
                 int[] pInfo = getParallelInfo(link);
 
+                // Attach parallel/self-loop indices so the frontend knows how to offset overlapping edges
                 if (pInfo != null && element instanceof GEdge gEdge) {
                     gEdge.getArgs().put("parallelIndex", pInfo[0]);
                     gEdge.getArgs().put("parallelTotal", pInfo[1]);
@@ -78,6 +85,9 @@ public class ClassLinkFactory {
         createLinkNotes();
     }
 
+    /**
+     * Groups links by entity pair or by single entity so each edge can be assigned an index for offset positioning.
+     */
     private void buildParallelGroups() {
         parallelGroups.clear();
         selfLoopGroups.clear();
@@ -86,6 +96,7 @@ public class ClassLinkFactory {
             if (link.getType().equals("INVISIBLE")) continue;
             if (link.getEntity1() == null || link.getEntity2() == null) continue;
 
+            // Self-loops go into their own group
             if (link.getEntity1().getId().equals(link.getEntity2().getId())) {
                 String entityId = link.getEntity1().getId();
                 selfLoopGroups.computeIfAbsent(entityId, k -> new ArrayList<>()).add(link);
@@ -93,6 +104,7 @@ public class ClassLinkFactory {
                 continue;
             }
 
+            // Member links are dealt with separately
             boolean hasMembers = (link.getSourceMember() != null && !link.getSourceMember().isEmpty())
                     || (link.getTargetMember() != null && !link.getTargetMember().isEmpty());
 
@@ -118,6 +130,7 @@ public class ClassLinkFactory {
         String key = canonicalPairKey(link.getEntity1().getId(), link.getEntity2().getId());
         List<ClassLink> group = parallelGroups.get(key);
 
+        // Single link no need for offset
         if (group == null || group.size() <= 1) return null;
 
         int index = group.indexOf(link);
@@ -139,16 +152,14 @@ public class ClassLinkFactory {
 
     private void createTipLinks() {
         for (ClassEntityFactory.TipInfo tipInfo : entityFactory.tipInfoList) {
-            GEdgeBuilder edge = new GEdgeBuilder("link:note")
-                    .id("edge-" + tipInfo.tipId)
-                    .sourceId(tipInfo.parentEntityId)
-                    .targetId(tipInfo.tipId)
-                    .addArgument("memberName", tipInfo.memberName);
-
-            elements.add(edge.build());
+            elements.add(linkBuild.buildTipLinks(tipInfo));
         }
     }
 
+    /**
+     * Places qualifier label boxes on the entity boundary closest to the opposite entity, then offsets outward
+     * from the nearest edge.
+     */
     private void createQuantifierLabels() {
         for (ClassLink link : model.links) {
             if (isEmpty(link.getQuantifier1().getLabel()) && isEmpty(link.getQuantifier2().getLabel())) {
@@ -164,6 +175,7 @@ public class ClassLinkFactory {
                     double headSize = getHeadSize(link.getDecorator2());
                     pos = geometry.getQuantifierPosition(true, headSize);
 
+                // If user moved label, keep it where it is, no new calculation
                 } else {
                     pos = new Point(link.getQuantifier1().getX(), link.getQuantifier1().getY());
                 }
@@ -181,6 +193,7 @@ public class ClassLinkFactory {
                     double headSize = getHeadSize(link.getDecorator1());
                     pos = geometry.getQuantifierPosition(false, headSize);
 
+                // If user moved label, keep it where it is, no new calculation
                 } else {
                     pos = new Point(link.getQuantifier2().getX(), link.getQuantifier2().getY());
                 }
@@ -210,6 +223,7 @@ public class ClassLinkFactory {
             double src2CenterY = link.getEntity2().getY() + tgtSize.height / 2;
 
             if (hasSrc) {
+                // Find where the line exits source
                 Point anchor = entityBoundaryAnchor(
                         link.getEntity1().getX(), link.getEntity1().getY(), srcSize.width, srcSize.height,
                         src2CenterX, src2CenterY);
@@ -227,6 +241,7 @@ public class ClassLinkFactory {
             }
 
             if (hasTgt) {
+                // same search but for target side
                 Point anchor = entityBoundaryAnchor(
                         link.getEntity2().getX(), link.getEntity2().getY(), tgtSize.width, tgtSize.height,
                         src1CenterX, src1CenterY);
@@ -251,6 +266,7 @@ public class ClassLinkFactory {
         double dx = refX - centerX;
         double dy = refY - centerY;
 
+        // Ref is at the center, default is right edge
         if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) {
             return new Point(entityX + entityW, centerY);
         }
@@ -259,8 +275,11 @@ public class ClassLinkFactory {
         double halfH = entityH / 2;
         double t;
 
+        // Pick the axis where the ray hits the boundary first, if the horizontal displacement is larger,
+        // the ray exits through the left/right edge, otherwise through top/bottom
         if (Math.abs(dx) / halfW > Math.abs(dy) / halfH) {
             t = (dx > 0 ? halfW : -halfW) / dx;
+
         } else {
             t = (dy > 0 ? halfH : -halfH) / dy;
         }
@@ -268,6 +287,9 @@ public class ClassLinkFactory {
         return new Point(centerX + t * dx, centerY + t * dy);
     }
 
+    /**
+     * Centers the qualifier box on the entity edge nearest to the anchor
+     */
     private static Point qualifierBoxCenter(String text, Point anchor,
                                             double entityX, double entityY,
                                             double entityW, double entityH) {
@@ -279,6 +301,7 @@ public class ClassLinkFactory {
         double boxW = text.length() * charWidth + padding * 2;
         double boxH = lineHeight + padding * 2;
 
+        // Find the closest anchor to edge entity
         double distToLeft = Math.abs(anchor.x() - entityX);
         double distToRight = Math.abs(anchor.x() - (entityX + entityW));
         double distToTop = Math.abs(anchor.y() - entityY);
@@ -286,6 +309,7 @@ public class ClassLinkFactory {
 
         double minDist = Math.min(Math.min(distToLeft, distToRight), Math.min(distToTop, distToBottom));
 
+        // Place box on the outside of the nearest edge
         double boxX, boxY;
         if (minDist == distToRight) {
             boxX = anchor.x() + gap;
@@ -319,10 +343,12 @@ public class ClassLinkFactory {
             if (!link.getMessage().isModified()) {
                 labelPos = geometry.getLabelPosition(link.getMessage().getLabel().length());
 
+            // Manually moved label, no recalculation
             } else {
                 labelPos = new Point(link.getMessage().getX(), link.getMessage().getY());
             }
 
+            // Push label accordingly if note on link is present
             if (link.hasNoteOnLink()) {
                 Dimensions noteDim = noteCalculator.calculateNoteDimensions(link.getNoteOnLink().getName());
                 double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());
@@ -349,6 +375,7 @@ public class ClassLinkFactory {
             Point labelPos = geometry.getLabelPosition(
                     link.getMessage() != null ? link.getMessage().getLabel().length() : 0);
 
+            // Prevent crossing line for label
             double linkXAtLabelY = geometry.getLinkXAtY(labelPos.y());
             Point notePos = noteCalculator.calculateNotePosition(
                     labelPos, link.getMessage().getLabel(), noteDim,
@@ -377,6 +404,9 @@ public class ClassLinkFactory {
         }
     }
 
+    /**
+     * Selects the correct EdgeGeometry implementation based on link type
+     */
     private EdgeGeometry createEdgeGeometry(ClassLink link) {
         if (link.getEntity1() == null || link.getEntity2() == null) return null;
 
@@ -393,6 +423,7 @@ public class ClassLinkFactory {
         ClassLayout.Size tgtSize = dimensions.get(link.getEntity2().getId());
         if (tgtSize == null) return null;
 
+        // Multiple links between same pair offset as parallel curve
         int[] pInfo = getParallelInfo(link);
         if (pInfo != null) {
             int index = pInfo[0];

@@ -2,7 +2,7 @@
  * File: CurvedEdgeCalculator.java
  * Author: Norman Babiak
  * Description: Bézier curve geometry for member-to-member and parallel edges.
- * Date: 30.3.2026
+ * Date: 31.3.2026
  */
 
 package com.diagrams.ClassDiagram.utils;
@@ -38,6 +38,7 @@ public class CurvedEdgeCalculator {
             return size.height / 2;
         }
 
+        // Header depending on stereotype presence
         double headerWithStereotype = 44;
         double headerWithoutStereotype = 30;
         double headerH = hasStereotype ? headerWithStereotype : headerWithoutStereotype;
@@ -49,6 +50,7 @@ public class CurvedEdgeCalculator {
             String clean = cleanMemberName(field.getMethodName());
 
             if (matchesMember(clean, memberName)) {
+                // Center of matching row
                 return headerH + padding + fieldIndex * lineHeight + lineHeight / 2;
             }
             fieldIndex++;
@@ -77,6 +79,7 @@ public class CurvedEdgeCalculator {
                                                           boolean hasStereotype, List<EntityMethod> fields,
                                                           List<EntityMethod> methods, String member,
                                                           boolean curveToRight) {
+        // Side depends on where the curve bulges
         double x = curveToRight ? entityX + size.width : entityX;
         double y = entityY + getMemberYOffset(size, hasStereotype, fields, methods, member);
 
@@ -97,17 +100,20 @@ public class CurvedEdgeCalculator {
         String id2 = sourceId.compareTo(targetId) < 0 ? targetId : sourceId;
         String pairKey = id1 + "-" + id2;
 
+        // Simple character-sum hash to get a deterministic base direction
         int hash = 0;
         for (char c : pairKey.toCharArray()) {
             hash += c;
         }
         boolean baseDirection = hash % 2 == 0;
 
+        // Unique key including members
         String linkKey = source.getId() + "-" + target.getId() + "-" +
                 (sourceMember != null ? sourceMember : "") + "-" +
                 (targetMember != null ? targetMember : "");
 
         if (!curveDirectionMap.containsKey(linkKey)) {
+            // Count for alternating direction
             long existingLinksCount = curveDirectionMap.keySet().stream()
                     .filter(key -> key.startsWith(pairKey))
                     .count();
@@ -147,6 +153,7 @@ public class CurvedEdgeCalculator {
             perp = perp.negate();
         }
 
+        // Arc 30% of normal line
         GeometryUtils.Vector perpNorm = perp.normalize();
         double arcHeight = distance * 0.3;
 
@@ -163,18 +170,19 @@ public class CurvedEdgeCalculator {
         double u = 1 - t;
 
         // Cubic Bézier at t=0.5
-        // Generated with assistance of AI tool Claude
+        // Generated with assistance of AI tool Claude Opus 4.5
         GeometryUtils.Point midPoint = new GeometryUtils.Point(
                 u*u*u * start.x() + 3*u*u*t * cp1.x() + 3*u*t*t * cp2.x() + t*t*t * end.x(),
                 u*u*u * start.y() + 3*u*u*t * cp1.y() + 3*u*t*t * cp2.y() + t*t*t * end.y()
         );
 
         // Tangent at t=0.5
-        // Generated with assistance of AI tool Claude
+        // Generated with assistance of AI tool Claude Opus 4.5
         double midTangentX = 3 * (u*u * (cp1.x() - start.x()) + 2*u*t * (cp2.x() - cp1.x()) + t*t * (end.x() - cp2.x()));
         double midTangentY = 3 * (u*u * (cp1.y() - start.y()) + 2*u*t * (cp2.y() - cp1.y()) + t*t * (end.y() - cp2.y()));
         double midTangentLength = Math.hypot(midTangentX, midTangentY);
 
+        // Normalize tangent to unit vector for directional use
         return new CurveData(
                 midPoint,
                 midTangentX / midTangentLength,
@@ -193,10 +201,12 @@ public class CurvedEdgeCalculator {
         GeometryUtils.Vector dir = new GeometryUtils.Vector(start, end).normalize();
         GeometryUtils.Vector perp = dir.perpendicular();
 
+        // Source quantifier offsets outward, target inward
         double direction = isStart ? 1 : -1;
         double lineOffset = 15;
         double perpOffset = 15;
 
+        // Past the arrowHead + shift perp
         return anchor
                 .offset(dir, direction * (headSize + lineOffset))
                 .offset(perp, perpOffset);

@@ -1,3 +1,10 @@
+/*
+ * File: ClassModelFactory.java
+ * Author: Norman Babiak
+ * Description: Main factory for creating corresponding class factories and sending GModel to client side
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.factory;
 
 import com.GLSPPlantUML.utils.ErrorMessage;

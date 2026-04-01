@@ -1,3 +1,10 @@
+/*
+ * File: ChangeRoutingPointsHandler.java
+ * Author: Norman Babiak
+ * Description: Placeholder handler for changing routing points after update from client side
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.handler;
 
 import com.google.inject.Inject;

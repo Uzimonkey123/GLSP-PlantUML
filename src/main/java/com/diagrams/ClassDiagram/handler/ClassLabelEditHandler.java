@@ -1,3 +1,10 @@
+/*
+ * File: ClassLabelEditHandler.java
+ * Author: Norman Babiak
+ * Description: Handler for replacing edited labels in the internal model
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.handler;
 
 import com.diagrams.ClassDiagram.model.ClassModel;
@@ -9,7 +16,6 @@ import org.eclipse.glsp.graph.GLabel;
 import org.eclipse.glsp.server.features.directediting.ApplyLabelEditOperation;
 import org.eclipse.glsp.server.operations.GModelOperationHandler;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -22,9 +28,6 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
 
         label = findLabel(operation).orElseThrow(
                 () -> new IllegalArgumentException("Element with provided ID cannot be found or is not a GLabel"));
-
-        System.err.println("[ApplyLabelEdit] New label text: " + operation.getText());
-        System.err.println("[ApplyLabelEdit] Label ID: " + label.getId());
 
         if (modelState instanceof ClassModelState sequenceState) {
             model = sequenceState.getModel();
@@ -57,22 +60,22 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
     private void updateEntityLabel(ClassEntity entity, String labelId, String newText) {
         String suffix = labelId.substring(entity.getId().length());
 
-        if (suffix.equals("-label-name")) {
-            entity.setName(newText);
-            entity.setModified();
-            return;
-        }
-
-        if(suffix.equals("-label-stereotype")) {
-            entity.setStereotypeName(newText);
-            entity.setModified();
-            return;
-        }
-
-        if (suffix.equals("-generic")) {
-            entity.setGeneric(newText);
-            entity.setModified();
-            return;
+        switch (suffix) {
+            case "-label-name" -> {
+                entity.setName(newText);
+                entity.setModified();
+                return;
+            }
+            case "-label-stereotype" -> {
+                entity.setStereotypeName(newText);
+                entity.setModified();
+                return;
+            }
+            case "-generic" -> {
+                entity.setGeneric(newText);
+                entity.setModified();
+                return;
+            }
         }
 
         if (suffix.startsWith("-field-")) {

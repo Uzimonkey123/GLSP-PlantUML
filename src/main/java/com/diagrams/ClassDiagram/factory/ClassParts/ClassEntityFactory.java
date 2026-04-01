@@ -1,3 +1,10 @@
+/*
+ * File: ClassEntityFactory.java
+ * Author: Norman Babiak
+ * Description: Computes entity dimensions, runs layout, and builds GModel elements.
+ * Date: 31.3.2026
+ */
+
 package com.diagrams.ClassDiagram.factory.ClassParts;
 
 import com.GLSPPlantUML.utils.WidthCalculator;
@@ -60,6 +67,9 @@ public class ClassEntityFactory {
         return dimensions;
     }
 
+    /**
+     * Method to compute dimensions, run GraphViz layout if first run, build packages, elements and page details
+     */
     public void createEntities() {
         dimensions.clear();
 
@@ -93,6 +103,7 @@ public class ClassEntityFactory {
                 }
 
                 default -> {
+                    // Standard class types
                     double methodWidth = entityAttributesLength(entity.getMethods());
                     double fieldsWidth = entityAttributesLength(entity.getFields());
                     double attributesWidth = Math.max(methodWidth, fieldsWidth);
@@ -131,6 +142,7 @@ public class ClassEntityFactory {
             createPackages();
         }
 
+        // Create elements for GModel
         for (ClassEntity entity : model.entities) {
             switch (entity.getType()) {
                 case "CIRCLE" -> {
@@ -176,7 +188,7 @@ public class ClassEntityFactory {
 
             elements.add(entityBuild.buildEntity(entity, entityWidth, entityHeight, methodNames, fieldNames, bodyLines));
 
-            createTipNotes(entity, entityWidth, entityHeight);
+            createTipNotes(entity, entityWidth);
         }
 
         entityBuild.buildPageDetails(elements, model, dimensions, model.entities);
@@ -200,7 +212,10 @@ public class ClassEntityFactory {
         }
     }
 
-    private void createTipNotes(ClassEntity entity, double entityWidth, double entityHeight) {
+    /**
+     * Creates note entities for members that have tooltips attached.
+     */
+    private void createTipNotes(ClassEntity entity, double entityWidth) {
         double tipX = entity.getX() + entityWidth + 20;
         double currentTipY = entity.getY();
 
@@ -253,7 +268,6 @@ public class ClassEntityFactory {
             if (method.hasTip()) {
                 String tipId = entity.getId() + "-method-" + i + "-tip";
                 String memberName = method.getMethodName();
-
 
                 double finalCurrentTipY = currentTipY;
                 ClassEntity tipEntity = model.notes.stream()
@@ -374,6 +388,10 @@ public class ClassEntityFactory {
         return Math.max(maxLineLength * charWidth + padding * 2, 100);
     }
 
+    /**
+     * For each link between package anchors, registers the opposite package center as an anchor target so the
+     * anchor point faces the linked package on the nearest edge.
+     */
     private void calculatePackageAnchorPositions() {
         Map<String, Package> anchorToPackage = new HashMap<>();
         for (Package pkg : model.packages) {
@@ -395,6 +413,7 @@ public class ClassEntityFactory {
             double cx2 = pkg2.getX() + pkg2.getWidth() / 2;
             double cy2 = pkg2.getY() + pkg2.getHeight() / 2;
 
+            // Each package needs to know where the other is
             pkg1.addAnchorTarget(cx2, cy2);
             pkg2.addAnchorTarget(cx1, cy1);
         }
@@ -404,6 +423,9 @@ public class ClassEntityFactory {
         }
     }
 
+    /**
+     * Pushes overlapping top-level packages to the right with a fixed gap.
+     */
     private void separateOverlappingPackages() {
         // Sort top-level packages left-to-right, then push any that overlap to the right
         List<Package> topLevel = model.packages.stream()
@@ -439,6 +461,7 @@ public class ClassEntityFactory {
 
             elements.add(packageElement);
 
+            // Just add anchor if the package has links to other package
             if (pkg.getAnchorX() >= 0) {
                 elements.add(entityBuild.buildPackageAnchor(pkg));
             }

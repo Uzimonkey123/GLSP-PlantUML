@@ -1,3 +1,10 @@
+/*
+ * File: ClassLayout.java
+ * Author: Norman Babiak
+ * Description: Computes entity positions using GraphViz DOT layout engine.
+ * Date: 31.3.2026
+ */
+
 package com.diagrams.ClassDiagram.factory;
 
 import com.diagrams.ClassDiagram.model.ClassModel;
@@ -25,12 +32,13 @@ import static guru.nidi.graphviz.attribute.Attributes.attr;
 public class ClassLayout {
 
     public void layoutEntities(ClassModel model, Map<String, Size> dimensions) {
+        // Swap LR to RL, TB to BT because of how the entities are loaded into the model
         String rankdir = model.isLeftToRight() ? "RL" : "BT";
 
         MutableGraph graph = mutGraph("class_diagram").setDirected(true).graphAttrs().add(
                         attr("rankdir", rankdir),
-                        attr("nodesep", 2.0),
-                        attr("ranksep", 1.3),
+                        attr("nodesep", 2.0), // Horizontal gap
+                        attr("ranksep", 1.3), // vertical gap
                         attr("splines", "polyline"),
                         attr("pad", "0.5,0.5")
                 );
@@ -75,6 +83,7 @@ public class ClassLayout {
 
     private void addEntitiesWithoutPackages(MutableGraph graph, List<ClassEntity> entities,
                                             List<Package> packages, Map<String, Size> dimensions) {
+        // Collect all packaged entities so it is possible to loop through the ones without a package
         Set<String> packagedEntityIds = new HashSet<>();
         for (Package pkg : packages) {
             for (ClassEntity entity : pkg.getAllEntities()) {
@@ -105,8 +114,10 @@ public class ClassLayout {
         }
     }
 
-    private void addPackageCluster(MutableGraph parentGraph, Package pkg,
-                                   Map<String, Size> dimensions) {
+    /**
+     * Maps a PlantUML package to a GraphViz cluster with its child entities and sub-packages.
+     */
+    private void addPackageCluster(MutableGraph parentGraph, Package pkg, Map<String, Size> dimensions) {
         MutableGraph cluster = mutGraph("cluster_" + pkg.getId()).setCluster(true).graphAttrs().add(
                         attr("label", pkg.getName()),
                         attr("style", "rounded"),
@@ -153,6 +164,9 @@ public class ClassLayout {
         }
     }
 
+    /**
+     * Parses the DOT JSON output to extract node positions. Converts from center-point to top-left-corner coordinates.
+     */
     private void parseAndApplyPositions(String json, List<ClassEntity> entities,
                                         Map<String, Size> dimensions) {
         JSONObject result = new JSONObject(json);
@@ -161,11 +175,12 @@ public class ClassLayout {
         double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE;
         Map<String, double[]> positions = new HashMap<>();
 
+        // collect all positions and find the minimum x/y to normalize the coordinate space
         for (int i = 0; i < objects.length(); i++) {
             JSONObject obj = objects.getJSONObject(i);
 
             if (!obj.has("pos")) {
-                continue;
+                continue; // Skip non node objects
             }
 
             String id = obj.getString("name");
@@ -195,6 +210,10 @@ public class ClassLayout {
         }
     }
 
+    /**
+     * Computes the minimum edge length for GraphViz, accounting for both the PlantUML arrow length and the message
+     * label widht.
+     */
     private int calculateMinLen(ClassLink link) {
         int baseLength = link.getLength();
 

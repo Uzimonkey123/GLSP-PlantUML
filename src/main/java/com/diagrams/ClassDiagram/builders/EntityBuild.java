@@ -1,3 +1,10 @@
+/*
+ * File: EntityBuild.java
+ * Author: Norman Babiak
+ * Description: Builder for entity elements
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.builders;
 
 import com.GLSPPlantUML.utils.WidthCalculator;
@@ -40,9 +47,7 @@ public class EntityBuild {
         String genericText = entity.isGeneric() ? entity.getGeneric() : "";
         int charWidth   = 7;
         int boxPadding  = 10;
-        int genericBoxW = entity.isGeneric()
-                ? (genericText.length() * charWidth + boxPadding)
-                : 50;
+        int genericBoxW = entity.isGeneric() ? (genericText.length() * charWidth + boxPadding) : 50;
         int genericBoxH = 20;
         double genericBoxX = width - genericBoxW;
         double nameLabelX  = entity.isGeneric() ? genericBoxX / 2.0 : width / 2.0;

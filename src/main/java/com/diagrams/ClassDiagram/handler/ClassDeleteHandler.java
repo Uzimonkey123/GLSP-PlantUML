@@ -1,3 +1,10 @@
+/*
+ * File: ClassDeleteHandler.java
+ * Author: Norman Babiak
+ * Description: Handler for deleting elements from the diagram
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.handler;
 
 import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
@@ -17,6 +24,7 @@ import org.eclipse.glsp.graph.GModelElement;
 import org.eclipse.glsp.graph.GModelRoot;
 
 import java.util.*;
+import java.util.regex.Matcher;
 
 public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
 
@@ -90,6 +98,10 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             actionDispatcher.dispatch(new UpdateModelAction());
         }
 
+        /**
+         * Deletes an entity and cascades to all connected links.
+         * If a connected link leads to an association point the entire association structure is removed.
+         */
         private void deleteEntity(ClassModel model, ClassEntity entity) {
             if (entity.hasLine()) {
                 model.markLinesForDeletion(entity.getSourceLineStart(), entity.getSourceLineEnd());
@@ -106,6 +118,7 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
                         model.markLinesForDeletion(link.getSourceLineStart(), link.getSourceLineEnd());
                     }
 
+                    // Check if the other end is association point, if yes, whole association class structure removed
                     ClassEntity other = (link.getEntity1() == entity) ? link.getEntity2() : link.getEntity1();
                     if ("ASSOCIATION_POINT".equals(other.getType())) {
                         if (!link.getType().contains("DASHED")) {
@@ -160,6 +173,9 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             }
         }
 
+        /**
+         * Removes an association point and all links connected to it.
+         */
         private void deleteAssociationPoint(ClassModel model, ClassEntity assocPoint) {
             if (assocPoint.hasLine()) {
                 model.markLinesForDeletion(assocPoint.getSourceLineStart(), assocPoint.getSourceLineEnd());
@@ -181,6 +197,9 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             model.entities.remove(assocPoint);
         }
 
+        /**
+         * Removes notes that reference the deleted entity via "note of EntityName" syntax.
+         */
         private void deleteNotesReferencingEntity(ClassModel model, ClassEntity entity) {
             ClassLineMapper lineMapper = model.getLineMapper();
             if (lineMapper == null) return;
@@ -234,6 +253,10 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             model.links.remove(link);
         }
 
+        /**
+         * Deletes a note and cleans up references: tip notes clear the member's tooltip, note-on-link notes detach
+         * from the link, adn any connecting links are marked for deletion.
+         */
         private void deleteNote(ClassModel model, ClassEntity note) {
              if (note.hasLine()) {
                 model.markLinesForDeletion(note.getSourceLineStart(), note.getSourceLineEnd());
@@ -273,8 +296,11 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             }
         }
 
+        /**
+         * Parses the tip ID to find the parent entity and member index, then clears the tooltip from that member.
+         */
         private void clearTipFromMember(ClassModel model, String tipId) {
-            java.util.regex.Matcher m = java.util.regex.Pattern
+            Matcher m = java.util.regex.Pattern
                     .compile("^(.+)-(field|method)-(\\d+)-tip$")
                     .matcher(tipId);
 
@@ -298,6 +324,7 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             for (EntityMethod bodyItem : parent.getRawBody()) {
                 if (memberIndex >= 0 && memberIndex < members.size()) {
                     String memberName = members.get(memberIndex).getMethodName();
+
                     if (bodyItem.getMethodName().equals(memberName)) {
                         bodyItem.setTip(null);
                     }

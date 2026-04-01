@@ -1,5 +1,13 @@
+/*
+ * File: LinkBuild.java
+ * Author: Norman Babiak
+ * Description: Builder for links between entities as GEdges
+ * Date: 30.3.2026
+ */
+
 package com.diagrams.ClassDiagram.builders;
 
+import com.diagrams.ClassDiagram.factory.ClassParts.ClassEntityFactory;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLabel;
 import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import org.eclipse.glsp.graph.*;
@@ -66,5 +74,15 @@ public class LinkBuild {
                 .text(quantifierLabel.getLabel());
 
         return label.build();
+    }
+
+    public GModelElement buildTipLinks(ClassEntityFactory.TipInfo tipInfo) {
+        GEdgeBuilder edge = new GEdgeBuilder("link:note")
+                .id("edge-" + tipInfo.tipId)
+                .sourceId(tipInfo.parentEntityId)
+                .targetId(tipInfo.tipId)
+                .addArgument("memberName", tipInfo.memberName);
+
+        return edge.build();
     }
 }
