@@ -1,3 +1,10 @@
+/*
+ * File: ClassDiagramModule.java
+ * Author: Norman Babiak
+ * Description: Main module to connect together all parts of the diagram
+ * Date: 4.2.2026
+ */
+
 package com.diagrams.ClassDiagram.module;
 
 import com.GLSPPlantUML.handlers.IgnoreComputeBoundsHandler;

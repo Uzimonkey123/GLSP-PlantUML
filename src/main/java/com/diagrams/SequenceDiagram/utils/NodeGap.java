@@ -1,3 +1,10 @@
+/*
+ * File: NodeGap.java
+ * Author: Norman Babiak
+ * Description: Calculator for gaps between nodes regarding label lengths
+ * Date: 2.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.utils;
 
 import com.GLSPPlantUML.utils.WidthCalculator;

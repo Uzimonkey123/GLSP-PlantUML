@@ -1,3 +1,10 @@
+/*
+ * File: IndentatHelper.java
+ * Author: Norman Babiak
+ * Description: Util class for extracting and applying indentation from / to source file in writer
+ * Date: 2.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.utils;
 
 public class IndentatHelper {

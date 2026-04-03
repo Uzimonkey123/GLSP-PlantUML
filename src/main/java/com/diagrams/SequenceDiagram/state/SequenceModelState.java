@@ -1,3 +1,10 @@
+/*
+ * File: SequenceModelState.java
+ * Author: Norman Babiak
+ * Description: Stores state of the model for the whole relation of the connected client
+ * Date: 4.2.2026
+ */
+
 package com.diagrams.SequenceDiagram.state;
 
 import com.GLSPPlantUML.state.PlantUMLModelState;

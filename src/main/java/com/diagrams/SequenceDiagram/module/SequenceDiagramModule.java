@@ -1,3 +1,10 @@
+/*
+ * File: SequenceDiagramModule.java
+ * Author: Norman Babiak
+ * Description: Main module to connect together all parts of the diagram
+ * Date: 2.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.module;
 
 import com.diagrams.SequenceDiagram.SequenceDiagramConfiguration;

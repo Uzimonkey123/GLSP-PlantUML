@@ -1,3 +1,10 @@
+/*
+ * File: ElementRelocator.java
+ * Author: Norman Babiak
+ * Description: Refreshes source-line references for all elements
+ * Date: 3.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.utils;
 
 import com.diagrams.SequenceDiagram.model.SequenceModel;
@@ -68,6 +75,7 @@ public class ElementRelocator {
         String participantName = node.getName();
         Set<Integer> usedLines = new HashSet<>();
 
+        // Sort by start message index so activation/deactivation pairs are matched in order
         List<SequenceLifeEvent> lifeEvents = new ArrayList<>(node.getLifeEvents());
         lifeEvents.sort(Comparator.comparingInt(SequenceLifeEvent::getStartMessage));
 
@@ -84,6 +92,7 @@ public class ElementRelocator {
 
             int activateLine = findNextUnused(activateLines, usedLines, -1);
 
+            // If the life event ends at the destroy index, look for "destroy" instead of "deactivate"
             boolean endsWithDestroy = (le.getEndMessage() == node.getDestroyIndex());
             List<Integer> endLines = endsWithDestroy ? destroyLines : deactivateLines;
             int endLine = findNextUnused(endLines, usedLines, activateLine);
@@ -102,6 +111,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Scans all source lines for standalone keyword declarations matching a participant.
+     */
     private List<Integer> collectKeywordLines(String keyword, String participantName) {
         List<Integer> lines = new ArrayList<>();
 
@@ -115,6 +127,9 @@ public class ElementRelocator {
         return lines;
     }
 
+    /**
+     * Returns the first line from candidates that hasn't been used yet and appears after the given line number.
+     */
     private int findNextUnused(List<Integer> candidates, Set<Integer> usedLines, int afterLine) {
         for (int line : candidates) {
             if (!usedLines.contains(line) && line > afterLine) {
@@ -157,6 +172,7 @@ public class ElementRelocator {
 
         String lineText = info.originalText.trim();
 
+        // "return" is a special case
         if (lineText.toLowerCase().startsWith("return")) {
             le.setSourceLines(le.getSourceLineStart(), endMsg.getSourceLineStart());
             le.setReturnEnd(true);
@@ -188,6 +204,7 @@ public class ElementRelocator {
                     String fromName = message.getFrom() != null ? message.getFrom().getName() : "";
                     line = lineFinder.findReferenceLine("ref over " + fromName, message);
 
+                    // Multi-line references need both start and end lines
                     if (line >= 0 && label.contains("<br>")) {
                         int endLine = lineFinder.findEndReferenceLine("end ref", message);
                         message.setSourceLines(line, endLine >= 0 ? endLine : line);
@@ -209,6 +226,7 @@ public class ElementRelocator {
                     continue;
                 }
 
+                // Regular messages try message arrow syntax first, then "return" syntax
                 default -> {
                     line = lineFinder.findMessageLine(label, message);
                     if (line < 0) line = lineFinder.findReturnLine(label, message);
@@ -264,6 +282,7 @@ public class ElementRelocator {
                 LineMapper.LineInfo info = lineMapper.getLineInfo(startLine);
                 if (info != null) group.setRawSourceText(info.originalText);
 
+                // Re-resolve separator lines by scanning forward from the group start
                 group.getSeparatorLineNumbers().clear();
                 lineFinder.setPosition(startLine);
 
@@ -333,6 +352,9 @@ public class ElementRelocator {
         model.mainframeLineNumber = findLineByType(LineMapper.LineType.MAINFRAME);
     }
 
+    /**
+     * Checks the arrow portion of a message line for inline activation markers.
+     */
     private String findInlineActivationMarker(String lineText) {
         String arrowPart = getArrowPart(lineText);
         if (arrowPart.contains("++")) return "++";
@@ -341,6 +363,9 @@ public class ElementRelocator {
         return null;
     }
 
+    /**
+     * Checks the arrow portion of a message line for inline deactivation markers.
+     */
     private String findInlineDeactivationMarker(String lineText) {
         String arrowPart = getArrowPart(lineText);
         if (arrowPart.contains("--")) return "--";
@@ -356,10 +381,12 @@ public class ElementRelocator {
     private boolean matchesParticipant(String textAfterKeyword, String participantName) {
         textAfterKeyword = textAfterKeyword.trim();
 
+        // Plain name match
         if (textAfterKeyword.toLowerCase().startsWith(participantName.toLowerCase())) {
             return true;
         }
 
+        // Quoted name match
         if ((textAfterKeyword.startsWith("\"") || textAfterKeyword.startsWith("'")) && textAfterKeyword.length() > 2) {
             char quote = textAfterKeyword.charAt(0);
             int endQuote = textAfterKeyword.indexOf(quote, 1);

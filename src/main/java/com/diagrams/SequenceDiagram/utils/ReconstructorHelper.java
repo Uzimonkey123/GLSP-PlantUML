@@ -1,3 +1,10 @@
+/*
+ * File: ReconstructorHelper.java
+ * Author: Norman Babiak
+ * Description: Helper for main sequence writer with util methods
+ * Date: 2.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.utils;
 
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;

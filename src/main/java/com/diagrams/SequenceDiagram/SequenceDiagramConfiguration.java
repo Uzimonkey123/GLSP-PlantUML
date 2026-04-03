@@ -1,3 +1,10 @@
+/*
+ * File: SequenceDiagramConfiguration.java
+ * Author: Norman Babiak
+ * Description: Configuration file for sequence diagram, containing shapes and edge types
+ * Date: 2.4.2026
+ */
+
 package com.diagrams.SequenceDiagram;
 
 import org.eclipse.glsp.server.diagram.BaseDiagramConfiguration;

@@ -1,3 +1,10 @@
+/*
+ * File: GroupAdjuster.java
+ * Author: Norman Babiak
+ * Description: Class for group utils in delete handler
+ * Date: 2.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.utils;
 
 import com.diagrams.SequenceDiagram.model.SequenceModel;
@@ -29,6 +36,9 @@ public class GroupAdjuster {
         }
     }
 
+    /**
+     * Recalculates all group boundaries after messages at removedIndices have been deleted.
+     */
     public void adjustGroups(Set<Integer> removedIndices) {
         Iterator<SequenceGroup> it = model.groups.iterator();
 
@@ -37,6 +47,7 @@ public class GroupAdjuster {
             int start = group.getStartIndex();
             int end = group.getEndIndex();
 
+            // Count how many removed messages fall before start and between start and end
             int startShift = 0, endShift = 0, removedInRange = 0;
             for (int r : removedIndices) {
                 if (r < start) {
@@ -52,6 +63,7 @@ public class GroupAdjuster {
             int newStart = start - startShift;
             int newEnd = end - endShift;
 
+            // Group collapses if its range is empty or all internal messages were removed
             if (newEnd <= newStart || removedInRange >= (end - start)) {
                 markGroupStructureLines(group);
                 scheduleGroupRemoval(group);
@@ -65,11 +77,15 @@ public class GroupAdjuster {
         }
     }
 
+    /**
+     * Removes groups that no longer contain any direct messages after deletion.
+     */
     public void removeEmptyGroups() {
         List<SequenceGroup> sorted = new ArrayList<>(model.groups);
         sorted.sort((a, b) -> b.getSourceLineStart() - a.getSourceLineStart());
 
         for (SequenceGroup group : sorted) {
+            // Group may have been removed by a previous iteration
             if (!model.groups.contains(group)) continue;
 
             if (!hasDirectMessages(group)) {
@@ -80,6 +96,9 @@ public class GroupAdjuster {
         }
     }
 
+    /**
+     * Method for marking all lines of the group, start, end and separators
+     */
     public void markGroupStructureLines(SequenceGroup group) {
         if (!group.hasLine()) return;
 
@@ -91,6 +110,9 @@ public class GroupAdjuster {
         }
     }
 
+    /**
+     * Check if message has atleast one message in its own nested level
+     */
     private boolean hasDirectMessages(SequenceGroup group) {
         int gStart = group.getSourceLineStart();
         int gEnd = group.getSourceLineEnd();
@@ -113,18 +135,24 @@ public class GroupAdjuster {
         return false;
     }
 
+    /**
+     * Rebuilds a group's separator list after message deletion.
+     */
     private void rebuildSeparators(SequenceGroup group, Set<Integer> removedIndices, int newStart, int newEnd) {
         List<Integer> old = new ArrayList<>(group.getSeparatorList());
         group.clearSeparatorList();
 
         for (int sep : old) {
+            // Drop separators that pointed to a removed message
             if (removedIndices.contains(sep)) continue;
 
+            // Shift the separator index down by the count of removed messages before it
             int shift = 0;
             for (int r : removedIndices) {
                 if (r < sep) shift++;
             }
 
+            // Only keep the separator if it still falls within the group's new range
             int newSep = sep - shift;
             if (newSep >= newStart && newSep < newEnd) {
                 group.addSeparator(newSep);

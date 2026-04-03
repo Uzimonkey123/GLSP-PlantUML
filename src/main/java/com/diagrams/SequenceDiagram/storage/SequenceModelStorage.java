@@ -1,3 +1,10 @@
+/*
+ * File: SequenceModelStorage.java
+ * Author: Norman Babiak
+ * Description: Storage for the model, handles loading and saving of the diagram
+ * Date: 4.2.2026
+ */
+
 package com.diagrams.SequenceDiagram.storage;
 
 import com.GLSPPlantUML.storage.AbstractPlantUMLStorage;
