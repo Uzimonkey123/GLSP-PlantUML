@@ -1,3 +1,10 @@
+/*
+ * File: LineFinder.java
+ * Author: Norman Babiak
+ * Description: Locates model elements in the PlantUML source by line type and content matching.
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.reconstructor;
 
 import java.util.HashSet;

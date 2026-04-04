@@ -1,3 +1,10 @@
+/*
+ * File: SourceElement.java
+ * Author: Norman Babiak
+ * Description: Tracks the source lines where the element is present in the source code, for editing purposes
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.reconstructor;
 
 public abstract class SourceElement {

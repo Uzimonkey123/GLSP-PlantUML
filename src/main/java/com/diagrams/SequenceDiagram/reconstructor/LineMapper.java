@@ -1,3 +1,10 @@
+/*
+ * File: LineMapper.java
+ * Author: Norman Babiak
+ * Description: Classifies each line of PlantUML source into a LineType for the parser and writer.
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.reconstructor;
 
 import java.util.ArrayList;
@@ -111,16 +118,16 @@ public class LineMapper {
             String leftToRightPattern =
                     "(\\?|\\[|[ox])?" +
                             "[-\\\\/.]+" +
-                            "(\\[#[^\\]]+\\])?" +
+                            "(\\[#[^]]+])?" +
                             "[><]+" +
-                            "(\\?|\\]|[ox])?";
+                            "(\\?|]|[ox])?";
 
             String rightToLeftPattern =
                     "(\\?|\\[|[ox])?" +
                             "[><]+" +
-                            "(\\[#[^\\]]+\\])?" +
+                            "(\\[#[^]]+])?" +
                             "[-\\\\/.]+" +
-                            "(\\?|\\]|[ox])?";
+                            "(\\?|]|[ox])?";
 
             return line.matches(".*(" + leftToRightPattern + "|" + rightToLeftPattern + ").*");
         }
@@ -131,7 +138,7 @@ public class LineMapper {
         COMMENT,
         START_UML,
         END_UML,
-        PARTICIPANT, // TODO: Fix alias, spots
+        PARTICIPANT,
         MESSAGE,
         DIVIDER,
         DELAY,

@@ -3,12 +3,14 @@ package com.diagrams.SequenceDiagram.reconstructor;
 import com.diagrams.SequenceDiagram.SequenceDiagramTestBase;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.*;
+import com.diagrams.SequenceDiagram.reconstructor.writers.*;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -44,6 +46,14 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
     @AfterEach
     void tearDownMocks() throws Exception {
         mocks.close();
+    }
+
+    /**
+     * Creates a SequenceWriterContext from a mock model and file path.
+     */
+    private SequenceWriterContext createContext(Path file) throws IOException {
+        List<String> sourceLines = Files.readAllLines(file, StandardCharsets.UTF_8);
+        return new SequenceWriterContext(mockModel, sourceLines, mockLineMapper);
     }
 
     @Nested
@@ -199,7 +209,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "participant Alice");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            ParticipantWriter writer = new ParticipantWriter(createContext(testFile));
             String result = invokeReplaceParticipant(writer, node);
 
             assertTrue(result.contains("participant"));
@@ -215,7 +225,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "actor User");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            ParticipantWriter writer = new ParticipantWriter(createContext(testFile));
             String result = invokeReplaceParticipant(writer, node);
 
             assertTrue(result.contains("actor"));
@@ -231,7 +241,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "database DB");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            ParticipantWriter writer = new ParticipantWriter(createContext(testFile));
             String result = invokeReplaceParticipant(writer, node);
 
             assertTrue(result.contains("database"));
@@ -246,7 +256,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "participant \"User Interface\" as UI");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            ParticipantWriter writer = new ParticipantWriter(createContext(testFile));
             String result = invokeReplaceParticipant(writer, node);
 
             assertTrue(result.contains("as UI") || result.contains("User Interface"));
@@ -262,7 +272,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "participant Alice order 10");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            ParticipantWriter writer = new ParticipantWriter(createContext(testFile));
             String result = invokeReplaceParticipant(writer, node);
 
             assertTrue(result.contains("order 10"));
@@ -278,14 +288,14 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "participant Alice #LightBlue");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            ParticipantWriter writer = new ParticipantWriter(createContext(testFile));
             String result = invokeReplaceParticipant(writer, node);
 
             assertTrue(result.contains("#LightBlue"));
         }
 
-        private String invokeReplaceParticipant(SequenceWriter writer, SequenceNode node) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod("replaceParticipant", SequenceNode.class);
+        private String invokeReplaceParticipant(ParticipantWriter writer, SequenceNode node) throws Exception {
+            Method method = ParticipantWriter.class.getDeclaredMethod("replaceParticipant", SequenceNode.class);
             method.setAccessible(true);
 
             return (String) method.invoke(writer, node);
@@ -306,8 +316,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "...5 minutes later...");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeReplaceMessage(writer, message);
+            MessageWriter writer = new MessageWriter(createContext(testFile));
+            String result = writer.replaceMessage(message);
 
             assertTrue(result.contains("...5 minutes later..."));
         }
@@ -322,8 +332,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "==Initialization==");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeReplaceMessage(writer, message);
+            MessageWriter writer = new MessageWriter(createContext(testFile));
+            String result = writer.replaceMessage(message);
 
             assertTrue(result.contains("==Initialization=="));
         }
@@ -338,44 +348,37 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             LineMapper.LineInfo lineInfo = new LineMapper.LineInfo(0, "return result");
             when(mockLineMapper.getLineInfo(0)).thenReturn(lineInfo);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeReplaceMessage(writer, message);
+            MessageWriter writer = new MessageWriter(createContext(testFile));
+            String result = writer.replaceMessage(message);
 
             assertTrue(result.contains("return"));
             assertTrue(result.contains("result"));
         }
-
-        private String invokeReplaceMessage(SequenceWriter writer, SequenceMessage message) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod("replaceMessage", SequenceMessage.class);
-            method.setAccessible(true);
-
-            return (String) method.invoke(writer, message);
-        }
     }
 
     @Nested
-    @DisplayName("messageArrow")
+    @DisplayName("buildArrow")
     class MessageArrowTests {
 
         @Test
         @DisplayName("generates arrow variations")
         void arrowVariations() throws Exception {
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            MessageWriter writer = new MessageWriter(createContext(testFile));
 
             SequenceMessage solid = createMockMessageWithArrow(false, "block", "none");
-            String solidResult = invokeMessageArrow(writer, solid);
+            String solidResult = invokeBuildArrow(writer, solid);
             assertTrue(solidResult.contains("-") && solidResult.contains(">") && !solidResult.contains("--"));
 
             SequenceMessage dotted = createMockMessageWithArrow(true, "block", "none");
-            String dottedResult = invokeMessageArrow(writer, dotted);
+            String dottedResult = invokeBuildArrow(writer, dotted);
             assertTrue(dottedResult.contains("--"));
 
             SequenceMessage async = createMockMessageWithArrow(false, "open", "none");
-            String asyncResult = invokeMessageArrow(writer, async);
+            String asyncResult = invokeBuildArrow(writer, async);
             assertTrue(asyncResult.contains(">>"));
 
             SequenceMessage cross = createMockMessageWithArrow(false, "cross", "none");
-            String crossResult = invokeMessageArrow(writer, cross);
+            String crossResult = invokeBuildArrow(writer, cross);
             assertTrue(crossResult.contains("x"));
         }
 
@@ -385,8 +388,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             SequenceMessage message = createMockMessageWithArrow(false, "block", "none");
             when(message.getColor()).thenReturn("#red");
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeMessageArrow(writer, message);
+            MessageWriter writer = new MessageWriter(createContext(testFile));
+            String result = invokeBuildArrow(writer, message);
 
             assertTrue(result.contains("[#red]"));
         }
@@ -397,8 +400,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             SequenceMessage message = createMockMessageWithArrow(false, "block", "block");
             when(message.getStartHead()).thenReturn("block");
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeMessageArrow(writer, message);
+            MessageWriter writer = new MessageWriter(createContext(testFile));
+            String result = invokeBuildArrow(writer, message);
 
             assertTrue(result.contains("<") && result.contains(">"));
         }
@@ -409,14 +412,14 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             SequenceMessage message = createMockMessageWithArrow(false, "block", "none");
             when(message.getEndDecor()).thenReturn("circle");
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeMessageArrow(writer, message);
+            MessageWriter writer = new MessageWriter(createContext(testFile));
+            String result = invokeBuildArrow(writer, message);
 
             assertTrue(result.contains("o"));
         }
 
-        private String invokeMessageArrow(SequenceWriter writer, SequenceMessage message) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod("messageArrow", SequenceMessage.class);
+        private String invokeBuildArrow(MessageWriter writer, SequenceMessage message) throws Exception {
+            Method method = MessageWriter.class.getDeclaredMethod("buildArrow", SequenceMessage.class);
             method.setAccessible(true);
 
             return (String) method.invoke(writer, message);
@@ -434,7 +437,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(anchor.getRawSourceText()).thenReturn("{start} <-> {end} : Original Label");
             when(anchor.getLabel()).thenReturn("New Label");
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            AnchorWriter writer = new AnchorWriter(createContext(testFile));
             String result = invokeReplaceAnchor(writer, anchor);
 
             assertTrue(result.contains("{start}"));
@@ -443,9 +446,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             assertTrue(result.contains("New Label"));
         }
 
-
-        private String invokeReplaceAnchor(SequenceWriter writer, SequenceAnchor anchor) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod("replaceAnchor", SequenceAnchor.class);
+        private String invokeReplaceAnchor(AnchorWriter writer, SequenceAnchor anchor) throws Exception {
+            Method method = AnchorWriter.class.getDeclaredMethod("replaceAnchor", SequenceAnchor.class);
             method.setAccessible(true);
 
             return (String) method.invoke(writer, anchor);
@@ -459,7 +461,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
         @Test
         @DisplayName("generates group types")
         void fragmentTypes() throws Exception {
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            GroupWriter writer = new GroupWriter(createContext(testFile));
 
             SequenceGroup alt = createMockGroup("alt", "condition1", false);
             String altResult = invokeReplaceGroupStart(writer, alt);
@@ -486,14 +488,14 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(group.getElementColor()).thenReturn("#blue");
             when(group.getBackColor()).thenReturn("#lightblue");
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            GroupWriter writer = new GroupWriter(createContext(testFile));
             String result = invokeReplaceGroupStart(writer, group);
 
             assertTrue(result.contains("#blue") && result.contains("#lightblue"));
         }
 
-        private String invokeReplaceGroupStart(SequenceWriter writer, SequenceGroup group) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod("replaceGroupStart", SequenceGroup.class);
+        private String invokeReplaceGroupStart(GroupWriter writer, SequenceGroup group) throws Exception {
+            Method method = GroupWriter.class.getDeclaredMethod("replaceGroupStart", SequenceGroup.class);
             method.setAccessible(true);
 
             return (String) method.invoke(writer, group);
@@ -507,7 +509,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
         @Test
         @DisplayName("generates else with label")
         void elseWithLabel() throws Exception {
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            GroupWriter writer = new GroupWriter(createContext(testFile));
             String result = invokeReplaceGroupElse(writer, "condition2", "else condition1");
 
             assertTrue(result.contains("else"));
@@ -517,14 +519,14 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
         @Test
         @DisplayName("generates else without label")
         void elseWithoutLabel() throws Exception {
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            GroupWriter writer = new GroupWriter(createContext(testFile));
             String result = invokeReplaceGroupElse(writer, "", "else");
 
             assertEquals("else", result.trim());
         }
 
-        private String invokeReplaceGroupElse(SequenceWriter writer, String label, String source) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod("replaceGroupElse", String.class, String.class);
+        private String invokeReplaceGroupElse(GroupWriter writer, String label, String source) throws Exception {
+            Method method = GroupWriter.class.getDeclaredMethod("replaceGroupElse", String.class, String.class);
             method.setAccessible(true);
 
             return (String) method.invoke(writer, label, source);
@@ -543,7 +545,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(englober.getLabel()).thenReturn("Frontend");
             when(englober.getColor()).thenReturn("#CCCCCC");
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            EngloberWriter writer = new EngloberWriter(createContext(testFile));
             String result = invokeReplaceEnglober(writer, englober);
 
             assertTrue(result.contains("box \"Frontend\""));
@@ -557,15 +559,15 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(englober.getLabel()).thenReturn("Backend");
             when(englober.getColor()).thenReturn("#LightGreen");
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
+            EngloberWriter writer = new EngloberWriter(createContext(testFile));
             String result = invokeReplaceEnglober(writer, englober);
 
             assertTrue(result.contains("box"));
             assertTrue(result.contains("#LightGreen"));
         }
 
-        private String invokeReplaceEnglober(SequenceWriter writer, SequenceEnglober englober) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod("replaceEnglober", SequenceEnglober.class);
+        private String invokeReplaceEnglober(EngloberWriter writer, SequenceEnglober englober) throws Exception {
+            Method method = EngloberWriter.class.getDeclaredMethod("replaceEnglober", SequenceEnglober.class);
             method.setAccessible(true);
 
             return (String) method.invoke(writer, englober);
@@ -573,7 +575,7 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
     }
 
     @Nested
-    @DisplayName("replacePageDetails")
+    @DisplayName("replacePageDetail")
     class ReplacePageDetailsTests {
 
         @Test
@@ -582,12 +584,12 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             String content = puml("title Old Title", "participant A");
             Path file = createTempPumlFile(content);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, file.toUri().toString());
-            List<String> result = invokeReplacePageDetails(writer, "title", "New Title", 1, 1);
+            PageDetailsWriter writer = new PageDetailsWriter(createContext(file));
+            List<String> result = invokeReplacePageDetail(writer, "title", "New Title", 1, 1);
 
             assertEquals(1, result.size());
-            assertTrue(result.get(0).contains("title"));
-            assertTrue(result.get(0).contains("New Title"));
+            assertTrue(result.getFirst().contains("title"));
+            assertTrue(result.getFirst().contains("New Title"));
         }
 
         @Test
@@ -596,18 +598,18 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             String content = puml("title", "Line 1", "Line 2", "end title", "participant A");
             Path file = createTempPumlFile(content);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, file.toUri().toString());
-            List<String> result = invokeReplacePageDetails(writer, "title", "Line 1<br>Line 2", 1, 4);
+            PageDetailsWriter writer = new PageDetailsWriter(createContext(file));
+            List<String> result = invokeReplacePageDetail(writer, "title", "Line 1<br>Line 2", 1, 4);
 
             assertTrue(result.size() >= 3);
             assertTrue(result.getFirst().contains("title"));
             assertTrue(result.getLast().contains("end title"));
         }
 
-        private List<String> invokeReplacePageDetails(SequenceWriter writer, String keyword,
-                                                      String content, int startLine, int endLine) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod(
-                    "replacePageDetails", String.class, String.class, int.class, int.class);
+        private List<String> invokeReplacePageDetail(PageDetailsWriter writer, String keyword,
+                                                     String content, int startLine, int endLine) throws Exception {
+            Method method = PageDetailsWriter.class.getDeclaredMethod(
+                    "replacePageDetail", String.class, String.class, int.class, int.class);
             method.setAccessible(true);
 
             return (List<String>) method.invoke(writer, keyword, content, startLine, endLine);
@@ -634,8 +636,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(note.getBackground()).thenReturn("#FFFFE0");
             when(note.isParalell()).thenReturn(false);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeReplaceSingleLineNote(writer, message, note);
+            NoteWriter writer = new NoteWriter(createContext(testFile));
+            String result = invokeReplaceNote(writer, message, note, false);
 
             assertTrue(result.contains("note"));
             assertTrue(result.contains("Comment"));
@@ -657,8 +659,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(note.getBackground()).thenReturn("#FFFFE0");
             when(note.isParalell()).thenReturn(false);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeReplaceSingleLineNote(writer, message, note);
+            NoteWriter writer = new NoteWriter(createContext(testFile));
+            String result = invokeReplaceNote(writer, message, note, false);
 
             assertTrue(result.contains("hnote"));
         }
@@ -679,8 +681,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(note.getBackground()).thenReturn("#FFFFE0");
             when(note.isParalell()).thenReturn(false);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeReplaceSingleLineNote(writer, message, note);
+            NoteWriter writer = new NoteWriter(createContext(testFile));
+            String result = invokeReplaceNote(writer, message, note, false);
 
             assertTrue(result.contains("rnote"));
         }
@@ -701,19 +703,19 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             when(note.getBackground()).thenReturn("#FFFFE0");
             when(note.isParalell()).thenReturn(true);
 
-            SequenceWriter writer = new SequenceWriter(mockModel, testFile.toUri().toString());
-            String result = invokeReplaceSingleLineNote(writer, message, note);
+            NoteWriter writer = new NoteWriter(createContext(testFile));
+            String result = invokeReplaceNote(writer, message, note, false);
 
             assertTrue(result.contains("/"));
         }
 
-        private String invokeReplaceSingleLineNote(SequenceWriter writer,
-                                                   SequenceMessage message, SequenceNote note) throws Exception {
-            Method method = SequenceWriter.class.getDeclaredMethod(
-                    "replaceSingleLineNote", SequenceMessage.class, SequenceNote.class);
+        private String invokeReplaceNote(NoteWriter writer, SequenceMessage message,
+                                         SequenceNote note, boolean multiline) throws Exception {
+            Method method = NoteWriter.class.getDeclaredMethod(
+                    "replaceNote", SequenceMessage.class, SequenceNote.class, boolean.class);
             method.setAccessible(true);
 
-            return (String) method.invoke(writer, message, note);
+            return (String) method.invoke(writer, message, note, multiline);
         }
     }
 
@@ -969,6 +971,8 @@ class SequenceWriterTest extends SequenceDiagramTestBase {
             assertFalse(result.contains("participant B"));
         }
     }
+
+    // ========== Mock helpers ==========
 
     private SequenceNode createMockNode(String originalName, String newName, String type, int line) {
         SequenceNode node = mock(SequenceNode.class);

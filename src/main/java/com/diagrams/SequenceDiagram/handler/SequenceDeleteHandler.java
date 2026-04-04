@@ -1,8 +1,18 @@
+/*
+ * File: SequenceDeleteHandler.java
+ * Author: Norman Babiak
+ * Description: Handles deletion of sequence diagram elements
+ * Date: 4.4.2026
+ */
+
+// TODO: Life event bug when multiple deletions of a nested life event + inline removal bugs
+
 package com.diagrams.SequenceDiagram.handler;
 
 import com.google.inject.Inject;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.*;
+import com.diagrams.SequenceDiagram.reconstructor.SourceElement;
 import com.diagrams.SequenceDiagram.state.SequenceModelState;
 import com.diagrams.SequenceDiagram.utils.GroupAdjuster;
 import org.eclipse.emf.common.command.AbstractCommand;
@@ -156,6 +166,9 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
             model.participants.remove(participant);
         }
 
+        /**
+         * Removes all messages connected to a participant, returning their original indices.
+         */
         private Set<Integer> removeConnectedMessages(SequenceNode participant) {
             Set<Integer> removedIndices = new HashSet<>();
             Iterator<SequenceMessage> it = model.messages.iterator();
@@ -212,6 +225,7 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
             model.messages.remove(message);
             if (messageIndex < 0) return;
 
+            // Check for life events and destroy markers attached to this message
             for (SequenceNode p : model.participants) {
                 for (SequenceLifeEvent le : p.getLifeEvents()) {
                     if (le.getStartMessage() == messageIndex || le.getEndMessage() == messageIndex) {
@@ -249,6 +263,7 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
                 msg.getNotes().remove(note);
             }
 
+            // Remove empty standalone note messages
             List<String> emptyEdges = new ArrayList<>();
             model.messages.removeIf(msg -> {
                 if ("edge:note".equals(msg.getType()) && msg.getNotes().isEmpty()) {
@@ -308,6 +323,10 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
             participant.setDestroyIndex(-1);
         }
 
+        /**
+         * Marks source lines for a life event's start and end, handling inline markers eparately from standalone keyword lines.
+         * Skips lines already scheduled for deletion by a parent message removal.
+         */
         private void markLifeEventLines(SequenceLifeEvent le, Set<Integer> deletedMsgLines) {
             int startLine = le.getSourceLineStart();
             if (startLine >= 0) {
@@ -339,6 +358,9 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
             }
         }
 
+        /**
+         * Removes life events that reference deleted message indices and shifts remaining life event indices to account for removed messages.
+         */
         private void removeOrphanedLifeEvents(Set<Integer> removedIndices, SequenceNode exclude) {
             Set<Integer> deletedLines = new HashSet<>();
             for (int[] range : model.getLinesToDelete()) {
@@ -364,6 +386,9 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
             }
         }
 
+        /**
+         * Cleans up destroy markers that point beyond the current message count
+         */
         private void cleanupInvalidDestroys() {
             int msgCount = model.messages.size();
 
@@ -375,6 +400,25 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
                     }
                     p.setDestroyIndex(-1);
                 }
+            }
+        }
+
+
+        /**
+         * Unified line marking for any model element extending SourceElement.
+         */
+        private void markLines(SourceElement element) {
+            if (element.hasLine()) {
+                model.markLinesForDeletion(element.getSourceLineStart(), element.getSourceLineEnd());
+            }
+        }
+
+        /**
+         * Schedules an inline marker for removal from a source line rather than deleting the entire line.
+         */
+        private void stripMarker(int line, String marker) {
+            if (marker != null && !marker.isEmpty()) {
+                model.markLineForMarkerRemoval(line, marker);
             }
         }
 
@@ -516,55 +560,39 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
             return model.getNode(rest.substring(0, lastDash));
         }
 
-        private void markLines(SequenceNode node) {
-            if (node.hasLine()) model.markLinesForDeletion(node.getSourceLineStart(), node.getSourceLineEnd());
-        }
 
-        private void markLines(SequenceMessage msg) {
-            if (msg.hasLine()) model.markLinesForDeletion(msg.getSourceLineStart(), msg.getSourceLineEnd());
-        }
-
-        private void markLines(SequenceNote note) {
-            if (note.hasLine()) model.markLinesForDeletion(note.getSourceLineStart(), note.getSourceLineEnd());
-        }
-
-        private void markLines(SequenceEnglober e) {
-            if (e.hasLine()) model.markLinesForDeletion(e.getSourceLineStart(), e.getSourceLineEnd());
-        }
-
-        private void markLines(SequenceAnchor a) {
-            if (a.hasLine()) model.markLinesForDeletion(a.getSourceLineStart(), a.getSourceLineEnd());
-        }
-
-        private void stripMarker(int line, String marker) {
-            if (marker != null && !marker.isEmpty()) {
-                model.markLineForMarkerRemoval(line, marker);
-            }
-        }
-
-        @Override public boolean canUndo() {
+        @Override
+        public boolean canUndo() {
             return false;
         }
-        @Override public void undo() {
+
+        @Override
+        public void undo() {
+
         }
 
-        @Override public void redo() {
+        @Override
+        public void redo() {
             execute();
         }
 
-        @Override public Collection<?> getResult() {
+        @Override
+        public Collection<?> getResult() {
             return Collections.emptyList();
         }
 
-        @Override public Collection<?> getAffectedObjects() {
+        @Override
+        public Collection<?> getAffectedObjects() {
             return Collections.emptyList();
         }
 
-        @Override public String getLabel() {
+        @Override
+        public String getLabel() {
             return "Delete Elements";
         }
 
-        @Override public String getDescription() {
+        @Override
+        public String getDescription() {
             return "Delete selected elements from sequence diagram";
         }
     }
