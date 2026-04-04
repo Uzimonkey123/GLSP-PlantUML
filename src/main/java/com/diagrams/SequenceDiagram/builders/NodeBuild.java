@@ -1,3 +1,10 @@
+/*
+ * File: NodeBuild.java
+ * Author: Norman Babiak
+ * Description: GModelElement builder for nodes, page details and invisible helper nodes
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.builders;
 
 import com.diagrams.SequenceDiagram.model.SequenceModel;

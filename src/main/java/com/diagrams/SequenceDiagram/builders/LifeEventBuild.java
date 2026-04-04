@@ -1,3 +1,10 @@
+/*
+ * File: LifeEventBuild.java
+ * Author: Norman Babiak
+ * Description: GModelElement builder for life events and destroy crosses
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.builders;
 
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceLifeEvent;

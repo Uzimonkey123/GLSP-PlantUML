@@ -1,3 +1,10 @@
+/*
+ * File: SequenceLifeEvent.java
+ * Author: Norman Babiak
+ * Description: LifeEvent bar representation for sequence diagram
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.model.SequenceParts;
 
 import com.diagrams.SequenceDiagram.reconstructor.SourceElement;

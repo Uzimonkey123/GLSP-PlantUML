@@ -1,51 +1,55 @@
+/*
+ * File: SequenceNodeFactory.java
+ * Author: Norman Babiak
+ * Description: Factory for creating participant nodes, invisible nodes,and page-level details
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
 
 import com.diagrams.SequenceDiagram.builders.NodeBuild;
+import com.diagrams.SequenceDiagram.factory.SequenceFactoryContext;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;
-import com.diagrams.SequenceDiagram.utils.NodeGap;
 import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.*;
 
+import static com.diagrams.SequenceDiagram.factory.SequenceFactoryContext.*;
+
 public class SequenceNodeFactory {
-    private final int nodeY = 30;
-    private double cursor = 40;
-
-    private final SequenceModel model;
+    private final SequenceFactoryContext ctx;
     private final NodeBuild nodeBuild;
-    private final NodeGap gapCalculator;
-    private final List<Double> messagesYPos;
-
     private final double totalHeight;
-    private final List<GModelElement> elements = new ArrayList<>();
-    private final Map<String, Double> centre = new HashMap<>();
-    private final Map<String, Double> halfWidth = new HashMap<>();
 
     private SequenceNode currentNode;
-    private final int padding = 20;
-    private final int nodeOffset = 24;
 
-    public SequenceNodeFactory(SequenceModel model, NodeBuild nodeBuild, double totalHeight,
-                               List<Double> messagesYPos, NodeGap gapCalculator) {
-        this.model = model;
+    public SequenceNodeFactory(SequenceFactoryContext ctx, NodeBuild nodeBuild, double totalHeight) {
+        this.ctx = ctx;
         this.nodeBuild = nodeBuild;
         this.totalHeight = totalHeight;
-        this.messagesYPos = messagesYPos;
-        this.gapCalculator = gapCalculator;
     }
 
     public void createNodes() {
+        SequenceModel model = ctx.getModel();
+        Map<String, Double> centre = ctx.getCentre();
+        Map<String, Double> halfWidth = ctx.getHalfWidth();
+        List<GModelElement> elements = ctx.getElements();
+        List<Double> messagesYPos = ctx.getMessagesYPos();
+
         double highestNode = Double.MAX_VALUE;
         double biggestHeight = Double.MIN_VALUE;
         boolean isHighNodePresent = false;
+        double cursor = ctx.getCursor();
 
+        int padding = 20;
         for (SequenceNode node : model.participants) {
             this.currentNode = node;
             double createdOffset = 0;
 
             if (node.isCreatedNode()) {
+                int nodeOffset = 24;
                 createdOffset = messagesYPos.get(node.getCreatedIndex()) - nodeY - nodeOffset;
             }
 
@@ -55,7 +59,7 @@ public class SequenceNodeFactory {
 
             double nodeWidth = WidthCalculator.calculateWidth(currentNode.getName(), padding);
             String label = getLabel();
-            int headerHeight = calculateHeaderHeight(label);
+            int headerHeight = calculateHeaderHeight(label, padding / 2);
             double nodeStart = nodeY + createdOffset - headerHeight;
             highestNode = Math.min(highestNode, nodeStart);
             double height = totalHeight - createdOffset + 2 * headerHeight;
@@ -67,61 +71,33 @@ public class SequenceNodeFactory {
                                                         height, label, nodeStart, model.showFoot);
 
             elements.add(newNode);
-            centre.put(node.getId(), getNodeCenter(nodeWidth));
-            halfWidth.put(node.getId(), getNodeHalfWidth(nodeWidth));
+            centre.put(node.getId(), cursor + nodeWidth / 2);
+            halfWidth.put(node.getId(), nodeWidth / 2);
 
             String nextName = model.getNextParticipant(node.getId());
             if (!nextName.equals(node.getId())) {
-                double gap = gapCalculator.getGaps(node.getId(), nextName);
-                cursor += nodeWidth + gap + getNodeHalfWidth(nodeWidth);
+                double gap = ctx.getGapCalculator().getGaps(node.getId(), nextName);
+                cursor += nodeWidth + gap + nodeWidth / 2;
             }
         }
 
         cursor += halfWidth.get(model.participants.getLast().getId()) + 2 * padding;
+        ctx.setCursor(cursor);
 
         // Add invisible nodes for incoming or outgoing messages
-        createInvisibleNodes();
+        nodeBuild.buildInvisibleNodes(elements, totalHeight, cursor, nodeY);
+        centre.put("[", 0.0);
+        centre.put("]", cursor);
 
         // Add page details like header, title, footer
-        createPageDetails(highestNode, isHighNodePresent, biggestHeight);
-    }
-
-    public List<GModelElement> getElements() {
-        return elements;
-    }
-
-    public Map<String, Double> getCentre() {
-        return centre;
-    }
-
-    public Map<String, Double> getHalfWidth() {
-        return halfWidth;
-    }
-
-    public double getCursor() {
-        return cursor;
-    }
-
-    private int calculateHeaderHeight(String label) {
-        int lineCount = label.split("<br>").length;
-        int lineHeight = 14;
-
-        return lineCount * lineHeight + padding / 2;
-    }
-
-    private double getNodeCenter(double nodeWidth) {
-        return this.cursor + nodeWidth / 2;
-    }
-
-    private double getNodeHalfWidth(double nodeWidth) {
-        return nodeWidth / 2;
+        nodeBuild.buildPageDetails(elements, model, totalHeight, centre, highestNode, isHighNodePresent, biggestHeight);
     }
 
     private StringBuilder removeSpecialChar() {
         String name = currentNode.getName();
-        char stereotypeCharc = currentNode.getStereotypeChar();
+        char stereotypeChar = currentNode.getStereotypeChar();
 
-        if (currentNode.isStereotype() && name.startsWith(stereotypeCharc + " ")) {
+        if (currentNode.isStereotype() && name.startsWith(stereotypeChar + " ")) {
             name = name.substring(2);
         }
 
@@ -137,15 +113,5 @@ public class SequenceNodeFactory {
         return currentNode.isStereotype()
                 ? this.removeSpecialChar().toString()
                 : currentNode.getName();
-    }
-
-    private void createPageDetails(double highestNode, boolean isHighNodePresent, double biggestHeight) {
-        nodeBuild.buildPageDetails(elements, model, totalHeight, centre, highestNode, isHighNodePresent, biggestHeight);
-    }
-
-    private void createInvisibleNodes() {
-        nodeBuild.buildInvisibleNodes(elements, totalHeight, cursor, nodeY);
-        centre.put("[", 0.0);
-        centre.put("]", cursor);
     }
 }

@@ -1,3 +1,10 @@
+/*
+ * File: SequenceGroup.java
+ * Author: Norman Babiak
+ * Description: Group representation for sequence diagram
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.model.SequenceParts;
 
 import com.diagrams.SequenceDiagram.reconstructor.SourceElement;
@@ -26,6 +33,7 @@ public class SequenceGroup extends SourceElement {
         separatorList = new ArrayList<>();
         separatorLabel = new ArrayList<>();
 
+        // Check if group is custom type or pre-made keyword
         switch(label) {
             case "alt":
             case "opt":

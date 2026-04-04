@@ -1,3 +1,10 @@
+/*
+ * File: NoteBuild.java
+ * Author: Norman Babiak
+ * Description: GModelElement builder for notes
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.builders;
 
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNote;

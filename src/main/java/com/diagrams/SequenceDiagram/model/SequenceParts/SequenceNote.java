@@ -1,3 +1,10 @@
+/*
+ * File: SequenceNote.java
+ * Author: Norman Babiak
+ * Description: Note representation for sequence diagram, attached to messages
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.model.SequenceParts;
 
 import com.diagrams.SequenceDiagram.reconstructor.SourceElement;

@@ -1,3 +1,10 @@
+/*
+ * File: EngloberBuild.java
+ * Author: Norman Babiak
+ * Description: GModelElement builder for englober boxes
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.builders;
 
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceEnglober;

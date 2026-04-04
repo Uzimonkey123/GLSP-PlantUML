@@ -1,6 +1,14 @@
+/*
+ * File: SequenceGroupFactory.java
+ * Author: Norman Babiak
+ * Description: Factory for creating group outlines, separator lines, and their labels
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
 
 import com.diagrams.SequenceDiagram.builders.GroupBuild;
+import com.diagrams.SequenceDiagram.factory.SequenceFactoryContext;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceGroup;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceMessage;
@@ -9,33 +17,28 @@ import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.*;
 
+import static com.diagrams.SequenceDiagram.factory.SequenceFactoryContext.*;
+
 public class SequenceGroupFactory {
-    private final SequenceModel model;
-    private final List<Double> messagesYPos;
-    private final Map<String, Double> centre;
-    private final List<GModelElement> elements;
+    private final SequenceFactoryContext ctx;
+    private final GroupBuild groupBuild;
     private final List<GModelElement> tempElements;
 
     List<Double> separatorYPos = new ArrayList<>();
-    GroupBuild groupBuild;
 
     double minX = Double.MAX_VALUE;
     double maxX = Double.MIN_VALUE;
-    double globalMaxX = Double.MIN_VALUE; // Variable to keep track of the previous longest group x2
-    private final int padding = 10;
-    private final int titleCommentGap = 15;
-    private final int lineHeight = 14;
+    double globalMaxX = Double.MIN_VALUE;
 
-    public SequenceGroupFactory(SequenceModel model, List<Double> messagesYPos, Map<String, Double> centre, List<GModelElement> elements) {
-        this.model = model;
-        this.messagesYPos = messagesYPos;
-        this.centre = centre;
-        this.elements = elements;
-
+    public SequenceGroupFactory(SequenceFactoryContext ctx) {
+        this.ctx = ctx;
         this.groupBuild = new GroupBuild();
         this.tempElements = new ArrayList<>();
     }
 
+    /**
+     * Sorts groups into post-order so nested groups are processed before their parents.
+     */
     List<SequenceGroup> postOrder(List<SequenceGroup> groups) {
         Deque<SequenceGroup> stack = new ArrayDeque<>();
         List<SequenceGroup> out = new ArrayList<>();
@@ -56,6 +59,10 @@ public class SequenceGroupFactory {
     }
 
     public void createGroups() {
+        SequenceModel model = ctx.getModel();
+        Map<String, Double> centre = ctx.getCentre();
+        List<Double> messagesYPos = ctx.getMessagesYPos();
+
         globalMaxX = Double.MIN_VALUE;
         tempElements.clear();
 
@@ -81,10 +88,10 @@ public class SequenceGroupFactory {
                 labelHeight = Math.max(labelHeight, calculateLabelHeight(msgCheck));
             }
 
-            double titleLength = WidthCalculator.calculateWidth(seqGroup.getLabel(), padding);
-            double commentLength = seqGroup.getComment() == null ? 0 : WidthCalculator.calculateWidth(seqGroup.getComment(), padding);
+            double titleLength = WidthCalculator.calculateWidth(seqGroup.getLabel(), defPadding);
+            double commentLength = seqGroup.getComment() == null ? 0 : WidthCalculator.calculateWidth(seqGroup.getComment(), defPadding);
 
-            double y1 = messagesYPos.get(seqGroup.getStartIndex()) - (labelHeight + padding);
+            double y1 = messagesYPos.get(seqGroup.getStartIndex()) - (labelHeight + defPadding);
             double y2 = messagesYPos.get(seqGroup.getEndIndex() - 1) + (lineHeight / 2);
 
             int currentLevel = seqGroup.getLevel();
@@ -92,13 +99,15 @@ public class SequenceGroupFactory {
                 maxGroupLevel = currentLevel;
                 globalMaxX = Double.MIN_VALUE;
             }
-            int nestingPadding = (maxGroupLevel - seqGroup.getLevel() + 1) * padding;
+            int nestingPadding = (maxGroupLevel - seqGroup.getLevel() + 1) * defPadding;
 
-            calculateMinMax(seqGroup);
+            calculateMinMax(seqGroup, model, centre);
             double x1 = minX - nestingPadding;
             double x2 = maxX;
+
             // If maxX is smaller than the combination of labels, extend it
-            if (maxX - 2 * padding - titleCommentGap < commentLength + titleLength) {
+            int titleCommentGap = 15;
+            if (maxX - 2 * defPadding - titleCommentGap < commentLength + titleLength) {
                 x2 = maxX + Math.max(commentLength, titleLength);
             }
 
@@ -111,7 +120,7 @@ public class SequenceGroupFactory {
             }
             x2 = calculateX2(isNested, nestedOuter, nestingPadding, x2);
 
-            calculateSeparatorY(seqGroup);
+            calculateSeparatorY(seqGroup, model, messagesYPos);
 
             tempElements.addFirst(groupBuild.buildGroupOutline(seqGroup, x1, x2, y1, y2, separatorYPos, titleLength));
 
@@ -130,14 +139,14 @@ public class SequenceGroupFactory {
             }
         }
 
-        elements.addAll(tempElements);
+        ctx.getElements().addAll(tempElements);
     }
 
-    private void calculateSeparatorY(SequenceGroup seqGroup) {
+    private void calculateSeparatorY(SequenceGroup seqGroup, SequenceModel model, List<Double> messagesYPos) {
         for (Integer separatorIndex : seqGroup.getSeparatorList()) {
             SequenceMessage separatorMsg = model.messages.get(separatorIndex);
             int labelHeight = calculateLabelHeight(separatorMsg);
-            double y = messagesYPos.get(separatorIndex) - (labelHeight + padding) + 2;
+            double y = messagesYPos.get(separatorIndex) - (labelHeight + defPadding) + 2;
             separatorYPos.add(y);
         }
     }
@@ -146,7 +155,7 @@ public class SequenceGroupFactory {
         for (int i = 0; i < separatorYPos.size(); i++) {
             if (!seqGroup.getSeparatorLabel().get(i).isEmpty()) {
                 String label = seqGroup.getSeparatorLabel().get(i);
-                double labelLength = WidthCalculator.calculateWidth(label, padding);
+                double labelLength = WidthCalculator.calculateWidth(label, defPadding);
                 double separatorLabelPos = x1 + (labelLength / 2);
                 String id = seqGroup.separatorId(i);
 
@@ -158,11 +167,10 @@ public class SequenceGroupFactory {
     private int calculateLabelHeight(SequenceMessage msg) {
         String[] lines = msg.getMessage().split("<br>");
 
-        int lineCount = lines.length;
-        return lineCount * lineHeight;
+        return lines.length * lineHeight;
     }
 
-    private void calculateMinMax(SequenceGroup seqGroup) {
+    private void calculateMinMax(SequenceGroup seqGroup, SequenceModel model, Map<String, Double> centre) {
         for (int i = seqGroup.getStartIndex(); i < seqGroup.getEndIndex(); i++) {
             SequenceMessage message = model.messages.get(i);
             double fromX = message.getFrom() != null ? centre.get(message.getFromId()) : -1;
@@ -187,7 +195,7 @@ public class SequenceGroupFactory {
         }
 
         // If it is the outer group of a nested one, use different padding
-        double calculated = nestedOuter ? Math.max(globalMaxX, x2) + nestingPadding : x2 + padding;
+        double calculated = nestedOuter ? Math.max(globalMaxX, x2) + nestingPadding : x2 + defPadding;
         globalMaxX = calculated;
 
         return calculated;

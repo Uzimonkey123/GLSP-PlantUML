@@ -1,3 +1,10 @@
+/*
+ * File: AnchorBuild.java
+ * Author: Norman Babiak
+ * Description: GModelElement builder for anchor edges
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.builders;
 
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceAnchor;

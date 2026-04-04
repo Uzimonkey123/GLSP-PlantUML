@@ -1,6 +1,14 @@
+/*
+ * File: SequenceMainframeFactory.java
+ * Author: Norman Babiak
+ * Description: Factory for creating the mainframe border and label around the entire sequence diagram
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
 
 import com.diagrams.SequenceDiagram.builders.NodeBuild;
+import com.diagrams.SequenceDiagram.factory.SequenceFactoryContext;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GLabel;
@@ -11,25 +19,19 @@ import org.eclipse.glsp.graph.GPoint;
 import java.util.List;
 import java.util.Map;
 
+import static com.diagrams.SequenceDiagram.factory.SequenceFactoryContext.*;
+
 public class SequenceMainframeFactory {
-    private final SequenceModel model;
-    private final Map<String, Double> centre;
-    private final Map<String, Double> halfWidth;
-    private final List<GModelElement> elements;
+    private final SequenceFactoryContext ctx;
     private final NodeBuild nodeBuild;
 
     private double minX;
     private double maxX;
     private double minY;
     private double maxY;
-    private final int padding = 10;
 
-    public SequenceMainframeFactory(SequenceModel model, Map<String, Double> centre,
-                                    Map<String, Double> halfWidth, List<GModelElement> elements) {
-        this.model = model;
-        this.centre = centre;
-        this.halfWidth = halfWidth;
-        this.elements = elements;
+    public SequenceMainframeFactory(SequenceFactoryContext ctx) {
+        this.ctx = ctx;
         this.nodeBuild = new NodeBuild();
 
         minX = Double.MAX_VALUE;
@@ -40,24 +42,30 @@ public class SequenceMainframeFactory {
     }
 
     public void createMainframe() {
-        computeMainframe();
+        SequenceModel model = ctx.getModel();
+        Map<String, Double> centre = ctx.getCentre();
+        Map<String, Double> halfWidth = ctx.getHalfWidth();
+        List<GModelElement> elements = ctx.getElements();
+
+        computeMainframe(elements);
 
         if (model.invisibleNodes) {
-            minX -= padding;
-            maxX += padding;
+            minX -= defPadding;
+            maxX += defPadding;
+
         } else {
             String firstParticipant = model.participants.getFirst().getId();
-            minX = centre.get(firstParticipant) - halfWidth.get(firstParticipant) - padding;
+            minX = centre.get(firstParticipant) - halfWidth.get(firstParticipant) - defPadding;
 
             String lastParticipant = model.participants.getLast().getId();
-            maxX = centre.get(lastParticipant) + halfWidth.get(lastParticipant) + padding;
+            maxX = centre.get(lastParticipant) + halfWidth.get(lastParticipant) + defPadding;
         }
 
-        minY -= padding;
-        maxY += calculateHeaderHeight(model.footer);
+        minY -= defPadding;
+        maxY += calculateHeaderHeight(model.footer, defPadding);
 
         double labelWidth = WidthCalculator.calculateWidth(model.mainframe, 0);
-        double labelHeight = calculateHeaderHeight(model.mainframe) - padding;
+        double labelHeight = calculateHeaderHeight(model.mainframe, defPadding) - defPadding;
 
         minY -= labelHeight;
         maxX = Math.max(maxX, minX + labelWidth);
@@ -68,7 +76,7 @@ public class SequenceMainframeFactory {
         elements.add(nodeBuild.buildMainframe(model, minX, minY, frameWidth, frameHeight, labelWidth, labelHeight));
     }
 
-    private void computeMainframe() {
+    private void computeMainframe(List<GModelElement> elements) {
         for (GModelElement elem : elements) {
             if (elem instanceof GNode) {
                 GPoint point = ((GNode) elem).getPosition();
@@ -87,12 +95,5 @@ public class SequenceMainframeFactory {
         minY = Math.min(minY, point.getY());
         maxX = Math.max(maxX, point.getX());
         maxY = Math.max(maxY, point.getY());
-    }
-
-    private double calculateHeaderHeight(String label) {
-        int lineCount = label.split("<br>").length;
-        int lineHeight = 14;
-
-        return lineCount * lineHeight + padding;
     }
 }

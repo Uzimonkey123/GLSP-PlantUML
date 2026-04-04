@@ -1,6 +1,14 @@
+/*
+ * File: SequenceNoteFactory.java
+ * Author: Norman Babiak
+ * Description: Factory for creating note boxes and labels attached to messages or standing alone
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
 
 import com.diagrams.SequenceDiagram.builders.NoteBuild;
+import com.diagrams.SequenceDiagram.factory.SequenceFactoryContext;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceMessage;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;
@@ -11,6 +19,7 @@ import org.eclipse.glsp.graph.GModelElement;
 import java.util.List;
 import java.util.Map;
 
+import static com.diagrams.SequenceDiagram.factory.SequenceFactoryContext.*;
 
 public class SequenceNoteFactory {
     private record NotePosition(double x1, double x2, String source, String target) {
@@ -25,6 +34,7 @@ public class SequenceNoteFactory {
         }
     }
 
+    private final SequenceFactoryContext ctx;
     private final SequenceModel model;
     private final List<Double> messagesYPos;
     private final Map<String, Double> centre;
@@ -33,28 +43,25 @@ public class SequenceNoteFactory {
 
     private final NoteBuild noteBuild;
 
-    private final int labelHeight = 14;
     private final int noteXOffset = 5;
-    private final int padding = 10;
     private final int singleYOffset = 6;
 
-    public SequenceNoteFactory(SequenceModel model, List<Double> messagesYPos,
-                               Map<String, Double> centre, Map<String, Double> halfWidth,
-                               List<GModelElement> elements) {
-        this.model = model;
-        this.messagesYPos = messagesYPos;
-        this.centre = centre;
-        this.halfWidth = halfWidth;
-        this.elements = elements;
-
+    public SequenceNoteFactory(SequenceFactoryContext ctx) {
+        this.ctx = ctx;
         this.noteBuild = new NoteBuild();
+
+        model = ctx.getModel();
+        centre = ctx.getCentre();
+        halfWidth = ctx.getHalfWidth();
+        messagesYPos = ctx.getMessagesYPos();
+        elements = ctx.getElements();
     }
 
     public void createNote(SequenceMessage msg, int msgIndex) {
         if (msg.getNotes() == null || msg.getNotes().isEmpty()) return;
 
         for (SequenceNote note : msg.getNotes()) {
-            double width = WidthCalculator.calculateWidth(note.getLabel(), padding);
+            double width = WidthCalculator.calculateWidth(note.getLabel(), defPadding);
             SequenceNode from = msg.getFrom();
             SequenceNode to = msg.getTo();
 
@@ -64,7 +71,7 @@ public class SequenceNoteFactory {
             // Exo message note position override
             String position = resolveNotePosition(fromId, toId, note.getPosition());
 
-            NotePosition notePos = switch(position) {
+            NotePosition notePos = switch (position) {
                 case "OVER", "OVER_SEVERAL" -> noteOver(fromId, toId, width);
                 case "RIGHT" -> noteRight(fromId, toId, width);
                 case "LEFT" -> noteLeft(fromId, toId, width);
@@ -84,8 +91,8 @@ public class SequenceNoteFactory {
             }
 
             int lineCount = note.getLabel().split("<br>").length;
-            double labelYOffset = lineCount > 1 ? lineCount * labelHeight : singleYOffset;
-            double noteYOffset = lineCount > 1 ? lineCount * labelHeight : labelHeight;
+            double labelYOffset = lineCount > 1 ? lineCount * lineHeight : singleYOffset;
+            double noteYOffset = lineCount > 1 ? lineCount * lineHeight : lineHeight;
             double labelYPos = messagesYPos.get(msgIndex) - labelYOffset;
 
             double y1 = messagesYPos.get(msgIndex) - noteYOffset;
@@ -105,8 +112,6 @@ public class SequenceNoteFactory {
     }
 
     private NotePosition noteOver(String from, String to, double width) {
-        NotePosition notePos;
-
         if (from == null && to == null) { // Across all
             String firstId = model.participants.getFirst().getId();
             String lastId = model.participants.getLast().getId();
@@ -119,15 +124,11 @@ public class SequenceNoteFactory {
                 x2 = middleX + width / 2;
             }
 
-            notePos = new NotePosition(x1 - noteXOffset,
-                                        x2 + noteXOffset,
-                                        firstId, lastId);
+            return new NotePosition(x1 - noteXOffset, x2 + noteXOffset, firstId, lastId);
 
         } else if (to == null) { // Over from
             double center = centre.get(from);
-            notePos = new NotePosition(center - width / 2,
-                                        center + width / 2,
-                                        from, from);
+            return new NotePosition(center - width / 2, center + width / 2, from, from);
 
         } else { // Across defined ones
             double fromX = centre.get(from);
@@ -141,12 +142,8 @@ public class SequenceNoteFactory {
                 x2 = middleX + width / 2;
             }
 
-            notePos = new NotePosition(x1 - noteXOffset,
-                                        x2 + noteXOffset,
-                                        from, to);
+            return new NotePosition(x1 - noteXOffset, x2 + noteXOffset, from, to);
         }
-
-        return notePos;
     }
 
     private NotePosition noteRight(String from, String to, double width) {
@@ -160,10 +157,8 @@ public class SequenceNoteFactory {
             rightX = Math.max(centre.get(from), centre.get(to));
         }
 
-        return new NotePosition(rightX + noteXOffset,
-                rightX + noteXOffset + width,
-                from != null ? from : to,
-                from != null ? from : to);
+        return new NotePosition(rightX + noteXOffset, rightX + noteXOffset + width,
+                from != null ? from : to, from != null ? from : to);
     }
 
     private NotePosition noteLeft(String from, String to, double width) {
@@ -177,9 +172,7 @@ public class SequenceNoteFactory {
             leftX = Math.min(centre.get(from), centre.get(to));
         }
 
-        return new NotePosition(leftX - noteXOffset - width,
-                leftX - noteXOffset,
-                from != null ? from : to,
-                from != null ? from : to);
+        return new NotePosition(leftX - noteXOffset - width, leftX - noteXOffset,
+                from != null ? from : to, from != null ? from : to);
     }
 }

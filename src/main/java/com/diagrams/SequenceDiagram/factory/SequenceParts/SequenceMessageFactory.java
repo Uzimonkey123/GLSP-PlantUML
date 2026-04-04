@@ -1,61 +1,64 @@
+/*
+ * File: SequenceMessageFactory.java
+ * Author: Norman Babiak
+ * Description: Factory for creating message edges, references, labels, anchors, and delegating note creation
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
 
 import com.diagrams.SequenceDiagram.builders.AnchorBuild;
 import com.diagrams.SequenceDiagram.builders.MessageBuild;
 import com.diagrams.SequenceDiagram.builders.NodeBuild;
+import com.diagrams.SequenceDiagram.factory.SequenceFactoryContext;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
-import com.diagrams.SequenceDiagram.utils.NodeGap;
-import com.GLSPPlantUML.utils.WidthCalculator;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceAnchor;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceLifeEvent;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceMessage;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;
+import com.GLSPPlantUML.utils.WidthCalculator;
 import org.eclipse.glsp.graph.GModelElement;
 
 import java.util.*;
 
-public class SequenceMessageFactory {
-    private final SequenceModel model;
-    private final double cursor;
+import static com.diagrams.SequenceDiagram.factory.SequenceFactoryContext.*;
 
-    private final Stack<SequenceAnchor> anchors = new Stack<>(); // Stack for anchors in the diagram
-    // Map to store anchors with their ID for easier search
+public class SequenceMessageFactory {
+    private final SequenceFactoryContext ctx;
+
+    private final Stack<SequenceAnchor> anchors = new Stack<>();
     private final Map<String, SequenceAnchor> anchorMap = new HashMap<>();
 
-    private final List<Double> messagesYPos;
+    private final SequenceModel model;
     private final Map<String, Double> centre;
     private final Map<String, Double> halfWidth;
+    private final List<Double> messagesYPos;
     private final List<GModelElement> elements;
-    private final NodeGap gapCalculator;
 
     private SequenceMessage msg;
     private final MessageBuild msgBuild;
     private final NodeBuild nodeBuild;
     private final SequenceNoteFactory noteFactory;
 
-    private final int labelHeight = 14;
     private final int centrePadding = 25;
-    private final int padding = 10;
 
-
-    public SequenceMessageFactory(SequenceModel model, double cursor, Map<String, Double> centre,
-                                  Map<String, Double> halfWidth, List<GModelElement> elements,
-                                  List<Double> messagesYPos, NodeGap gapCalculator)
-    {
-        this.model = model;
-        this.cursor = cursor;
-        this.centre = centre;
-        this.halfWidth = halfWidth;
-        this.elements = elements;
-        this.messagesYPos = messagesYPos;
-        this.gapCalculator = gapCalculator;
+    public SequenceMessageFactory(SequenceFactoryContext ctx) {
+        this.ctx = ctx;
 
         this.nodeBuild = new NodeBuild();
-        this.msgBuild = new MessageBuild(halfWidth);
-        this.noteFactory = new SequenceNoteFactory(model, messagesYPos, centre, halfWidth, elements);
+        this.msgBuild = new MessageBuild(ctx.getHalfWidth());
+        this.noteFactory = new SequenceNoteFactory(ctx);
+
+        model = ctx.getModel();
+        centre = ctx.getCentre();
+        halfWidth = ctx.getHalfWidth();
+        messagesYPos = ctx.getMessagesYPos();
+        elements = ctx.getElements();
     }
 
     public void createEdges() {
+        SequenceModel model = ctx.getModel();
+
         // Populate anchor map with all anchors and match them with their ID
         for (SequenceAnchor anchor : model.anchors) {
             anchorMap.put(anchor.getAnchorId(), anchor);
@@ -107,17 +110,17 @@ public class SequenceMessageFactory {
 
         } else {
             boolean leftToRight = centre.get(targetId) > centre.get(sourceId);
-            x1 = setX(sourceId, msgIndex, true,  leftToRight);
-            x2 = setX(targetId,   msgIndex, false, leftToRight);
+            x1 = setX(sourceId, msgIndex, true, leftToRight);
+            x2 = setX(targetId, msgIndex, false, leftToRight);
         }
 
         // Adjust source/target if message is external (incoming/outgoing)
         if (incoming) {
-            x1 = "[".equals(sourceId) ? 0 : cursor + halfWidth.get(model.participants.getLast().getId());
+            x1 = "[".equals(sourceId) ? 0 : ctx.getCursor() + halfWidth.get(model.participants.getLast().getId());
         }
 
         if (outgoing) {
-            x2 = "]".equals(targetId) ? cursor + halfWidth.get(model.participants.getLast().getId()) : 0;
+            x2 = "]".equals(targetId) ? ctx.getCursor() + halfWidth.get(model.participants.getLast().getId()) : 0;
         }
 
         elements.add(msgBuild.buildEdge(msg, sourceId, targetId, x1, x2, y, incoming, outgoing));
@@ -134,18 +137,17 @@ public class SequenceMessageFactory {
 
         String[] lines = msg.getMessage().split("<br>");
         int maxLineLength = Arrays.stream(lines).mapToInt(String::length).max().orElse(0);
-        int labelWidth = maxLineLength * 8 + padding;
+        int labelWidth = maxLineLength * 8 + defPadding;
 
         int lineCount = lines.length;
-        int labelHeight = lineCount * this.labelHeight;
+        int labelHeight = lineCount * lineHeight;
 
-        // Get y1 according to the current index - amount of lines and some padding
-        double y1 = messagesYPos.get(msgIndex) - (labelHeight + padding);
+        double y1 = messagesYPos.get(msgIndex) - (labelHeight + defPadding);
         double y2 = messagesYPos.get(msgIndex);
 
         double baseWidth = x2 - x1;
         if (labelWidth > baseWidth) {
-            x2 = x1 + labelWidth; // Move the ref just towards the right, no further extension to the left
+            x2 = x1 + labelWidth;
         }
 
         elements.add(msgBuild.buildReference(msg, from, to, x1, x2, y1, y2));
@@ -164,19 +166,19 @@ public class SequenceMessageFactory {
 
             labelShift = switch (direction) {
                 case "outgoing" ->
-                        centre.get(routingOne) + WidthCalculator.calculateWidth(msg.getMessage(), padding) / 2;
+                        centre.get(routingOne) + WidthCalculator.calculateWidth(msg.getMessage(), defPadding) / 2;
 
                 case "incoming" ->
                         // labelShift is center position, so shift label left by half width
                         // so that right edge aligns exactly with centerX
-                        centre.get(routingTwo) - WidthCalculator.calculateWidth(msg.getMessage(), padding) / 2;
+                        centre.get(routingTwo) - WidthCalculator.calculateWidth(msg.getMessage(), defPadding) / 2;
 
                 default -> (x1 + x2) / 2;
             };
         }
 
         int lineCount = msg.getMessage().split("<br>").length;
-        double labelYOffset = lineCount > 1 ? lineCount * labelHeight : 6;
+        double labelYOffset = lineCount > 1 ? lineCount * lineHeight : 6;
 
         elements.add(msgBuild.buildMsgLabel(msg, msgIndex, y, labelShift, labelYOffset));
     }
@@ -193,7 +195,7 @@ public class SequenceMessageFactory {
 
         if (msg.isAnchorEnd()) {
             SequenceAnchor concreteAnchor = anchors.pop();
-            double gap = gapCalculator.getGaps(concreteAnchor.getParticipant1Id(), concreteAnchor.getParticipant2Id());
+            double gap = ctx.getGapCalculator().getGaps(concreteAnchor.getParticipant1Id(), concreteAnchor.getParticipant2Id());
 
             AnchorBuild anchor = new AnchorBuild(concreteAnchor, y, gap);
             double xCoord = anchor.getXCoord(centre.get(concreteAnchor.getParticipant1Id()),
@@ -221,13 +223,13 @@ public class SequenceMessageFactory {
         if (event.isEmpty()) return centreX;
 
         double shift = event.get().getLevel() * lifeEventOffset;
-        double leftEdge  = centreX + shift - lifeEventBar / 2;
+        double leftEdge = centreX + shift - lifeEventBar / 2;
         double rightEdge = centreX + shift + lifeEventBar / 2;
 
         if (isStart) {
             return leftToRight ? rightEdge : leftEdge;
         } else {
-            return leftToRight ? leftEdge  : rightEdge;
+            return leftToRight ? leftEdge : rightEdge;
         }
     }
 

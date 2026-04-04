@@ -1,3 +1,10 @@
+/*
+ * File: SequenceModeljava
+ * Author: Norman Babiak
+ * Description: Model for Sequence diagram, holding all related nodes, edges, details and lookups
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.model;
 
 import com.diagrams.SequenceDiagram.model.SequenceParts.*;

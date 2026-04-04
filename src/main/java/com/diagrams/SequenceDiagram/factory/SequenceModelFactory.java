@@ -1,3 +1,10 @@
+/*
+ * File: SequenceModelFactory.java
+ * Author: Norman Babiak
+ * Description: Main factory that does GLSP graph creation for sequence diagrams from GModel
+ * Date: 4.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.factory;
 
 import com.diagrams.SequenceDiagram.builders.NodeBuild;
@@ -14,21 +21,11 @@ import org.eclipse.glsp.graph.builder.impl.*;
 import org.eclipse.glsp.server.features.core.model.GModelFactory;
 
 import java.util.*;
+
 public class SequenceModelFactory implements GModelFactory {
-    private Map<String, Double> centre; // Map to store the middle of all nodes for lifeline
-    private Map<String, Double> halfWidth; // Half size of nodes for created node arrows
-    private List<GModelElement> elements = new ArrayList<>();
-    private NodeGap gapCalculator;
-    private NodeBuild nodeBuild;
-
-    private final List<Double> lifeEventYPos = new ArrayList<>();
-    private final List<Double> messagesYPos = new ArrayList<>();
-
-    private double cursor;
 
     @Inject
     protected SequenceModelState modelState;
-    protected SequenceModel model;
 
     @Override
     public void createGModel() {
@@ -39,56 +36,48 @@ public class SequenceModelFactory implements GModelFactory {
             return;
         }
 
-        this.model = modelState.getModel();
+        SequenceModel model = modelState.getModel();
+        SequenceFactoryContext ctx = new SequenceFactoryContext(model);
 
-        double nodeY = 30;
         double nodeHeight = 30;
-        double firstMsgY = nodeY + nodeHeight + 10;
+        double firstMsgY = SequenceFactoryContext.nodeY + nodeHeight + SequenceFactoryContext.defPadding;
 
-        calculateYPositions(model, firstMsgY); // Get all Y coordinate information for messages/life events/ ver. spaces
-        double totalHeight = messagesYPos.stream().mapToDouble(Double::doubleValue).max().orElse(firstMsgY);
+        calculateYPositions(ctx, firstMsgY);
+        double totalHeight = ctx.getMessagesYPos().stream()
+                .mapToDouble(Double::doubleValue).max().orElse(firstMsgY);
 
-        this.gapCalculator = new NodeGap(model);
-        this.nodeBuild = new NodeBuild();
+        ctx.setGapCalculator(new NodeGap(model));
 
-        // Build all the nodes and create list to get their centers
-        SequenceNodeFactory nodeFactory = new SequenceNodeFactory(model, nodeBuild, totalHeight,
-                                                                    messagesYPos, gapCalculator);
+        // Build all the nodes and create list to get their centres
+        SequenceNodeFactory nodeFactory = new SequenceNodeFactory(ctx, new NodeBuild(), totalHeight);
         nodeFactory.createNodes();
 
-        this.elements = nodeFactory.getElements();
-        this.centre = nodeFactory.getCentre();
-        this.halfWidth = nodeFactory.getHalfWidth();
-        this.cursor = nodeFactory.getCursor();
-
         // Build boxes around the created nodes
-        SequenceEngloberFactory engloberFactory = new SequenceEngloberFactory(model, centre, halfWidth,
-                                                                                    elements, totalHeight);
+        SequenceEngloberFactory engloberFactory = new SequenceEngloberFactory(ctx, totalHeight);
         engloberFactory.createEnglobers();
 
         // Build the necessary life events and destroy icons
-        SequenceLifeEventFactory leFactory = new SequenceLifeEventFactory(model, lifeEventYPos, centre,
-                                                                            elements, messagesYPos);
+        SequenceLifeEventFactory leFactory = new SequenceLifeEventFactory(ctx);
         leFactory.createSequenceLifeEvents();
 
         // Build all groups and separators
-        SequenceGroupFactory groupFactory = new SequenceGroupFactory(model, messagesYPos, centre, elements);
+        SequenceGroupFactory groupFactory = new SequenceGroupFactory(ctx);
         groupFactory.createGroups();
 
-        SequenceMessageFactory msgFactory = new SequenceMessageFactory(model, cursor, centre, halfWidth,
-                                                                        elements, messagesYPos, gapCalculator);
+        // Build all messages, references, and notes
+        SequenceMessageFactory msgFactory = new SequenceMessageFactory(ctx);
         msgFactory.createEdges();
 
+        // Build mainframe if present
         if (model.isMainframe) {
-            SequenceMainframeFactory mainframeFactory = new SequenceMainframeFactory(model, centre, halfWidth,
-                                                                                        elements);
+            SequenceMainframeFactory mainframeFactory = new SequenceMainframeFactory(ctx);
             mainframeFactory.createMainframe();
         }
 
         // Build the graph
         GGraph newGModel = new GGraphBuilder()
                 .id("sequence-diagram")
-                .addAll(elements)
+                .addAll(ctx.getElements())
                 .build();
 
         // Update model state
@@ -96,7 +85,15 @@ public class SequenceModelFactory implements GModelFactory {
         modelState.getRoot().setRevision(-1);
     }
 
-    private void calculateYPositions(SequenceModel model, double firstMsgY) {
+    /**
+     * Calculates Y positions for all messages and life events, accounting for
+     * parallel messages, vertical spacing (HSpace), and multi-line labels.
+     */
+    private void calculateYPositions(SequenceFactoryContext ctx, double firstMsgY) {
+        SequenceModel model = ctx.getModel();
+        List<Double> messagesYPos = ctx.getMessagesYPos();
+        List<Double> lifeEventYPos = ctx.getLifeEventYPos();
+
         double hspace = 0;
         double msgGap = 35;
         int row = 0;
@@ -119,7 +116,7 @@ public class SequenceModelFactory implements GModelFactory {
                     hspace += spaces.get(k);
                 }
 
-                int autoExtra = getExtra(k);
+                int autoExtra = getExtra(model, k);
                 parallelExtra = Math.max(parallelExtra, autoExtra);
                 spaces.putIfAbsent(k, autoExtra);
             }
@@ -130,17 +127,17 @@ public class SequenceModelFactory implements GModelFactory {
             hspace += parallelExtra;
             double y = firstMsgY + row * msgGap + hspace;
             messagesYPos.add(y);
-            selfActivation(msg, y, i);
+            addLifeEventY(model, lifeEventYPos, msg, y, i);
 
             // Place parallels at same Y
             for (int k = i + 1; k < j; k++) {
                 messagesYPos.add(y);
-                selfActivation(model.messages.get(k), y, k);
-                spaces.putIfAbsent(k, getExtra(k));
+                addLifeEventY(model, lifeEventYPos, model.messages.get(k), y, k);
+                spaces.putIfAbsent(k, getExtra(model, k));
             }
 
             row++;
-            i = j; // Skip parallel ones since processed
+            i = j;
         }
 
         int trailing = spaces.getOrDefault(model.messages.size(), 0);
@@ -151,23 +148,28 @@ public class SequenceModelFactory implements GModelFactory {
         }
     }
 
-    private int getExtra(int index) {
+    /**
+     * Calculates extra vertical space needed for multi-line message labels or notes.
+     */
+    private int getExtra(SequenceModel model, int index) {
         SequenceMessage msg = model.messages.get(index);
         int lines = msg.getMessage().split("<br>").length;
-        int moteLines = 0;
+        int noteLines = 0;
         if (msg.getNotes() != null) {
             for (SequenceNote note : msg.getNotes()) {
-                moteLines = Math.max(moteLines, note.getLabel().split("<br>").length);
+                noteLines = Math.max(noteLines, note.getLabel().split("<br>").length);
             }
         }
 
-        int prevTotalLines = Math.max(lines, moteLines);
-        return Math.max(0, (prevTotalLines - 1) * 14);
+        int totalLines = Math.max(lines, noteLines);
+        return Math.max(0, (totalLines - 1) * SequenceFactoryContext.lineHeight);
     }
 
-    private void selfActivation(SequenceMessage msg, double y, int i) {
-        // If message is self call activation, the start of life event is lower
-        // for deactivation or destroy of self message it does not set offset
+    /**
+     * Records the Y position for a life event, applying an offset for self-call activations.
+     */
+    private void addLifeEventY(SequenceModel model, List<Double> lifeEventYPos,
+                               SequenceMessage msg, double y, int i) {
         boolean isStartOfLifeEvent = msg.isSelf() &&
                 model.participants.stream()
                         .anyMatch(p -> p.getLifeEvents().stream()
@@ -176,8 +178,8 @@ public class SequenceModelFactory implements GModelFactory {
     }
 
     private void errorHandler(Optional<ErrorMessage> error) {
-        ErrorMessage errorMessage = error.get();
-        elements.add(errorMessage.buildError());
+        List<GModelElement> elements = new ArrayList<>();
+        elements.add(error.get().buildError());
 
         GGraph newGModel = new GGraphBuilder()
                 .id("sequence-diagram")
