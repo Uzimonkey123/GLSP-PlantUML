@@ -1,10 +1,8 @@
 package com.diagrams.SequenceDiagram.handler;
 
-import com.GLSPPlantUML.handlers.CustomLabelEdit;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.*;
 import com.diagrams.SequenceDiagram.state.SequenceModelState;
-import org.eclipse.emf.common.command.Command;
 import org.eclipse.glsp.graph.GLabel;
 import org.eclipse.glsp.graph.GModelIndex;
 import org.eclipse.glsp.server.features.directediting.ApplyLabelEditOperation;
@@ -30,7 +28,7 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("SequenceLabelEdit Tests")
 class SequenceLabelEditTest {
-    private CustomLabelEdit handler;
+    private SequenceLabelEditHandler handler;
     private SequenceModel model;
 
     @Mock private SequenceModelState mockModelState;
@@ -40,7 +38,7 @@ class SequenceLabelEditTest {
 
     @BeforeEach
     void setup() throws Exception {
-        handler = new CustomLabelEdit();
+        handler = new SequenceLabelEditHandler();
 
         model = new SequenceModel();
         model.participants = new ArrayList<>();

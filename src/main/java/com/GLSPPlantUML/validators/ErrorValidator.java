@@ -1,3 +1,10 @@
+/*
+ * File: ErrorValidator.java
+ * Author: Norman Babiak
+ * Description: Validates PlantUML syntax errors from the PlantUML API
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.validators;
 
 import com.GLSPPlantUML.utils.ErrorRecord;

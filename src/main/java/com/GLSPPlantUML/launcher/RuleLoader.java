@@ -1,3 +1,10 @@
+/*
+ * File: RuleLoader.java
+ * Author: Norman Babiak
+ * Description: Dynamic rule loader and matcher for diagram types
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.launcher;
 
 import com.GLSPPlantUML.validators.ValidationRule;
@@ -21,9 +28,6 @@ public class RuleLoader {
 
         loadFolder();
         loadClasspath();
-
-        System.out.println("RuleLoader: loaded " + loadedClasses.size() + " validation rule(s) for "
-                + rulesByDiagram.size() + " diagram type(s)");
     }
 
     private void loadFolder() throws IOException {

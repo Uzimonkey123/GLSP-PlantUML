@@ -1,3 +1,10 @@
+/*
+ * File: PlantUMLServerLauncher.java
+ * Author: Norman Babiak
+ * Description: Main launcher for the servers and processes
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.launcher;
 
 import com.GLSPPlantUML.validators.CompositeValidator;

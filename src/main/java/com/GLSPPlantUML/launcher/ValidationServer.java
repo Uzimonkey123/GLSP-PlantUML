@@ -1,3 +1,10 @@
+/*
+ * File: ValidationServer.java
+ * Author: Norman Babiak
+ * Description: Server for communicating via REST APIs with the client about the errors in the text editor part
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.launcher;
 
 import com.GLSPPlantUML.utils.ErrorRecord;

@@ -8,7 +8,7 @@
 package com.diagrams.SequenceDiagram.module;
 
 import com.diagrams.SequenceDiagram.SequenceDiagramConfiguration;
-import com.GLSPPlantUML.handlers.CustomLabelEdit;
+import com.diagrams.SequenceDiagram.handler.SequenceLabelEditHandler;
 import com.GLSPPlantUML.handlers.IgnoreComputeBoundsHandler;
 import com.diagrams.SequenceDiagram.handler.SequenceDeleteHandler;
 import com.diagrams.SequenceDiagram.validator.SequenceLabelValidator;
@@ -71,7 +71,7 @@ public class SequenceDiagramModule extends DiagramModule {
     @Override
     protected void configureOperationHandlers(MultiBinding<OperationHandler<?>> mb) {
         super.configureOperationHandlers(mb);
-        mb.add(CustomLabelEdit.class);
+        mb.add(SequenceLabelEditHandler.class);
         mb.add(SequenceDeleteHandler.class);
     }
 

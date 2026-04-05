@@ -1,3 +1,10 @@
+/*
+ * File: PlantUMLWebsocketLauncher.java
+ * Author: Norman Babiak
+ * Description: Custom Websocket launcher for server, just so it is possible to set the idle timeout
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.launcher;
 
 import org.apache.logging.log4j.Level;

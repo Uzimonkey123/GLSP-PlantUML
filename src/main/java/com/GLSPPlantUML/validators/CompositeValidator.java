@@ -1,3 +1,10 @@
+/*
+ * File: CompositeValidator.java
+ * Author: Norman Babiak
+ * Description: Loads in error validator and rule loader, going through the rules and returning results of them
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.validators;
 
 import com.GLSPPlantUML.launcher.RuleLoader;

@@ -1,3 +1,10 @@
+/*
+ * File: WidthCalculator.java
+ * Author: Norman Babiak
+ * Description: Common util width calculator for labels
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.utils;
 
 import java.util.Arrays;

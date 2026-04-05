@@ -1,3 +1,10 @@
+/*
+ * File: ModuleLoader.java
+ * Author: Norman Babiak
+ * Description: Dynamic loader of present diagrams into the server, can be as code, JAR file
+ * Date: 5.4.2026
+ */
+
 package com.GLSPPlantUML.launcher;
 
 import org.eclipse.glsp.server.di.DiagramModule;

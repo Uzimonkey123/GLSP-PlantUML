@@ -1,4 +1,11 @@
-package com.GLSPPlantUML.handlers;
+/*
+ * File: SequenceLabelEditHandler.java
+ * Author: Norman Babiak
+ * Description: Handler for replacing edited labels in the internal model
+ * Date: 5.4.2026
+ */
+
+package com.diagrams.SequenceDiagram.handler;
 
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.state.SequenceModelState;
@@ -11,7 +18,7 @@ import org.eclipse.glsp.server.operations.GModelOperationHandler;
 import java.util.Objects;
 import java.util.Optional;
 
-public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperation> {
+public class SequenceLabelEditHandler extends GModelOperationHandler<ApplyLabelEditOperation> {
     private GLabel label;
     private SequenceModel model;
 
@@ -20,9 +27,6 @@ public class CustomLabelEdit extends GModelOperationHandler<ApplyLabelEditOperat
 
         label = findLabel(operation).orElseThrow(
                 () -> new IllegalArgumentException("Element with provided ID cannot be found or is not a GLabel"));
-
-        System.err.println("[ApplyLabelEdit] New label text: " + operation.getText());
-        System.err.println("[ApplyLabelEdit] Label ID: " + label.getId());
 
         if (modelState instanceof SequenceModelState sequenceState) {
             model = sequenceState.getModel();
