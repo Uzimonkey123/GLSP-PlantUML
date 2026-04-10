@@ -7,19 +7,15 @@
 
 package com.GLSPPlantUML.launcher;
 
-import com.GLSPPlantUML.validators.CompositeValidator;
-import com.GLSPPlantUML.validators.ErrorValidator;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.glsp.server.di.ServerModule;
 import org.eclipse.glsp.server.launch.GLSPServerLauncher;
 import org.eclipse.glsp.server.launch.SocketGLSPServerLauncher;
 import org.eclipse.glsp.server.utils.LaunchUtil;
-import org.eclipse.glsp.server.websocket.WebsocketServerLauncher;
 
 public class PlantUMLServerLauncher {
     public static void main(String[] args) {
         String processName = "GLSPPlantUML-1.0-SNAPSHOT.jar";
-        ValidationServer httpServer = validationStartup();
 
         try {
             PlantUMLCLIParser parser = new PlantUMLCLIParser(args, processName);
@@ -48,39 +44,6 @@ public class PlantUMLServerLauncher {
 
         } catch (Exception e) {
             throw new RuntimeException(e);
-
-        } finally {
-            if (httpServer != null) {
-                httpServer.stop();
-            }
-        }
-    }
-
-    private static ValidationServer validationStartup() {
-        try {
-            RuleLoader ruleLoader = new RuleLoader();
-            ruleLoader.loadRules();
-
-            ErrorValidator errorValidator = new ErrorValidator();
-            CompositeValidator compositeValidator = new CompositeValidator(errorValidator, ruleLoader);
-
-            // Start HTTP validation server
-            ValidationServer server = new ValidationServer(compositeValidator);
-            server.start();
-
-            // Add shutdown hook
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                server.stop();
-                System.out.println("Validation HTTP server stopped");
-            }));
-
-            return server;
-
-        } catch (Exception e) {
-            System.err.println("Failed to start validation HTTP server: " + e.getMessage());
-            e.printStackTrace();
-
-            return null;
         }
     }
 }

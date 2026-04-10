@@ -36,6 +36,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.eclipse.lsp4j</groupId>
+            <artifactId>org.eclipse.lsp4j</artifactId>
+            <version>0.23.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.eclipse.glsp</groupId>
             <artifactId>org.eclipse.glsp.server.websocket</artifactId>
             <version>${glsp.version}</version>
