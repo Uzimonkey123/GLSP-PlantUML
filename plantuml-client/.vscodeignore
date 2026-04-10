@@ -1,0 +1,9 @@
+.vscode/
+**/tsconfig.json
+**/webpack.config.js
+**/*.ts
+!**/*.d.ts
+client/
+webview/src/
+extension/src/
+extension/lib/

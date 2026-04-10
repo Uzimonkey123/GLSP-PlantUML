@@ -17,7 +17,6 @@ module.exports = merge(common, {
   devtool: 'source-map',
   externals: {
     vscode: "commonjs vscode",
-    ws: "commonjs ws"
   },
   plugins: [
     new CopyPlugin({

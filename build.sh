@@ -7,6 +7,7 @@ CLIENT_DIR="plantuml-client"
 
 SKIP_TESTS=false
 BUILD_CLIENT=false
+PACKAGE_VSIX=false
 
 show_help() {
     echo ""
@@ -17,15 +18,17 @@ show_help() {
     echo "  -s             Maven build without tests, copy JAR"
     echo "  -c             Maven build + npm run build:all"
     echo "  -f             Maven build + npm run build:all (skip tests)"
+    echo "  -p             Full build (skip tests) + npm build + vsce package"
     echo "  -h             Show this help"
     echo ""
 }
 
-while getopts "scfh" opt; do
+while getopts "scfph" opt; do
     case $opt in
         s) SKIP_TESTS=true ;;
         c) BUILD_CLIENT=true ;;
         f) SKIP_TESTS=true; BUILD_CLIENT=true ;;
+        p) SKIP_TESTS=true; BUILD_CLIENT=true; PACKAGE_VSIX=true ;;
         h) show_help; exit 0 ;;
         *) show_help; exit 1 ;;
     esac
@@ -50,6 +53,14 @@ if [ "$BUILD_CLIENT" = true ]; then
     npm run build:all
     cd ..
     echo "Client built."
+fi
+
+if [ "$PACKAGE_VSIX" = true ]; then
+    echo "[+] Packaging VSIX..."
+    cd "$CLIENT_DIR"
+    npx vsce package --no-dependencies
+    cd ..
+    echo "VSIX packaged."
 fi
 
 echo "Done."

@@ -167,8 +167,14 @@ async function startLanguageClient(context: vscode.ExtensionContext): Promise<vo
         clientOptions
     );
 
-    context.subscriptions.push(languageClient);
-    await languageClient.start();
+    try {
+        await languageClient.start();
+        context.subscriptions.push(languageClient);
+
+    } catch (err) {
+        console.error('[PlantUML] LSP failed, continuing without it:', err);
+        languageClient = undefined;
+    }
 }
 
 async function launchServerProcess(context: vscode.ExtensionContext): Promise<void> {
