@@ -240,6 +240,9 @@ public class SequenceDeleteHandler implements OperationHandler<DeleteOperation> 
             }
 
             removeOrphanedLifeEvents(Set.of(messageIndex), null);
+            groupAdjuster.collectAllGroupIds();
+            groupAdjuster.adjustGroups(Set.of(messageIndex));
+            groupAdjuster.removeEmptyGroups();
         }
 
         private void removeGroup(SequenceGroup group) {

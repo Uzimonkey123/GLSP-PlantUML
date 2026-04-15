@@ -182,8 +182,15 @@ async function launchServerProcess(context: vscode.ExtensionContext): Promise<vo
         return;
     }
 
+    try {
+        await waitForPort(GLSP_PORT, 1000);
+        return;
+        
+    } catch {
+
+    }
+
     const jarPath = path.join(context.extensionPath, 'server', JAR_NAME);
-    console.log('[PlantUML] JAR path:', jarPath);
 
     serverProcess = spawn('java', [
         '-jar', jarPath,
