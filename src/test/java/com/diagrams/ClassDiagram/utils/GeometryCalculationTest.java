@@ -1,215 +1,125 @@
+/*
+ * File: GeometryCalculationTest.java
+ * Author: Norman Babiak
+ * Description: Tests for geometry calculations of class diagram, point, vector, rectangle...
+ * Date: 28.4.2026
+ */
+
 package com.diagrams.ClassDiagram.utils;
 
 import com.diagrams.ClassDiagram.factory.ClassLayout;
-import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
-import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
-import com.diagrams.ClassDiagram.model.ClassParts.EntityMethod;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import com.diagrams.ClassDiagram.model.ClassParts.*;
+import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Geometry Calculation Tests")
+@DisplayName("Geometry Tests")
 class GeometryCalculationTest {
 
-    @Nested
-    @DisplayName("GeometryUtils.Point")
-    class PointTests {
+    @Test
+    @DisplayName("Point: midpoint and distance")
+    void pointOps() {
+        GeometryUtils.Point pointA = new GeometryUtils.Point(0, 0);
+        GeometryUtils.Point pointB = new GeometryUtils.Point(100, 200);
+        GeometryUtils.Point midpoint = pointA.midpoint(pointB);
 
-        @Test
-        @DisplayName("midpoint calculates center")
-        void midpoint() {
-            var a = new GeometryUtils.Point(0, 0);
-            var b = new GeometryUtils.Point(100, 200);
-
-            var mid = a.midpoint(b);
-
-            assertEquals(50, mid.x());
-            assertEquals(100, mid.y());
-        }
-
-        @Test
-        @DisplayName("distanceTo uses Pythagorean theorem")
-        void distanceTo() {
-            var a = new GeometryUtils.Point(0, 0);
-            var b = new GeometryUtils.Point(3, 4);
-
-            assertEquals(5.0, a.distanceTo(b), 0.001);
-        }
+        assertEquals(50, midpoint.x());
+        assertEquals(100, midpoint.y());
+        assertEquals(5.0, new GeometryUtils.Point(0, 0).distanceTo(new GeometryUtils.Point(3, 4)), 0.001);
     }
 
-    @Nested
-    @DisplayName("GeometryUtils.Vector")
-    class VectorTests {
+    @Test
+    @DisplayName("Vector: normalize, perpendicular, negate")
+    void vectorOps() {
+        GeometryUtils.Vector vector = new GeometryUtils.Vector(3, 4);
+        GeometryUtils.Vector unit = new GeometryUtils.Vector(1, 0);
+        GeometryUtils.Vector perp = unit.perpendicular();
 
-        @Test
-        @DisplayName("normalize creates unit vector")
-        void normalize() {
-            var v = new GeometryUtils.Vector(3, 4);
-            var norm = v.normalize();
-
-            assertEquals(1.0, norm.length(), 0.001);
-        }
-
-        @Test
-        @DisplayName("perpendicular rotates 90 degrees")
-        void perpendicular() {
-            var v = new GeometryUtils.Vector(1, 0);
-            var perp = v.perpendicular();
-
-            assertEquals(0, perp.dx(), 0.001);
-            assertEquals(1, perp.dy(), 0.001);
-        }
-
-        @Test
-        @DisplayName("negate reverses direction")
-        void negate() {
-            var v = new GeometryUtils.Vector(5, -3);
-            var neg = v.negate();
-
-            assertEquals(-5, neg.dx());
-            assertEquals(3, neg.dy());
-        }
+        assertEquals(1.0, vector.normalize().length(), 0.001);
+        assertEquals(0, perp.dx(), 0.001);
+        assertEquals(1, perp.dy(), 0.001);
+        assertEquals(-5, new GeometryUtils.Vector(5, -3).negate().dx());
     }
 
-    @Nested
-    @DisplayName("GeometryUtils.Rectangle")
-    class RectangleTests {
+    @Test
+    @DisplayName("Rectangle: boundary intersection hits edge")
+    void rectangleBoundary() {
+        GeometryUtils.Rectangle rect = new GeometryUtils.Rectangle(0, 0, 100, 100);
+        GeometryUtils.Point intersection = rect.boundaryIntersection(new GeometryUtils.Point(200, 50));
 
-        @Test
-        @DisplayName("boundaryIntersection finds right edge")
-        void boundaryIntersectionRight() {
-            var rect = new GeometryUtils.Rectangle(0, 0, 100, 100);
-            var target = new GeometryUtils.Point(200, 50);
-            var boundary = rect.boundaryIntersection(target);
-
-            assertEquals(100, boundary.x(), 0.001);
-        }
+        assertEquals(100, intersection.x(), 0.001);
     }
 
-    @Nested
-    @DisplayName("CurvedEdgeCalculator")
-    class CurvedEdgeCalculatorTests {
-        private CurvedEdgeCalculator calculator;
+    @Test
+    @DisplayName("CurvedEdgeCalculator: null member returns center offset")
+    void curveNullMember() {
+        CurvedEdgeCalculator calculator = new CurvedEdgeCalculator();
+        ClassLayout.Size size = new ClassLayout.Size(100, 80);
 
-        @BeforeEach
-        void setup() {
-            calculator = new CurvedEdgeCalculator();
-        }
-
-        @Test
-        @DisplayName("getMemberYOffset returns center for null member")
-        void offsetForNullMember() {
-            var size = new ClassLayout.Size(100, 80);
-            double offset = calculator.getMemberYOffset(size, false, List.of(), List.of(), null);
-
-            assertEquals(40, offset);
-        }
-
-        @Test
-        @DisplayName("getMemberYOffset finds field by name")
-        void offsetFindsField() {
-            var size = new ClassLayout.Size(100, 100);
-            var fields = List.of(new EntityMethod("+name"), new EntityMethod("+age"));
-
-            double offset = calculator.getMemberYOffset(size, false, fields, List.of(), "age");
-
-            assertTrue(offset > 30 && offset < 80);
-        }
-
-        @Test
-        @DisplayName("shouldCurveToRight flip reverses direction")
-        void flipReversesDirection() {
-            var size = new ClassLayout.Size(100, 80);
-
-            boolean normal = calculator.shouldCurveToRight(0, 100, size, size, false);
-            boolean flipped = calculator.shouldCurveToRight(0, 100, size, size, true);
-
-            assertNotEquals(normal, flipped);
-        }
-
-        @Test
-        @DisplayName("calculateCurve returns normalized tangent")
-        void curveHasNormalizedTangent() {
-            var start = new GeometryUtils.Point(0, 0);
-            var end = new GeometryUtils.Point(100, 100);
-
-            var curve = calculator.calculateCurve(start, end, false);
-
-            double tangentLength = Math.hypot(curve.midTangentX(), curve.midTangentY());
-            assertEquals(1.0, tangentLength, 0.001);
-        }
+        assertEquals(40, calculator.getMemberYOffset(size, false, List.of(), List.of(), null));
     }
 
-    @Nested
-    @DisplayName("LinkGeometry")
-    class LinkGeometryTests {
-        private LinkGeometry linkGeometry;
-        private ClassLayout.Size defaultSize;
+    @Test
+    @DisplayName("CurvedEdgeCalculator: finds field by name")
+    void curveFieldOffset() {
+        List<EntityMethod> fields = List.of(new EntityMethod("+name"), new EntityMethod("+age"));
+        CurvedEdgeCalculator calculator = new CurvedEdgeCalculator();
+        ClassLayout.Size size = new ClassLayout.Size(100, 100);
 
-        @BeforeEach
-        void setup() {
-            linkGeometry = new LinkGeometry();
-            defaultSize = new ClassLayout.Size(100, 80);
-        }
+        double offset = calculator.getMemberYOffset(size, false, fields, List.of(), "age");
 
-        @Test
-        @DisplayName("create returns StraightEdge without members")
-        void straightEdgeWithoutMembers() {
-            ClassLink link = createLink(null, null);
-            var edge = linkGeometry.create(link, defaultSize, defaultSize);
+        assertTrue(offset > 30 && offset < 80);
+    }
 
-            assertInstanceOf(LinkGeometry.StraightEdge.class, edge);
-        }
+    @Test
+    @DisplayName("CurvedEdgeCalculator: flip reverses curve direction, tangent normalized")
+    void curveDirectionAndTangent() {
+        ClassLayout.Size size = new ClassLayout.Size(100, 80);
+        CurvedEdgeCalculator calculator = new CurvedEdgeCalculator();
 
-        @Test
-        @DisplayName("create returns CurvedEdge with source member")
-        void curvedEdgeWithSourceMember() {
-            ClassLink link = createLink("field1", null);
-            var edge = linkGeometry.create(link, defaultSize, defaultSize);
+        boolean normal = calculator.shouldCurveToRight(0, 100, size, size, false);
+        boolean flipped = calculator.shouldCurveToRight(0, 100, size, size, true);
+        assertNotEquals(normal, flipped);
 
-            assertInstanceOf(LinkGeometry.CurvedEdge.class, edge);
-        }
+        var curve = calculator.calculateCurve(new GeometryUtils.Point(0, 0), new GeometryUtils.Point(100, 100), false);
+        assertEquals(1.0, Math.hypot(curve.midTangentX(), curve.midTangentY()), 0.001);
+    }
 
-        @Test
-        @DisplayName("create returns CurvedEdge with target member")
-        void curvedEdgeWithTargetMember() {
-            ClassLink link = createLink(null, "method1");
-            var edge = linkGeometry.create(link, defaultSize, defaultSize);
+    @Test
+    @DisplayName("LinkGeometry: straight without members, curved with members")
+    void linkGeometryTypes() {
+        LinkGeometry linkGeometry = new LinkGeometry();
+        ClassLayout.Size size = new ClassLayout.Size(100, 80);
 
-            assertInstanceOf(LinkGeometry.CurvedEdge.class, edge);
-        }
+        assertInstanceOf(LinkGeometry.StraightEdge.class, linkGeometry.create(makeLink(null, null), size, size));
+        assertInstanceOf(LinkGeometry.CurvedEdge.class, linkGeometry.create(makeLink("f1", null), size, size));
+        assertInstanceOf(LinkGeometry.CurvedEdge.class, linkGeometry.create(makeLink(null, "m1"), size, size));
+    }
 
-        @Test
-        @DisplayName("createParallel returns ParallelEdge")
-        void parallelEdge() {
-            ClassLink link = createLink(null, null);
-            var edge = linkGeometry.createParallel(link, defaultSize, defaultSize, false, 0, 3);
+    @Test
+    @DisplayName("LinkGeometry: createParallel returns ParallelEdge")
+    void parallelEdge() {
+        LinkGeometry linkGeometry = new LinkGeometry();
+        ClassLayout.Size size = new ClassLayout.Size(100, 80);
 
-            assertInstanceOf(LinkGeometry.ParallelEdge.class, edge);
-        }
+        assertInstanceOf(LinkGeometry.ParallelEdge.class,
+                linkGeometry.createParallel(makeLink(null, null), size, size, false, 0, 3));
+    }
 
-        private ClassLink createLink(String sourceMember, String targetMember) {
-            ClassEntity e1 = new ClassEntity(0, 0, "ent-0", "A", "CLASS",
-                    new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-            ClassEntity e2 = new ClassEntity(200, 0, "ent-1", "B", "CLASS",
-                    new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    private ClassLink makeLink(String sourceMember, String targetMember) {
+        ClassEntity entity1 = new ClassEntity(0, 0, "e0", "A", "CLASS", new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+        ClassEntity entity2 = new ClassEntity(200, 0, "e1", "B", "CLASS", new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+        entity1.setStereotypeName("");
+        entity2.setStereotypeName("");
 
-            e1.setStereotypeName("");
-            e2.setStereotypeName("");
+        ClassLink link = new ClassLink("l", entity1, entity2, "ARROW", "", 1, "NONE", "ARROW", "", "");
+        if (sourceMember != null) link.setSourceMember(sourceMember);
+        if (targetMember != null) link.setTargetMember(targetMember);
 
-            ClassLink link = new ClassLink("link-0", e1, e2, "ARROW", "", 1,
-                    "NONE", "ARROW", "", "");
-
-            if (sourceMember != null) link.setSourceMember(sourceMember);
-            if (targetMember != null) link.setTargetMember(targetMember);
-
-            return link;
-        }
+        return link;
     }
 }
+
