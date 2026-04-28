@@ -1,3 +1,10 @@
+/*
+ * File: ClassDiagramTestBase.java
+ * Author: Norman Babiak
+ * Description: Base testing setup file for the class diagram
+ * Date: 28.4.2026
+ */
+
 package com.diagrams.ClassDiagram;
 
 import com.diagrams.ClassDiagram.model.ClassModel;

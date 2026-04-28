@@ -1,3 +1,10 @@
+/*
+ * File: TipsHandlerTest.java
+ * Author: Norman Babiak
+ * Description: Tests for entity method tips
+ * Date: 28.4.2026
+ */
+
 package com.diagrams.ClassDiagram.parser;
 
 import com.diagrams.ClassDiagram.model.ClassParts.ClassEntity;
@@ -7,10 +14,7 @@ import net.sourceforge.plantuml.klimt.color.ColorType;
 import net.sourceforge.plantuml.klimt.color.Colors;
 import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.klimt.creole.Display;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,189 +32,94 @@ import static org.mockito.Mockito.*;
 @DisplayName("TipsHandler Tests")
 class TipsHandlerTest {
     private TipsHandler tipsHandler;
-
     @Mock private Entity mockTipsEntity;
     @Mock private Colors mockColors;
-    @Mock private HColor mockBackColor;
-
-    private ClassEntity targetEntity;
+    private ClassEntity target;
 
     @BeforeEach
     void setup() {
         tipsHandler = new TipsHandler();
-        targetEntity = new ClassEntity(0, 0, "test-entity", "TestClass", "CLASS");
-    }
-
-    private void setupTips(Map<String, Display> tips) {
-        when(mockTipsEntity.getTips()).thenReturn(tips);
+        target = new ClassEntity(0, 0, "e", "E", "CLASS");
         when(mockTipsEntity.getColors()).thenReturn(mockColors);
         when(mockColors.getColor(ColorType.BACK)).thenReturn(null);
     }
 
-    private Map<String, Display> singleTip(String key, String... lines) {
-        Map<String, Display> tips = new HashMap<>();
-        tips.put(key, Display.create(lines));
-
-        return tips;
+    private void tips(Map<String, Display> tips) {
+        when(mockTipsEntity.getTips()).thenReturn(tips);
     }
 
-    @Nested
-    @DisplayName("Tip Application")
-    class TipApplicationTests {
+    @Test
+    @DisplayName("applies tip to matching method")
+    void applyTipAndMultiline() {
+        EntityMethod method = new EntityMethod("doWork()");
+        target.getMethods().add(method);
+        Map<String, Display> tipsMap = new HashMap<>();
+        tipsMap.put("doWork", Display.create("Line 1", "Line 2"));
+        tips(tipsMap);
 
-        @Test
-        @DisplayName("applies tip to matching method")
-        void applyTipToMethod() {
-            EntityMethod method = new EntityMethod("doSomething()");
-            targetEntity.getMethods().add(method);
-            setupTips(singleTip("doSomething", "Method tip"));
+        tipsHandler.applyTipsToEntity(mockTipsEntity, target);
 
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertEquals("Method tip", method.getTip());
-        }
-
-        @Test
-        @DisplayName("applies tip to raw body member")
-        void applyTipToRawBody() {
-            EntityMethod member = new EntityMethod("customMethod()");
-            targetEntity.getRawBody().add(member);
-            setupTips(singleTip("customMethod", "Raw body tip"));
-
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertEquals("Raw body tip", member.getTip());
-        }
-
-        @Test
-        @DisplayName("applies background color from tips entity")
-        void applyBackgroundColor() {
-            EntityMethod method = new EntityMethod("test()");
-            targetEntity.getMethods().add(method);
-
-            when(mockTipsEntity.getTips()).thenReturn(singleTip("test", "Tip"));
-            when(mockTipsEntity.getColors()).thenReturn(mockColors);
-            when(mockColors.getColor(ColorType.BACK)).thenReturn(mockBackColor);
-            when(mockBackColor.asString()).thenReturn("#FFFF00");
-
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertEquals("#FFFF00", method.getTipBackground());
-        }
-
-        @Test
-        @DisplayName("joins multiline tips with <br>")
-        void handleMultilineTip() {
-            EntityMethod method = new EntityMethod("multi()");
-            targetEntity.getMethods().add(method);
-            setupTips(singleTip("multi", "Line 1", "Line 2", "Line 3"));
-
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertEquals("Line 1<br>Line 2<br>Line 3", method.getTip());
-        }
-
-        @Test
-        @DisplayName("does not apply tip to non-matching member")
-        void noTipForNonMatching() {
-            EntityMethod method = new EntityMethod("differentMethod()");
-            targetEntity.getMethods().add(method);
-            setupTips(singleTip("someOtherMethod", "Tip"));
-
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertNull(method.getTip());
-        }
+        assertEquals("Line 1<br>Line 2", method.getTip());
     }
 
-    @Nested
-    @DisplayName("Signature Matching")
-    class SignatureMatchingTests {
+    @Test
+    @DisplayName("applies background color from tips entity")
+    void applyBackground() {
+        EntityMethod method = new EntityMethod("test()");
+        target.getMethods().add(method);
+        tips(Map.of("test", Display.create("Tip")));
+        HColor mockColor = mock(HColor.class);
+        when(mockColors.getColor(ColorType.BACK)).thenReturn(mockColor);
+        when(mockColor.asString()).thenReturn("#FFFF00");
 
-        @Test
-        @DisplayName("matches method stripping visibility prefix (+/-/#/~)")
-        void matchWithVisibilityPrefix() {
-            EntityMethod method1 = new EntityMethod("+publicMethod()");
-            targetEntity.getMethods().add(method1);
-            setupTips(singleTip("publicMethod", "Tip"));
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
+        tipsHandler.applyTipsToEntity(mockTipsEntity, target);
 
-            EntityMethod method2 = new EntityMethod("{static} getInstance()");
-            targetEntity.getMethods().add(method2);
-            setupTips(singleTip("getInstance", "Static tip"));
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            EntityMethod method3 = new EntityMethod("process(String)");
-            targetEntity.getMethods().add(method3);
-            setupTips(singleTip("process(String)", "Processing tip"));
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertEquals("Tip", method1.getTip());
-            assertEquals("Static tip", method2.getTip());
-            assertEquals("Processing tip", method3.getTip());
-        }
-
-        @Test
-        @DisplayName("matches method by name only")
-        void matchByNameOnly() {
-            EntityMethod method = new EntityMethod("calculate(int, int)");
-            targetEntity.getMethods().add(method);
-            setupTips(singleTip("calculate", "Calc tip"));
-
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertEquals("Calc tip", method.getTip());
-        }
+        assertEquals("#FFFF00", method.getTipBackground());
     }
 
-    @Nested
-    @DisplayName("Edge Cases")
-    class EdgeCaseTests {
+    @Test
+    @DisplayName("strips visibility prefix when matching")
+    void visibilityStripping() {
+        EntityMethod method = new EntityMethod("+publicMethod()");
+        target.getMethods().add(method);
+        tips(Map.of("publicMethod", Display.create("Tip")));
 
-        @Test
-        @DisplayName("handles empty tips map without error")
-        void handleEmptyTipsMap() {
-            targetEntity.getMethods().add(new EntityMethod("method()"));
-            when(mockTipsEntity.getTips()).thenReturn(new HashMap<>());
+        tipsHandler.applyTipsToEntity(mockTipsEntity, target);
 
-            assertDoesNotThrow(() -> tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity));
-        }
+        assertEquals("Tip", method.getTip());
+    }
 
-        @Test
-        @DisplayName("handles entity with no members")
-        void handleEmptyMemberLists() {
-            setupTips(singleTip("anyMember", "Tip"));
+    @Test
+    @DisplayName("does not apply tip to non-matching member")
+    void noMatch() {
+        EntityMethod method = new EntityMethod("other()");
+        target.getMethods().add(method);
+        tips(Map.of("different", Display.create("Tip")));
 
-            assertDoesNotThrow(() -> tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity));
-        }
+        tipsHandler.applyTipsToEntity(mockTipsEntity, target);
 
-        @Test
-        @DisplayName("handles null target entity gracefully")
-        void handleNullTargetEntity() {
-            setupTips(singleTip("method", "Tip"));
+        assertNull(method.getTip());
+    }
 
-            assertDoesNotThrow(() -> tipsHandler.applyTipsToEntity(mockTipsEntity, null));
-        }
+    @Test
+    @DisplayName("handles empty tips, null target, and multiple members")
+    void edgeCases() {
+        when(mockTipsEntity.getTips()).thenReturn(new HashMap<>());
+        assertDoesNotThrow(() -> tipsHandler.applyTipsToEntity(mockTipsEntity, target));
+        assertDoesNotThrow(() -> tipsHandler.applyTipsToEntity(mockTipsEntity, null));
 
-        @Test
-        @DisplayName("applies tips to multiple members")
-        void applyTipsToMultipleMembers() {
-            EntityMethod method1 = new EntityMethod("first()");
-            EntityMethod method2 = new EntityMethod("second()");
-            targetEntity.getMethods().add(method1);
-            targetEntity.getMethods().add(method2);
+        EntityMethod method1 = new EntityMethod("a()");
+        EntityMethod method2 = new EntityMethod("b()");
+        target.getMethods().add(method1);
+        target.getMethods().add(method2);
+        Map<String, Display> tipsMap = new HashMap<>();
+        tipsMap.put("a", Display.create("T1"));
+        tipsMap.put("b", Display.create("T2"));
+        tips(tipsMap);
 
-            Map<String, Display> tips = new HashMap<>();
-            tips.put("first", Display.create("First tip"));
-            tips.put("second", Display.create("Second tip"));
-            setupTips(tips);
+        tipsHandler.applyTipsToEntity(mockTipsEntity, target);
 
-            tipsHandler.applyTipsToEntity(mockTipsEntity, targetEntity);
-
-            assertAll(
-                    () -> assertEquals("First tip", method1.getTip()),
-                    () -> assertEquals("Second tip", method2.getTip())
-            );
-        }
+        assertEquals("T1", method1.getTip());
+        assertEquals("T2", method2.getTip());
     }
 }

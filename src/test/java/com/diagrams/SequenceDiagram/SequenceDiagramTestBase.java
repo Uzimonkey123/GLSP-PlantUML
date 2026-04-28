@@ -1,3 +1,10 @@
+/*
+ * File: SequenceDiagramTestBase.java
+ * Author: Norman Babiak
+ * Description: Base testing setup file for the sequence diagram
+ * Date: 29.4.2026
+ */
+
 package com.diagrams.SequenceDiagram;
 
 import com.diagrams.SequenceDiagram.model.SequenceModel;

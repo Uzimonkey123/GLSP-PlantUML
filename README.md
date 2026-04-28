@@ -25,8 +25,6 @@ An integrated **LSP server** provides real-time syntax diagnostics and code comp
 
 ## Prerequisites
 
-TODO
-
 | Tool | Version |
 |------|---------|
 | **Java JDK** | 21+     |
@@ -41,7 +39,9 @@ TODO
 
 ### Installing as VSIX package
 
-TODO
+Download the `.vsix` file from the latest release. 
+In VS Code, open the Command Palette (Ctrl+Shift+P), run `Extensions: Install from VSIX`, 
+and select the downloaded file.
 
 ### Cloning the repository and VS Code debug mode usage
 
@@ -67,13 +67,13 @@ This compiles the GLSP server, LSP server, parsers, and validators into a single
 
 **Windows:**
 ```cmd
-./build.bat -f
+./build.bat -p
 ```
 
 **Linux/macOS:**
 ```bash
 chmod +x build.sh
-./build.sh -f
+./build.sh -p
 ```
 
 ### 5. Run in VS Code

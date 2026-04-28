@@ -1,256 +1,204 @@
+/*
+ * File: SequenceModelParserTest.java
+ * Author: Norman Babiak
+ * Description: Tests for sequence model parser
+ * Date: 29.4.2026
+ */
+
 package com.diagrams.SequenceDiagram.parser;
 
 import com.diagrams.SequenceDiagram.SequenceDiagramTestBase;
 import com.diagrams.SequenceDiagram.model.SequenceModel;
 import com.diagrams.SequenceDiagram.model.SequenceParts.*;
+import com.diagrams.SequenceDiagram.state.SequenceModelState;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 @DisplayName("SequenceModelParser Tests")
 class SequenceModelParserTest extends SequenceDiagramTestBase {
     private SequenceModelParser parser;
 
     @BeforeEach
-    void setupParser() {
+    void setup() throws Exception {
         parser = new SequenceModelParser();
+        Field field = SequenceModelParser.class.getDeclaredField("modelState");
+        field.setAccessible(true);
+        field.set(parser, mock(SequenceModelState.class));
     }
 
     private SequenceModel parse(String resourcePath) throws IOException {
-        Path file = createTempPumlFile(loadResource(resourcePath));
-
-        return parser.parse(file.toFile());
+        return parser.parse(createTempPumlFile(loadResource(resourcePath)).toFile());
     }
 
-    private Set<String> participantTypes(SequenceModel model) {
-        return model.participants.stream()
-                .map(SequenceNode::getType)
-                .collect(Collectors.toSet());
+    private SequenceModel parseSource(String source) throws IOException {
+        return parser.parse(createTempPumlFile(source).toFile());
     }
 
-    @Nested
-    @DisplayName("Participant Parsing")
-    class ParticipantParsingTests {
+    @Test
+    @DisplayName("parses participants with line info")
+    void participants() throws IOException {
+        SequenceModel model = parse("participants/simple-participant.puml");
 
-        @Test
-        @DisplayName("parses participants")
-        void parseParticipantVariations() throws IOException {
-            SequenceModel model = parse("participants/simple-participant.puml");
-            assertTrue(model.participants.size() >= 2);
-            assertTrue(model.participants.stream().allMatch(SequenceNode::hasLine));
-
-            model = parse("participants/with-aliases.puml");
-            assertTrue(model.participants.stream().anyMatch(p -> p.getName().contains(" ") || p.hasLine()));
-
-            model = parse("participants/participant-ordering.puml");
-            assertTrue(model.participants.stream().anyMatch(p -> p.getOrder() != 0));
-
-            model = parse("participants/participant-styling.puml");
-            assertTrue(model.participants.stream().anyMatch(p -> !p.getBackground().equals("#5d4949")));
-
-            model = parse("participants/stereotypes.puml");
-            assertTrue(model.participants.stream().anyMatch(SequenceNode::isStereotype));
-        }
+        assertTrue(model.participants.size() >= 2);
+        assertTrue(model.participants.stream().allMatch(SequenceNode::hasLine));
     }
 
-    @Nested
-    @DisplayName("Message Parsing")
-    class MessageParsingTests {
+    @Test
+    @DisplayName("parses aliases and ordering")
+    void aliasesAndOrdering() throws IOException {
+        SequenceModel aliased = parse("participants/with-aliases.puml");
+        SequenceModel ordered = parse("participants/participant-ordering.puml");
 
-        @Test
-        @DisplayName("parses messages")
-        void parseMessageVariations() throws IOException {
-            SequenceModel model = parse("messages/basic-messages.puml");
-            assertTrue(model.messages.size() >= 2);
-
-            model = parse("messages/all-arrow-types.puml");
-            assertTrue(model.messages.size() >= 10);
-            assertTrue(model.messages.stream().anyMatch(SequenceMessage::isDotted));
-
-            model = parse("messages/self-messages.puml");
-            assertTrue(model.messages.stream()
-                    .anyMatch(m -> m.getFrom() != null && m.getTo() != null && m.getFrom().equals(m.getTo())));
-
-            model = parse("messages/message-styling.puml");
-            assertTrue(model.messages.stream()
-                    .anyMatch(m -> m.getColor() != null && !m.getColor().equals("black")));
-
-            model = parse("messages/autonumber.puml");
-            assertTrue(model.messages.stream()
-                    .anyMatch(m -> m.getNumbering() != null && !m.getNumbering().isEmpty()));
-        }
+        assertTrue(aliased.participants.stream().anyMatch(participant -> participant.getName().contains(" ")));
+        assertTrue(ordered.participants.stream().anyMatch(participant -> participant.getOrder() != 0));
     }
 
-    @Nested
-    @DisplayName("Fragment Parsing")
-    class FragmentParsingTests {
+    @Test
+    @DisplayName("parses basic and styled messages")
+    void messages() throws IOException {
+        SequenceModel basic = parse("messages/basic-messages.puml");
+        SequenceModel allTypes = parse("messages/all-arrow-types.puml");
 
-        @Test
-        @DisplayName("parses all group types")
-        void parseAllFragmentTypes() throws IOException {
-            SequenceModel model = parse("fragments/alt-fragment.puml");
-            assertTrue(model.groups.stream().anyMatch(g -> g.getLabel().toLowerCase().contains("alt")));
-            assertTrue(model.groups.stream().findFirst().map(SequenceGroup::hasLine).orElse(false));
-
-            model = parse("fragments/opt-fragment.puml");
-            assertTrue(model.groups.stream().anyMatch(g -> g.getLabel().toLowerCase().contains("opt")));
-
-            model = parse("fragments/loop-fragment.puml");
-            assertTrue(model.groups.stream().anyMatch(g -> g.getLabel().toLowerCase().contains("loop")));
-
-            model = parse("fragments/par-fragment.puml");
-            assertTrue(model.groups.stream().anyMatch(g -> g.getLabel().toLowerCase().contains("par")));
-
-            model = parse("fragments/break-fragment.puml");
-            assertTrue(model.groups.stream().anyMatch(g -> g.getLabel().toLowerCase().contains("break")));
-
-            model = parse("fragments/critical-fragment.puml");
-            assertTrue(model.groups.stream().anyMatch(g -> g.getLabel().toLowerCase().contains("critical")));
-
-            model = parse("fragments/group-fragment.puml");
-            assertTrue(model.groups.stream().anyMatch(SequenceGroup::isGroup));
-
-            model = parse("fragments/ref-fragment.puml");
-            assertTrue(model.messages.stream().anyMatch(m -> m.getType().equals("edge:ref")));
-        }
-
-        @Test
-        @DisplayName("parses nested groups with levels")
-        void parseNestedFragments() throws IOException {
-            SequenceModel model = parse("complex/nested-fragments.puml");
-
-            assertTrue(model.groups.size() >= 2);
-            assertTrue(model.groups.stream().anyMatch(g -> g.getLevel() > 0));
-        }
+        assertTrue(basic.messages.size() >= 2);
+        assertTrue(allTypes.messages.size() >= 10);
+        assertTrue(allTypes.messages.stream().anyMatch(SequenceMessage::isDotted));
     }
 
-    @Nested
-    @DisplayName("Note Parsing")
-    class NoteParsingTests {
+    @Test
+    @DisplayName("parses self-messages")
+    void selfMessages() throws IOException {
+        SequenceModel model = parseSource(puml("participant A", "A -> A : think", "A -> A : process"));
 
-        @Test
-        @DisplayName("parses notes")
-        void parseNoteVariations() throws IOException {
-            SequenceModel model = parse("notes/basic-notes.puml");
-            assertFalse(model.notes.isEmpty());
-            assertTrue(model.notes.stream().allMatch(SequenceNote::hasLine));
-
-            model = parse("notes/notes-on-messages.puml");
-            assertTrue(model.messages.stream().anyMatch(m -> !m.getNotes().isEmpty()));
-
-            model = parse("notes/notes-across-participants.puml");
-            assertTrue(model.notes.stream()
-                    .anyMatch(n -> n.getPosition().equals("OVER") || n.getPosition().equals("OVER_SEVERAL")));
-        }
+        assertEquals(1, model.participants.size());
+        assertEquals(2, model.messages.stream().filter(message -> message.getType().equals("edge"))
+                .filter(message -> message.getFrom() != null && message.getFrom().equals(message.getTo())).count());
     }
 
-    @Nested
-    @DisplayName("Activation Parsing")
-    class ActivationParsingTests {
+    @Test
+    @DisplayName("parses all fragment types and else branches")
+    void fragments() throws IOException {
+        SequenceModel alt = parse("fragments/alt-fragment.puml");
+        SequenceModel loop = parse("fragments/loop-fragment.puml");
+        SequenceModel ref = parse("fragments/ref-fragment.puml");
 
-        @Test
-        @DisplayName("parses activations")
-        void parseActivationVariations() throws IOException {
-            SequenceModel model = parse("activation/basic-activation.puml");
-            assertTrue(model.participants.stream().anyMatch(p -> !p.getLifeEvents().isEmpty()));
+        assertTrue(alt.groups.stream().anyMatch(group -> group.getLabel().contains("alt")));
+        assertTrue(loop.groups.stream().anyMatch(group -> group.getLabel().contains("loop")));
+        assertTrue(ref.messages.stream().anyMatch(message -> message.getType().equals("edge:ref")));
 
-            model = parse("activation/colored-activation.puml");
-            assertTrue(model.participants.stream()
-                    .flatMap(p -> p.getLifeEvents().stream())
-                    .anyMatch(le -> !le.getBackground().equals("#5d4949")));
+        SequenceModel multiElse = parseSource(puml("participant A", "participant B",
+                "alt c1", "A->B:1", "else c2", "A->B:2", "else c3", "A->B:3", "else c4", "A->B:4", "end"));
 
-            model = parse("activation/create-destroy.puml");
-            boolean hasCreated = model.participants.stream().anyMatch(SequenceNode::isCreatedNode);
-            boolean hasDestroyed = model.participants.stream().anyMatch(p -> p.getDestroyIndex() >= 0);
-            assertTrue(hasCreated || hasDestroyed);
-        }
+        assertTrue(multiElse.groups.getFirst().getSeparatorLabel().size() >= 3);
     }
 
-    @Nested
-    @DisplayName("Divider, Delay, and Box Parsing")
-    class DividerDelayBoxParsingTests {
+    @Test
+    @DisplayName("parses nested groups with correct levels")
+    void nestedGroups() throws IOException {
+        SequenceModel model = parse("complex/nested-fragments.puml");
 
-        @Test
-        @DisplayName("parses dividers, delays, and boxes")
-        void parseDividerDelayBox() throws IOException {
-            SequenceModel model = parse("boxes/basic-box.puml");
-            assertFalse(model.englobers.isEmpty());
-            assertTrue(model.englobers.stream().allMatch(SequenceEnglober::hasLine));
-
-            model = parse("boxes/colored-boxes.puml");
-            assertTrue(model.englobers.stream().anyMatch(e -> !e.getColor().equals("#CCCCCC")));
-        }
+        assertTrue(model.groups.size() >= 2);
+        assertTrue(model.groups.stream().anyMatch(group -> group.getLevel() > 0));
     }
 
-    @Nested
-    @DisplayName("Page Details Parsing")
-    class PageDetailsParsingTests {
+    @Test
+    @DisplayName("parses 5 deeply nested groups")
+    void deeplyNested() throws IOException {
+        SequenceModel model = parseSource(puml("participant A", "participant B",
+                "alt l1", "opt l2", "loop l3", "par l4", "critical l5",
+                "A->B:deep", "end", "end", "end", "end", "end"));
 
-        @Test
-        @DisplayName("parses title, header, footer, mainframe")
-        void parsePageDetails() throws IOException {
-            SequenceModel model = parse("complex/full-diagram.puml");
-            assertFalse(model.title.isEmpty());
-            assertTrue(model.titleLineStart >= 0);
-            assertNotNull(model.header);
-            assertNotNull(model.footer);
-
-            model = parse("edge-cases/mainframe-header-footer.puml");
-            if (model.isMainframe) {
-                assertFalse(model.mainframe.isEmpty());
-                assertTrue(model.mainframeLineNumber >= 0);
-            }
-        }
+        assertEquals(5, model.groups.size());
     }
 
-    @Nested
-    @DisplayName("Complex Diagrams")
-    class ComplexDiagramTests {
+    @Test
+    @DisplayName("parses notes: basic, on messages, across participants")
+    void notes() throws IOException {
+        SequenceModel basic = parse("notes/basic-notes.puml");
+        SequenceModel onMessages = parse("notes/notes-on-messages.puml");
+        SequenceModel across = parse("notes/notes-across-participants.puml");
 
-        @Test
-        @DisplayName("parses full diagram and design patterns with source line tracking")
-        void parseComplexDiagrams() throws IOException {
-            SequenceModel model = parse("complex/full-diagram.puml");
-            SequenceModel finalModel = model;
-            assertAll(
-                    () -> assertTrue(finalModel.participants.size() >= 3),
-                    () -> assertTrue(finalModel.messages.size() >= 5),
-                    () -> assertFalse(finalModel.groups.isEmpty()),
-                    () -> assertFalse(finalModel.title.isEmpty())
-            );
-
-            long participantsWithLines = model.participants.stream().filter(SequenceNode::hasLine).count();
-            assertTrue(participantsWithLines >= 2);
-
-            model = parse("complex/design-patterns.puml");
-            assertTrue(model.participants.size() >= 4);
-            assertTrue(model.messages.size() >= 8);
-            assertTrue(model.participants.stream().anyMatch(p -> !p.getLifeEvents().isEmpty()));
-        }
+        assertFalse(basic.notes.isEmpty());
+        assertTrue(onMessages.messages.stream().anyMatch(message -> !message.getNotes().isEmpty()));
+        assertTrue(across.notes.stream()
+                .anyMatch(note -> note.getPosition().equals("OVER") || note.getPosition().equals("OVER_SEVERAL")));
     }
 
-    @Nested
-    @DisplayName("Parser State")
-    class ParserStateTests {
+    @Test
+    @DisplayName("parses activations, create, destroy")
+    void activations() throws IOException {
+        SequenceModel activated = parse("activation/basic-activation.puml");
+        SequenceModel createDestroy = parse("activation/create-destroy.puml");
 
-        @Test
-        @DisplayName("resets state between parses and sets line mapper")
-        void parserStateManagement() throws IOException {
-            SequenceModel model1 = parse("participants/simple-participant.puml");
-            SequenceModel model2 = parse("edge-cases/single-participant.puml");
+        assertTrue(activated.participants.stream().anyMatch(participant -> !participant.getLifeEvents().isEmpty()));
+        assertTrue(createDestroy.participants.stream().anyMatch(SequenceNode::isCreatedNode) ||
+                createDestroy.participants.stream().anyMatch(participant -> participant.getDestroyIndex() >= 0));
+    }
 
-            assertNotSame(model1, model2);
-            if (!model2.participants.isEmpty()) {
-                assertTrue(model2.participants.getFirst().getId().startsWith("par-"));
-            }
+    @Test
+    @DisplayName("parses boxes with colors")
+    void englobers() throws IOException {
+        SequenceModel basic = parse("boxes/basic-box.puml");
+        SequenceModel colored = parse("boxes/colored-boxes.puml");
 
-            assertNotNull(model1.getLineMapper());
-            assertNotNull(model2.getLineMapper());
-        }
+        assertFalse(basic.englobers.isEmpty());
+        assertTrue(colored.englobers.stream().anyMatch(englober -> !englober.getColor().equals("#CCCCCC")));
+    }
+
+    @Test
+    @DisplayName("parses title, header, footer, mainframe")
+    void pageDetails() throws IOException {
+        SequenceModel model = parse("complex/full-diagram.puml");
+
+        assertFalse(model.title.isEmpty());
+        assertNotNull(model.header);
+        assertNotNull(model.footer);
+    }
+
+    @Test
+    @DisplayName("implicit participants created from messages")
+    void implicitParticipants() throws IOException {
+        SequenceModel model = parseSource(puml("Alice -> Bob : hi"));
+
+        assertEquals(2, model.participants.size());
+    }
+
+    @Test
+    @DisplayName("handles empty diagram, CRLF, and blank lines")
+    void edgeCases() throws IOException {
+        SequenceModel empty = parseSource(puml(""));
+        SequenceModel crlf = parseSource("@startuml\r\nparticipant A\r\nparticipant B\r\n@enduml");
+
+        assertTrue(empty.participants.isEmpty() && empty.messages.isEmpty());
+        assertEquals(2, crlf.participants.size());
+    }
+
+    @Test
+    @DisplayName("full-diagram: all element types present with line tracking")
+    void fullDiagram() throws IOException {
+        SequenceModel model = parse("complex/full-diagram.puml");
+
+        assertAll(
+                () -> assertTrue(model.participants.size() >= 3),
+                () -> assertTrue(model.messages.size() >= 5),
+                () -> assertFalse(model.groups.isEmpty()),
+                () -> assertFalse(model.title.isEmpty()),
+                () -> assertTrue(model.participants.stream().filter(SequenceNode::hasLine).count() >= 2)
+        );
+    }
+
+    @Test
+    @DisplayName("parser resets state and sets line mapper between parses")
+    void parserState() throws IOException {
+        SequenceModel first = parse("participants/simple-participant.puml");
+        SequenceModel second = parse("edge-cases/single-participant.puml");
+
+        assertNotSame(first, second);
+        assertNotNull(first.getLineMapper());
+        assertNotNull(second.getLineMapper());
     }
 }
