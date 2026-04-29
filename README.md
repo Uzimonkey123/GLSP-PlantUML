@@ -129,4 +129,9 @@ Plugins are loaded automatically on server startup via `ServiceLoader`.
  
 ---
 
-TODO, add licence
+## License
+
+This project is licensed under the GNU General Public License v2.0 with the Classpath Exception.
+See the [LICENSE](LICENSE) file for details.
+
+SPDX-License-Identifier: GPL-2.0-only WITH Classpath-exception-2.0
