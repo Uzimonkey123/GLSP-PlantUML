@@ -1,3 +1,10 @@
+/*
+ * File: class-views.tsx
+ * Author: Norman Babiak
+ * Description: Label, note and other edge views for class diagram
+ * Date: 29.4.2026
+ */
+
 import {injectable} from 'inversify';
 import {
     GEdge,
@@ -18,6 +25,9 @@ import {CurvedEdgeRenderer} from "./ClassEdge/curved-edge-view";
 
 /** @jsx svg */
 
+/**
+ * Maps a PlantUML entity type to its icon color and single-character stereotype. Falls back to class
+ */
 export function getTypeConfig(type: string): { color: string; char: string } {
     const configs: Record<string, { color: string; char: string }> = {
         'abstract': { color: '#6DBABA', char: 'A' },
@@ -39,6 +49,10 @@ export function getTypeConfig(type: string): { color: string; char: string } {
     return configs[type] || configs['class'];
 }
 
+/**
+ * Renders the entity name label with a colored type icon, optional visibility shape, and bold/italic styling based on
+ * the entity type
+ */
 @injectable()
 export class EntityLabelView extends GLabelView {
     override render(label: Readonly<GLabel>, context: RenderingContext, args?: IViewArgs): VNode {
@@ -53,7 +67,6 @@ export class EntityLabelView extends GLabelView {
         const hasGeneric = (label as any).args?.hasGeneric as boolean | undefined;
 
         // Check for stereotype
-        const stereotypeName = (label as any).args?.stereotypeName as string | undefined;
         const stereotypeChar = (label as any).args?.stereotypeChar as string | undefined;
         const stereotypeColor = (label as any).args?.stereotypeColor as string | undefined;
         const hasStereotypeChar = stereotypeChar && stereotypeChar.trim().length > 0 && stereotypeChar !== ' ';
@@ -93,6 +106,9 @@ export class EntityLabelView extends GLabelView {
     }
 }
 
+/**
+ * Invisible label view
+ */
 @injectable()
 export class HiddenLabelView implements IView {
     render(label: Readonly<GLabel>, context: RenderingContext): VNode {
@@ -100,6 +116,9 @@ export class HiddenLabelView implements IView {
     }
 }
 
+/**
+ * Renders a note edge to a specific entity, or member of an entity
+ */
 @injectable()
 export class SimpleNoteEdgeView extends GEdgeView {
     protected override renderLine(edge: GEdge, segments: Point[], context: RenderingContext): VNode {
@@ -127,6 +146,9 @@ export class SimpleNoteEdgeView extends GEdgeView {
         return <g />;
     }
 
+    /**
+     * Renders a note edge that points to a specific member
+     */
     private renderMemberTipLink(source: GNode, target: GNode, segments: Point[], memberName: string): VNode {
         const memberYOffset = CurvedEdgeRenderer.getMemberYOffset(source, memberName);
         const first = {
@@ -139,6 +161,7 @@ export class SimpleNoteEdgeView extends GEdgeView {
 
         const baseWidth = 12;
 
+        // Estimate the text extent to place the tip near the member name's end
         const charWidth = 6.5;
         const textWidth = memberName.length * charWidth;
         const entityCenterX = source.position.x + source.size.width / 2;
@@ -147,6 +170,7 @@ export class SimpleNoteEdgeView extends GEdgeView {
         const tipAnchorX = Math.min(textEndX, source.position.x + source.size.width - 10);
         const tipAnchorY = first.y;
 
+        // Perpendicular offset to give the base its width
         const dx = last.x - tipAnchorX;
         const dy = last.y - tipAnchorY;
         const length = Math.sqrt(dx * dx + dy * dy);
@@ -164,6 +188,9 @@ export class SimpleNoteEdgeView extends GEdgeView {
         />;
     }
 
+    /**
+     * Renders a standard note edge as a filled triangle
+     */
     private renderRegularNoteLink(source: GNode, segments: Point[], noteAtStart: boolean): VNode {
         const first = segments[0];
         const last = segments[segments.length - 1];

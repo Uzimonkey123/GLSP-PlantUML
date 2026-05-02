@@ -1,3 +1,10 @@
+/*
+ * File: sequence-views.tsx
+ * Author: Norman Babiak
+ * Description: Message type views and other views for sequence diagram
+ * Date: 1.5.2026
+ */
+
 import {injectable} from 'inversify';
 import {
 	GEdge,
@@ -13,14 +20,16 @@ import {
 } from '@eclipse-glsp/client';
 import {VNode} from "snabbdom";
 import '../../css/diagram.css';
-import {createIcon, TspanConverter} from "../utils-common";
+import {createIcon} from "../utils-common";
 
 /** @jsx svg */
 
+/**
+ * Renders a participant's name label with multi-line support, stereotype icon
+ */
 @injectable()
 export class ParticipantLabelView extends GLabelView {
 	override render(label: Readonly<GLabel>, context: RenderingContext, args?: IViewArgs): VNode {
-		// TODO: Formating for creol and html (monospace, italic etc..)
 		const text = label.text ?? '';
 		const lines = text.split("<br>");
 		const lineHeight = 14;
@@ -81,6 +90,9 @@ export class ParticipantLabelView extends GLabelView {
 	}
 }
 
+/**
+ * Renders a divider as a pair of horizontal lines with a centered label box between them
+ */
 @injectable()
 export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersections {
 	protected override renderAdditionals(
@@ -104,7 +116,6 @@ export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersecti
 		const centerY = (start.y + end.y) / 2;
 
 		// Label text
-
 		const labelPadding = 4;
 		const labelLength = (edge.args?.labelWidth as number);
 		const label = (edge.args?.label as string);
@@ -148,6 +159,9 @@ export class SequenceMessageDivider extends PolylineEdgeViewWithGapsOnIntersecti
 	}
 }
 
+/**
+ * Renders delay, basically just an empty space, leaving the place for the children label
+ */
 @injectable()
 export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersections {
 	protected override renderAdditionals(
@@ -160,6 +174,9 @@ export class SequenceMessageDelay extends PolylineEdgeViewWithGapsOnIntersection
 	}
 }
 
+/**
+ * Return type for drawMessageLine, carrying the adjusted arrow positions, angle, and stroke width for head rendering
+ */
 export interface renderLine {
 	startArrowPos: {x: number, y: number};
 	endArrowPos: {x: number, y: number};
@@ -167,9 +184,11 @@ export interface renderLine {
 	strokeWidth: number;
 }
 
+/**
+ * Main edge view for sequence messages, handles simple arrows, self-arrows, incoming and outgoing arrows
+ */
 @injectable()
 export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
-
 	private start = {x: 0, y: 0};
 	private end = {x: 0, y: 0};
 	private circleStart = false;
@@ -185,6 +204,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 	private circleStartPart! : string;
 	private circleEndPart! : string;
 
+	/**
+	 * Returns the SVG path string for a given arrow head kind
+	 */
 	private headPath(kind: string, part: 'top' | 'bottom' | 'full', circle: boolean): string | undefined {
 		let circleOffset = circle ? 6 : 8;
 
@@ -211,6 +233,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		}
 	}
 
+	/**
+	 * Extracts all edge arguments and dispatch to arrow renderers
+	 */
 	protected override renderAdditionals(
 		edge: GEdge,
 		segments: Point[],
@@ -273,7 +298,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		return additionals;
 	}
 
-
+	/**
+	 * Draws the main message line between two points, returns arrow positions for arrow rendering
+	 */
 	private drawMessageLine(start: {x: number, y:number}, end: {x: number, y: number}, additionals: VNode[]): renderLine {
 		const dx = end.x - start.x;
 		const dy = end.y - start.y;
@@ -326,6 +353,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		};
 	}
 
+	/**
+	 * Renders incoming and outgoing arrows, short arrows are ending in the middle between nodes instead of at lifelines
+	 */
 	private drawOutInArrow(additionals: VNode[], edge: GEdge, incoming: boolean) {
 		// Additional arguments to get distance between two nodes who have short arrows
 		const fromX = edge.args?.fromX as number;
@@ -370,6 +400,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		if (this.circleEnd) this.drawCircle({ x: drawEndX, y: drawEndY }, additionals);
 	}
 
+	/**
+	 * Renders self loop arrows
+	 */
 	private drawSelfArrow(additionals: VNode[]) {
 		const strokeWidth = this.style === 'bold'   ? 2.5 : 1.5;
 		const dashed = this.style === 'dotted' ? '2 2' : undefined;
@@ -418,6 +451,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		}
 	}
 
+	/**
+	 * Draws a standard arrow between two different participants with heads and optional circle decorations at both ends
+	 */
 	private drawSimpleArrow(additionals: VNode[]) {
 		const {
 			startArrowPos, endArrowPos, angle, strokeWidth
@@ -430,6 +466,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		if (this.circleEnd) this.drawCircle(this.end, additionals);
 	}
 
+	/**
+	 * Draw the arrow head, depending on the position and decorations
+	 */
 	private drawHead(kind: string, at: Point, ang: number, pos: string, circle: boolean, additionals: VNode[], strokeWidth: number) {
 		if (kind == 'none') return;
 
@@ -447,6 +486,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 		}
 	}
 
+	/**
+	 * Draws circle at the end of arrow if syntax required it
+	 */
 	private drawCircle(point: Point, additionals: VNode[]) {
 		additionals.push(
 			<circle
@@ -461,6 +503,9 @@ export class SequenceMessageEdgeView extends PolylineEdgeViewWithGapsOnIntersect
 	}
 }
 
+/**
+ * Vertical arrow between two messages
+ */
 @injectable()
 export class AnchorEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
 	protected override renderAdditionals(
@@ -522,6 +567,9 @@ export class AnchorEdgeView extends PolylineEdgeViewWithGapsOnIntersections {
 	}
 }
 
+/**
+ * Renders a "ref" frame: a bordered rectangle with a grey "ref" tab in the top-left corner
+ */
 export class ReferenceEdgeView extends GEdgeView {
 	protected override renderAdditionals(edge: GEdge, segments: Point[], _context: RenderingContext): VNode[] {
 		const additionals = super.renderAdditionals(edge, segments, _context);
@@ -565,6 +613,10 @@ export class ReferenceEdgeView extends GEdgeView {
 	}
 }
 
+/**
+ * Renders a combined fragment group: a semi-transparent filled rectangle with a labeled tab, an outer border,
+ * and dashed separator lines for ELSE
+ */
 export class GroupsView extends GEdgeView {
 	protected override renderAdditionals(edge: GEdge, segments: Point[], _context: RenderingContext): VNode[] {
 		const additionals = super.renderAdditionals(edge, segments, _context);
@@ -628,6 +680,9 @@ export class GroupsView extends GEdgeView {
 	}
 }
 
+/**
+ * Renders a note shape attached to the sequence diagram
+ */
 export class NoteEdgeView extends GEdgeView {
 	protected override renderAdditionals(edge: GEdge, segments: Point[], _context: RenderingContext): VNode[] {
 		const additionals = super.renderAdditionals(edge, segments, _context);

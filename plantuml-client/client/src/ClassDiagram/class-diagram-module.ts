@@ -1,3 +1,10 @@
+/*
+ * File: class-diagram-module.ts
+ * Author: Norman Babiak
+ * Description: Module file for class diagram, registering and initializing DI container
+ * Date: 29.4.2026
+ */
+
 import {
     bindAsService,
     bindOrRebind,
@@ -17,12 +24,9 @@ import {
 } from "@eclipse-glsp/client";
 
 import {
-    GLSPDiagramWidget,
-    GLSPDiagramWidgetFactory,
     VSCODE_DEFAULT_MODULES
 } from "@eclipse-glsp/vscode-integration-webview";
 
-import {PlantUmlGLSPDiagramWidget} from "../plantuml-diagram-widget";
 import {PlantUmlToolPalette} from "../plantuml-tool-palette";
 import {BrEditLabelUI, HtmlLabelView} from "../utils-common";
 
@@ -53,13 +57,17 @@ import {
 } from "./class-package-view";
 import '../../css/diagram.css';
 
+const EDITABLE_FIXED_LABEL = { enable: [editLabelFeature, selectFeature], disable: [moveFeature] };
+const EDITABLE_MOVABLE_LABEL = { enable: [editLabelFeature, selectFeature, moveFeature] };
+const SELECTABLE_EDGE = { enable: [selectFeature] };
+
+/**
+ * Module function for class diagram, registering necessary components, node and edge views.
+ */
 export const ClassDiagramModule = new FeatureModule(
     (bind, unbind, isBound, rebind) => {
         const context = { bind, unbind, isBound, rebind };
-        console.log("CLASS DIAGRAM MODULE FRONTEND");
 
-        bindOrRebind(context, GLSPDiagramWidget).to(PlantUmlGLSPDiagramWidget).inSingletonScope();
-        bindOrRebind(context, GLSPDiagramWidgetFactory).toFactory(context => () => context.container.get<PlantUmlGLSPDiagramWidget>(GLSPDiagramWidget));
         bindAsService(context, TYPES.ICommandPaletteActionProvider, RevealNamedElementActionProvider);
         bindAsService(context, TYPES.IContextMenuItemProvider, DeleteElementContextMenuItemProvider);
         bindOrRebind(context, TYPES.IUIExtension).to(BrEditLabelUI).inSingletonScope().whenTargetNamed(EditLabelUI.ID);
@@ -76,19 +84,19 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, "entity:lollipop", GNode, LollipopEntityView);
         configureModelElement(context, "entity:invis", GNode, InvisibleEntityView);
 
-        configureModelElement(context, "link", GEdge, ClassLinkView, {enable: [selectFeature]});
-        configureModelElement(context, "link:note", GEdge, SimpleNoteEdgeView, {enable: [selectFeature]});
+        configureModelElement(context, "link", GEdge, ClassLinkView, SELECTABLE_EDGE);
+        configureModelElement(context, "link:note", GEdge, SimpleNoteEdgeView, SELECTABLE_EDGE);
 
-        configureModelElement(context, "label:entityName", GLabel, EntityLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature]});
-        configureModelElement(context, "label:stereotype", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature]});
-        configureModelElement(context, "label:method", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
-        configureModelElement(context, "label:field", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
-        configureModelElement(context, "label:body", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
-        configureModelElement(context, "label:generic", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
-        configureModelElement(context, "label:note", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:entityName", GLabel, EntityLabelView, EDITABLE_FIXED_LABEL);
+        configureModelElement(context, "label:stereotype", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
+        configureModelElement(context, "label:method", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
+        configureModelElement(context, "label:field", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
+        configureModelElement(context, "label:body", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
+        configureModelElement(context, "label:generic", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
+        configureModelElement(context, "label:note", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
         configureModelElement(context, "label:invis", GLabel, HiddenLabelView);
-        configureModelElement(context, "label:link", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature, moveFeature]});
-        configureModelElement(context, "label:html", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:link", GLabel, HtmlLabelView, EDITABLE_MOVABLE_LABEL);
+        configureModelElement(context, "label:html", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
 
         configureModelElement(context, 'package-folder', GCompartment, PackageFolderView);
         configureModelElement(context, 'package-rectangle', GCompartment, PackageRectangleView);
@@ -98,10 +106,13 @@ export const ClassDiagramModule = new FeatureModule(
         configureModelElement(context, 'package-cloud', GCompartment, PackageCloudView);
 
         configureModelElement(context, 'comp:header', GCompartment, PackageHeaderView);
-        configureModelElement(context, "label:heading", GLabel, HtmlLabelView, { enable: [editLabelFeature, selectFeature], disable: [moveFeature] });
+        configureModelElement(context, "label:heading", GLabel, HtmlLabelView, EDITABLE_FIXED_LABEL);
     }
 );
 
+/**
+ * Creates and initializes the DI container for the class diagram with all required GLSP modules and the class diagram feature module.
+ */
 export function initializeClassContainer(container: Container, ...containerConfiguration: ContainerConfiguration): Container {
     return initializeDiagramContainer(
         container,

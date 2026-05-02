@@ -1,19 +1,38 @@
+/*
+ * File: utils-common.tsx
+ * Author: Norman Babiak
+ * Description: Common utility functions like label views and node view argument extraction
+ * Date: 1.5.2026
+ */
+
 import {VNode} from "snabbdom";
 import {EditLabelUI, GLabel, GLabelView, GNode, IViewArgs, RenderingContext, svg} from "@eclipse-glsp/client";
 import {injectable} from "inversify";
 
+/**
+ * Custom label editor that supports multi-line editing via a textarea with Shift+Enter for newlines
+ */
 @injectable()
 export class BrEditLabelUI extends EditLabelUI {
+    /**
+     * Returns true for all labels except group labels, which are single-line only
+     */
     private isMultilineLabel(): boolean {
         const id = this.label?.id ?? '';
         return !id.startsWith('group-');  // Groups do not have multiline label/comment/separator
     }
 
+    /**
+     * Returns a textarea for multi-line labels or a plain input for single-line ones
+     */
     public override get editControl(): HTMLInputElement | HTMLTextAreaElement {
         // Check if input or text area is needed for label/multiline
         return this.isMultilineLabel() ? this.textAreaElement : this.inputElement;
     }
 
+    /**
+     * Extends the default setup with auto-resizing behavior and Shift+Enter newline insertion
+     */
     protected override configureAndAdd(
         element: HTMLInputElement | HTMLTextAreaElement,
         container: HTMLElement
@@ -41,6 +60,9 @@ export class BrEditLabelUI extends EditLabelUI {
         requestAnimationFrame(() => this.autoSizeEditor());
     }
 
+    /**
+     * Replaces "<br>" tags with real newlines for display in the editor, and positions the cursor at the end
+     */
     protected override applyTextContents(): void {
         if (!this.label) return;
         // To display multilines instead of simple <br>
@@ -64,12 +86,18 @@ export class BrEditLabelUI extends EditLabelUI {
         requestAnimationFrame(() => this.autoSizeEditor());
     }
 
+    /**
+     * Converts real newlines back to "<br>" before passing the value to the GLSP label edit action
+     */
     protected override async applyLabelEdit(): Promise<void> {
         this.editControl.value = this.editControl.value
             .replace(/\r?\n/g, '<br>');
         await super.applyLabelEdit();
     }
 
+    /**
+     * Inserts text at the current cursor position, replacing any selected text
+     */
     private insertAtCursor(el: HTMLInputElement | HTMLTextAreaElement, text: string): void {
         const start = el.selectionStart ?? 0;
         const end   = el.selectionEnd ?? 0;
@@ -78,6 +106,9 @@ export class BrEditLabelUI extends EditLabelUI {
         el.setSelectionRange(pos, pos);
     }
 
+    /**
+     * Adjusts the textarea's width and height to fit its content, eliminating scrollbars
+     */
     private autoSizeEditor(): void {
         if (!(this.editControl instanceof HTMLTextAreaElement)) return;
         const ta = this.editControl;
@@ -90,6 +121,10 @@ export class BrEditLabelUI extends EditLabelUI {
     }
 }
 
+/**
+ * Generic HTML label view used across both diagram types. Renders multi-line text with inline formatting parsed from PlantUML Creole/HTML markup,
+ * with optional visibility shape and line numbering
+ */
 @injectable()
 export class HtmlLabelView extends GLabelView {
     override render(label: Readonly<GLabel>, context: RenderingContext, args?: IViewArgs): VNode {
@@ -99,6 +134,7 @@ export class HtmlLabelView extends GLabelView {
         const isField = (label as any).args?.isField ?? false;
         const text = label.text ?? '';
 
+        // Convert numbering and text through the Creole/HTML parser
         const numLines = num ? TspanConverter(num) : [];
         const textLines = TspanConverter(text);
 
@@ -106,6 +142,7 @@ export class HtmlLabelView extends GLabelView {
         const max = Math.max(numLines.length, textLines.length);
         const initialY = max > 1 ? "10" : "0";
 
+        // Merge numbering and text spans into tspan elements, one per line
         for (let i = 0; i < max; i++) {
             const numSpans = numLines[i] ?? [];
             const textSpans = textLines[i] ?? [];
@@ -140,6 +177,9 @@ export class HtmlLabelView extends GLabelView {
     }
 }
 
+/**
+ * Renders a UML visibility indicator shape
+ */
 export function renderVisibilityShape(visibility: string | undefined, isField: boolean | undefined): VNode | null {
     if (!visibility) return null;
 
@@ -189,6 +229,9 @@ export function renderVisibilityShape(visibility: string | undefined, isField: b
     }
 }
 
+/**
+ * Parses a PlantUML Creole/HTML formatted string into an array of lines, where each line is an array of styled tspan VNodes.
+ */
 export function TspanConverter(html: string): VNode[][] {
     type Style = { //TODO: Add more styles according to plantuml
         bold?: boolean;
@@ -199,6 +242,7 @@ export function TspanConverter(html: string): VNode[][] {
     const result: VNode[][] = [];
     let currentLine: VNode[] = [];
 
+    /** Creates a tspan VNode with the current top-of-stack style applied */
     const applyStyle = (text: string) => {
         if (!text) return;
         const style = stack[stack.length - 1];
@@ -215,6 +259,9 @@ export function TspanConverter(html: string): VNode[][] {
         );
     };
 
+    /** Applies a style modifier recursively to all existing spans on the current line and all styles in the stack.
+     * Used for {abstract} and {static} which affect the entire line.
+     */
     const applyLineModifier = (styleKey: 'italic' | 'underline') => {
         // Update base style
         stack[0] = { ...stack[0], [styleKey]: true };
@@ -230,6 +277,7 @@ export function TspanConverter(html: string): VNode[][] {
 
             if (styleKey === 'italic') {
                 newAttrs['font-style'] = 'italic';
+
             } else if (styleKey === 'underline') {
                 newAttrs['text-decoration'] = 'underline';
             }
@@ -263,6 +311,7 @@ export function TspanConverter(html: string): VNode[][] {
             continue;
         }
 
+        // Newline starts a new line of tspan arrays
         if (token === '\n') {
             result.push(currentLine);
             currentLine = [];
@@ -286,6 +335,7 @@ export function TspanConverter(html: string): VNode[][] {
                 const colorMatch = token.match(/color=['"]?([^'">]+)/i);
                 if (colorMatch) {
                     currentStyle.color = colorMatch[1];
+
                 } else {
                     throw new Error("Error: Wrong usage of <font. Use: <font color=color");
                 }
@@ -305,6 +355,9 @@ export function TspanConverter(html: string): VNode[][] {
     return result;
 }
 
+/**
+ * Renders a circle icon for stereotypes and class diagram object types with a letter in it and background color specified
+ */
 export function createIcon(width: number, background: String, stereotypeChar: String) {
     const iconRadius = 8;
     const iconCenterX = -width / 2 + iconRadius + 2; // 2px padding from left edge
@@ -335,6 +388,9 @@ export function createIcon(width: number, background: String, stereotypeChar: St
     );
 }
 
+/**
+ * Shared layout dimensions for sequence diagram participant nodes
+ */
 export interface NodeViewArgs {
     w: number;
     h: number;
@@ -349,6 +405,9 @@ export interface NodeViewArgs {
     cx: number;
 }
 
+/**
+ * Extracts common layout arguments from a sequence diagram participant node, computing label height, lifeline span, and center X
+ */
 export function getNodeArgs(node: Readonly<GNode>): NodeViewArgs {
     const w = node.size.width;
     const h = node.size.height;

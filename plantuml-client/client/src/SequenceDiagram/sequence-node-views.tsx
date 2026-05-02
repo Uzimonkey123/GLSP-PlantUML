@@ -1,3 +1,10 @@
+/*
+ * File: sequence-node-views.tsx
+ * Author: Norman Babiak
+ * Description: Node views for sequence diagram
+ * Date: 30.4.2026
+ */
+
 import {injectable} from "inversify";
 import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
@@ -5,6 +12,9 @@ import {getNodeArgs} from "../utils-common";
 
 /** @jsx svg */
 
+/**
+ * Rectangular node view on top and bottom
+ */
 @injectable()
 export class RectangularNodeView extends ShapeView {
     override render(
@@ -49,6 +59,9 @@ export class RectangularNodeView extends ShapeView {
     }
 }
 
+/**
+ * Actor, stick man, node view on top and bottom
+ */
 @injectable()
 export class ActorNodeView extends ShapeView {
     override render(
@@ -119,6 +132,9 @@ export class ActorNodeView extends ShapeView {
     }
 }
 
+/**
+ * Boundary node view on top and bottom
+ */
 @injectable()
 export class BoundaryNodeView extends ShapeView {
     override render(
@@ -207,6 +223,9 @@ export class BoundaryNodeView extends ShapeView {
     }
 }
 
+/**
+ * Control node view on top and bottom
+ */
 @injectable()
 export class ControlNodeView extends ShapeView {
     override render(
@@ -293,6 +312,9 @@ export class ControlNodeView extends ShapeView {
     }
 }
 
+/**
+ * Entity node view on top and bottom
+ */
 @injectable()
 export class EntityNodeView extends ShapeView {
     override render(
@@ -371,6 +393,9 @@ export class EntityNodeView extends ShapeView {
     }
 }
 
+/**
+ * Database node view on top and bottom
+ */
 @injectable()
 export class DatabaseNodeView extends ShapeView {
     override render(
@@ -485,6 +510,9 @@ export class DatabaseNodeView extends ShapeView {
     }
 }
 
+/**
+ * Collection node view on top and bottom
+ */
 @injectable()
 export class CollectionNodeView extends ShapeView {
     override render(node: Readonly<GNode>, context: RenderingContext): VNode {
@@ -549,6 +577,9 @@ export class CollectionNodeView extends ShapeView {
     }
 }
 
+/**
+ * Queue node view on top and bottom
+ */
 @injectable()
 export class QueueNodeView extends ShapeView {
     override render(node: Readonly<GNode>, context: RenderingContext): VNode {
@@ -650,6 +681,9 @@ export class QueueNodeView extends ShapeView {
     }
 }
 
+/**
+ * Life event rectangle on the dashed line of nodes
+ */
 export class LifeEventBar extends ShapeView {
     override render(
         node: Readonly<GNode>,
@@ -671,6 +705,9 @@ export class LifeEventBar extends ShapeView {
     }
 }
 
+/**
+ * Destroy cross for keyword "destroy"
+ */
 export class DestroyCross extends ShapeView {
     override render(
         node: Readonly<GNode>,
@@ -690,6 +727,9 @@ export class DestroyCross extends ShapeView {
     }
 }
 
+/**
+ * Box view coupling nodes together of sequence diagram
+ */
 export class EngloberView extends ShapeView {
     override render(
         node: Readonly<GNode>,
@@ -716,6 +756,9 @@ export class EngloberView extends ShapeView {
     }
 }
 
+/**
+ * Mainframe, a nameable rectangle around the whole diagram
+ */
 export class MainframeView extends ShapeView {
     override render(
         node: Readonly<GNode>,

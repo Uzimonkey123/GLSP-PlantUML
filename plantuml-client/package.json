@@ -4,6 +4,11 @@
   "displayName": "PlantUML GLSP Diagram Editor",
   "version": "1.0.0",
   "private": true,
+  "license": "GPL-2.0-only WITH Classpath-exception-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Uzimonkey123/GLSP-PlantUML"
+  },
   "main": "./extension/dist/extension.js",
   "workspaces": [
     "client",

@@ -1,3 +1,10 @@
+/*
+ * File: link-views.ts
+ * Author: Norman Babiak
+ * Description: File with functions to render different types of links for class diagram
+ * Date: 29.4.2026
+ */
+
 import {injectable} from 'inversify';
 import {
     GEdge, GNode, IViewArgs,
@@ -19,6 +26,9 @@ import {
 
 const edgeControlPointOverrides = new Map<string, Point>();
 
+/**
+ * Renders a straight line segment between two points, shortening both ends to leave room for arrow heads.
+ */
 function drawLine(start: Point, end: Point, args: ClassEdgeArgs): {path: VNode; result: {startPos: Point; endPos: Point; angle: number}} {
     const dx = end.x - start.x;
     const dy = end.y - start.y;
@@ -53,6 +63,9 @@ function drawLine(start: Point, end: Point, args: ClassEdgeArgs): {path: VNode; 
     };
 }
 
+/**
+ * Draws a straight edge with optional arrow heads at both endpoints.
+ */
 function drawSimpleArrow(start: Point, end: Point, args: ClassEdgeArgs): VNode[] {
     const {path, result} = drawLine(start, end, args);
     const vnodes: VNode[] = [path];
@@ -72,6 +85,9 @@ function wrapInEdgeGroup(children: VNode[]): VNode {
     </g>;
 }
 
+/**
+ * Renders a cubic Bézier self-loop that exits and re-enters the right side of the source entity, stacking multiple loops outward by index.
+ */
 function renderSelfLoop(ctx: LinkRenderContext): VNode {
     const {edge, source, args} = ctx;
     const additionals: VNode[] = [];
@@ -84,6 +100,7 @@ function renderSelfLoop(ctx: LinkRenderContext): VNode {
     const index = args.selfLoopIndex ?? 0;
     const total = args.selfLoopTotal ?? 1;
 
+    // Message width so loops dont overlap
     const messageLabel = edge.children?.find(child => child.type === 'label:link') as any;
     const messageText = messageLabel?.text ?? '';
     const charWidth = 7;
@@ -92,14 +109,17 @@ function renderSelfLoop(ctx: LinkRenderContext): VNode {
         ? messageText.length * charWidth + labelPadding
         : 40;
 
+    // Wiider for outer loops
     const baseBulge = 25;
     const bulgeSpacing = labelWidth + 8;
     const bulge = baseBulge + (total - 1 - index) * bulgeSpacing;
 
+    // Vertical distance between entry and exit points
     const baseSpread = Math.min(height * 0.15, 12);
     const spreadStep = 8;
     const spread = baseSpread + (total - 1 - index) * spreadStep;
 
+    // For member links
     const centerY = y + height / 2;
     const anchorY1 = args.sourceMember
         ? y + CurvedEdgeRenderer.getMemberYOffset(source, args.sourceMember)
@@ -115,6 +135,7 @@ function renderSelfLoop(ctx: LinkRenderContext): VNode {
     const controlPoint1: Point = {x: anchorX + bulge, y: anchorY1};
     const controlPoint2: Point = {x: anchorX + bulge, y: anchorY2};
 
+    // Tangent vectors at curve endpoints
     const startTangentX = controlPoint1.x - start.x;
     const startTangentY = controlPoint1.y - start.y;
     const startTangentLen = Math.hypot(startTangentX, startTangentY) || 1;
@@ -128,6 +149,7 @@ function renderSelfLoop(ctx: LinkRenderContext): VNode {
     const startHeadSize = ArrowHeadRenderer.getSize(args.headStart) * args.thickness;
     const endHeadSize = ArrowHeadRenderer.getSize(args.headEnd) * args.thickness;
 
+    // Shorten path ends inward along tangent to leave room for arrow heads
     const pathStart = {
         x: start.x + (startTangentX / startTangentLen) * startHeadSize,
         y: start.y + (startTangentY / startTangentLen) * startHeadSize
@@ -158,6 +180,9 @@ function renderSelfLoop(ctx: LinkRenderContext): VNode {
     return wrapInEdgeGroup(additionals);
 }
 
+/**
+ * Renders an edge that connects specific members within two entities, using a curve when anchors are on the same side.
+ */
 function renderMemberLink(ctx: LinkRenderContext): VNode {
     const {source, target, args} = ctx;
     const additionals: VNode[] = [];
@@ -203,16 +228,21 @@ function renderMemberLink(ctx: LinkRenderContext): VNode {
     return wrapInEdgeGroup(additionals);
 }
 
+/**
+ * Renders one of several parallel edges between the same pair of entities, curving outer edges and allowing manual control-point overrides.
+ */
 function renderParallelLink(ctx: LinkRenderContext): VNode {
     const {edge, source, target, args} = ctx;
     const additionals: VNode[] = [];
 
+    // Compute shifted anchors so parallel edges don't overlap
     const index = args.parallelIndex!;
     const totalCount = args.parallelTotal!;
     const {sourceAnchor, targetAnchor, offset} = AnchorCalculator.getParallelAnchors(source, target, index, totalCount);
     const flipCurve = offset < 0;
     const isOuter = totalCount > 2 && (index === 0 || index === totalCount - 1);
 
+    // If the user has manually dragged the control point, use that override
     if (edgeControlPointOverrides.has(edge.id)) {
         const controlPoint = edgeControlPointOverrides.get(edge.id)!;
         renderBezier(sourceAnchor, targetAnchor, controlPoint, args, additionals);
@@ -222,6 +252,7 @@ function renderParallelLink(ctx: LinkRenderContext): VNode {
         return wrapInEdgeGroup(additionals);
     }
 
+    // automatic curve with a drag handle at the peak
     if (isOuter) {
         renderCurvedParallel(sourceAnchor, targetAnchor, flipCurve, args, additionals);
 
@@ -230,7 +261,7 @@ function renderParallelLink(ctx: LinkRenderContext): VNode {
             additionals.push(renderHandle(edge.id, peak));
         }
 
-    } else {
+    } else { // straight line with a drag handle at the midpoint
         additionals.push(...drawSimpleArrow(sourceAnchor, targetAnchor, args));
 
         if (edge.selected) {
@@ -242,6 +273,9 @@ function renderParallelLink(ctx: LinkRenderContext): VNode {
     return wrapInEdgeGroup(additionals);
 }
 
+/**
+ * Draws the curved path and arrow heads for an outer parallel edge using a quadratic offset curve.
+ */
 function renderCurvedParallel(sourceAnchor: Point, targetAnchor: Point, flipCurve: boolean, args: ClassEdgeArgs, additionals: VNode[]) {
     const curveData = CurvedEdgeRenderer.calculateCurveWithTangents(sourceAnchor, targetAnchor, flipCurve);
     const startHeadSize = ArrowHeadRenderer.getSize(args.headStart) * args.thickness;
@@ -275,6 +309,9 @@ function renderCurvedParallel(sourceAnchor: Point, targetAnchor: Point, flipCurv
     if (endHead) additionals.push(endHead);
 }
 
+/**
+ * Draws a quadratic Bézier edge through a given control point with arrow heads at both ends.
+ */
 function renderBezier(sourceAnchor: Point, targetAnchor: Point, controlPoint: Point, args: ClassEdgeArgs, additionals: VNode[]) {
     const startToControlX = controlPoint.x - sourceAnchor.x;
     const startToControlY = controlPoint.y - sourceAnchor.y;
@@ -318,6 +355,9 @@ function renderBezier(sourceAnchor: Point, targetAnchor: Point, controlPoint: Po
     if (endHead) additionals.push(endHead);
 }
 
+/**
+ * Computes the midpoint peak of an automatic curve by offsetting perpendicular to the source–target line.
+ */
 function getAutoCurvePeak(source: Point, target: Point, flipCurve: boolean): Point {
     const midX = (source.x + target.x) / 2;
     const midY = (source.y + target.y) / 2;
@@ -329,11 +369,15 @@ function getAutoCurvePeak(source: Point, target: Point, flipCurve: boolean): Poi
     const sign = flipCurve ? -1 : 1;
 
     return {
+        // sign decides which side of the line the peak lands on, Dividing by dist normalizes perpendicular to a unit vector
         x: midX + sign * (-dy / dist) * dist * EDGE_CONFIG.curve.offsetRatio,
         y: midY + sign * (dx / dist) * dist * EDGE_CONFIG.curve.offsetRatio
     };
 }
 
+/**
+ * Renders a draggable control-point handle for interactive edge bending.
+ */
 function renderHandle(edgeId: string, position: Point): VNode {
     const {radius, hitRadius} = EDGE_CONFIG.handle;
 
@@ -345,6 +389,9 @@ function renderHandle(edgeId: string, position: Point): VNode {
     );
 }
 
+/**
+ * Renders an edge involving at least one diamond-shaped entity, snapping anchors to the closest diamond tip.
+ */
 function renderDiamondLink(ctx: LinkRenderContext): VNode {
     const {source, target, args} = ctx;
 
@@ -365,6 +412,9 @@ function renderDiamondLink(ctx: LinkRenderContext): VNode {
     return wrapInEdgeGroup(drawSimpleArrow(sourceAnchor, targetAnchor, args));
 }
 
+/**
+ * Renders a standard straight edge between two entities with optional qualifier boxes at either endpoint.
+ */
 function renderSimpleLink(ctx: LinkRenderContext): VNode {
     const {source, target, args} = ctx;
     const additionals: VNode[] = [];
@@ -392,6 +442,10 @@ function renderSimpleLink(ctx: LinkRenderContext): VNode {
     return wrapInEdgeGroup(additionals);
 }
 
+/**
+ * Renders a labeled qualifier box adjacent to an anchor point, positioned on whichever entity side the anchor is closest to,
+ * and returns the shifted anchor.
+ */
 function renderQualifierBox(text: string, anchorPoint: Point, entity: GNode): {box: VNode; anchor: Point} {
     const {padding, lineHeight, charWidth, gap} = EDGE_CONFIG.qualifier;
     const boxWidth = text.length * charWidth + padding * 2;
@@ -456,6 +510,9 @@ function renderQualifierBox(text: string, anchorPoint: Point, entity: GNode): {b
     return {box, anchor: {x: newAnchorX, y: newAnchorY}};
 }
 
+/**
+ * Main edge view for class diagram links. Dispatches rendering to specialized functions based on edge type
+ */
 @injectable()
 export class ClassLinkView extends PolylineEdgeView {
     override render(edge: GEdge, context: RenderingContext, args?: IViewArgs): VNode | undefined {

@@ -1,10 +1,21 @@
+/*
+ * File: class-entity-views.tsx
+ * Author: Norman Babiak
+ * Description: Entity views for class diagrams
+ * Date: 29.4.2026
+ */
+
 import {injectable} from "inversify";
-import {GNode, IViewArgs, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
+import {GNode, RenderingContext, ShapeView, svg} from "@eclipse-glsp/client";
 import {VNode} from "snabbdom";
 import {getTypeConfig} from "./class-views";
 
 /** @jsx svg */
 
+/**
+ * Main entity view for standard class diagram entities. Renders a rectangular box with header, field, and method compartments
+ * separated by horizontal lines. Supports stereotypes, generics, and advanced body layouts with custom separators.
+ */
 @injectable()
 export class EntityView extends ShapeView {
     override render(
@@ -29,6 +40,7 @@ export class EntityView extends ShapeView {
         const hasStereotype = !!stereotypeLabel;
         const headerH = hasStereotype ? 44 : 30;
 
+        // If body labels contain separator lines, use the advanced rendering
         if (this.hasSeparator(bodyLabels)) {
             return this.renderAdvanced(context, w, h, background, nameLabel, stereotypeLabel, bodyLabels, headerH, lineHeight);
         }
@@ -37,6 +49,7 @@ export class EntityView extends ShapeView {
             ? fieldLabels.length * lineHeight + padding * 2
             : minSectionHeight;
 
+        // Generic type parameter box (dashed rectangle in the top-right corner)
         const genericText = genericNameLabel ? ((genericNameLabel as any).text || '') : '';
         const charWidth = 7;
         const boxPadding = 10;
@@ -89,6 +102,9 @@ export class EntityView extends ShapeView {
         </g>;
     }
 
+    /**
+     * Renders the circular stereotype icon
+     */
     private renderIcon(nameLabel: any): VNode {
         const type = (nameLabel as any).args?.type;
         const stereotypeChar = (nameLabel as any).args?.stereotypeChar;
@@ -127,6 +143,9 @@ export class EntityView extends ShapeView {
         </g>;
     }
 
+    /**
+     * Checks whether any body label starts with a PlantUML separator pattern
+     */
     private hasSeparator(bodyLabels: any[]): boolean {
         for (const label of bodyLabels) {
             const text = (label as any).text || '';
@@ -139,6 +158,9 @@ export class EntityView extends ShapeView {
         return false;
     }
 
+    /**
+     * Renders an entity with free-form body sections divided by PlantUML separator lines, instead of the standard field/method split.
+     */
     private renderAdvanced(context: RenderingContext, w: number, h: number,
                            background: string, nameLabel: any, stereotypeLabel: any,
                            bodyLabels: any[], headerH: number, lineHeight: number): VNode {
@@ -176,6 +198,9 @@ export class EntityView extends ShapeView {
         </g>;
     }
 
+    /**
+     * Renders a horizontal separator line from a PlantUML separator pattern. Supports solid, dotted , double , and thick styles
+     */
     private renderSeparator(text: string, y: number, w: number): VNode | null {
         const trimmed = text.trim();
 
@@ -228,6 +253,9 @@ export class EntityView extends ShapeView {
         </g>;
     }
 
+    /**
+     * Maps a separator character to its SVG line properties
+     */
     private getSeparatorLineProps(type: string, y: number) {
         switch (type) {
             case '-':
@@ -244,6 +272,9 @@ export class EntityView extends ShapeView {
     }
 }
 
+/**
+ * Renders a diamond shape, used for association class
+ */
 @injectable()
 export class DiamondEntityView extends ShapeView {
     override render(
@@ -268,6 +299,9 @@ export class DiamondEntityView extends ShapeView {
     }
 }
 
+/**
+ * Renders a circle entity with label under it
+ */
 @injectable()
 export class CircleEntityView extends ShapeView {
     override render(
@@ -298,6 +332,9 @@ export class CircleEntityView extends ShapeView {
     }
 }
 
+/**
+ * Renders a lollipop, which is a small circle, for provided interfaces, with label below.
+ */
 @injectable()
 export class LollipopEntityView extends ShapeView {
     override render(
@@ -328,6 +365,9 @@ export class LollipopEntityView extends ShapeView {
     }
 }
 
+/**
+ * Small filled dot for association point on link
+ */
 @injectable()
 export class AssociationPointView extends ShapeView {
     override render(node: GNode, context: RenderingContext): VNode | undefined {
@@ -347,6 +387,9 @@ export class AssociationPointView extends ShapeView {
     }
 }
 
+/**
+ * Basic note view of PlantUML notes
+ */
 export class NoteEntityView extends ShapeView {
     override render(node: GNode, context: RenderingContext): VNode {
         const width = node.size.width;
@@ -394,6 +437,9 @@ export class NoteEntityView extends ShapeView {
     }
 }
 
+/**
+ * Invisible nodes that must be in the graph model because of layout, but not visible
+ */
 @injectable()
 export class InvisibleEntityView extends ShapeView {
     override render(node: GNode, context: RenderingContext): VNode | undefined {

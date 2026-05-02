@@ -1,3 +1,10 @@
+/*
+ * File: extension.ts
+ * Author: Norman Babiak
+ * Description: VS Code extension entry point
+ * Date: 2.5.2026
+ */
+
 import 'reflect-metadata';
 import * as vscode from 'vscode';
 import * as net from 'net';
@@ -26,14 +33,14 @@ const RETRY_INTERVAL = 500;
 let serverProcess: ChildProcess | undefined;
 let languageClient: LanguageClient | undefined;
 
+/**
+ * Main activation entry point. Launches the GLSP server process, connects to it with WebSocket, starts the LSP client,
+ * and registers the custom editor provider, commands, and save-triggered model refresh
+ */
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     let server: SocketGlspVscodeServer | undefined;
     let connector: GlspVscodeConnector | undefined;
     let provider: PumlEditorProvider | undefined;
-
-    startLanguageClient(context).catch(err => {
-        console.error('[PlantUML] LSP client failed to start:', err);
-    });
 
     // Running server initialization only once, so reconnect is possible
     const initialized = () => {
@@ -80,6 +87,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         );
     };
 
+    // Ensure the server process is killed when the extension is deactivated
     context.subscriptions.push({
         dispose: () => {
             if (serverProcess) {
@@ -89,16 +97,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
     });
 
+    // Start GLSP server process and LSP at activation time
+    initialized();
+
+    try {
+        await launchServerProcess(context);
+        
+    } catch (err) {
+        console.error('[PlantUML] Server failed to start:', err);
+    }
+
+    // Start the LSP client for diagnostics and completions
+    startLanguageClient(context).catch(err => {
+        console.error('[PlantUML] LSP client failed to start:', err);
+    });
+
     // Command to open .puml in editor
     context.subscriptions.push(
         vscode.commands.registerCommand('plantuml.openPreview', async (uri?: vscode.Uri) => {
             const resource = uri ?? vscode.window.activeTextEditor?.document.uri;
 
-            // Check for server
-            initialized();
-
             try {
-                await launchServerProcess(context);
                 await server!.start();
 
             } catch (err) {
@@ -114,6 +133,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         })
     );
 
+    // On save reveal the diagram panel and request a model refresh from the server after a short delay
     context.subscriptions.push(
         vscode.workspace.onDidSaveTextDocument(async (document) => {
             vscode.window.showInformationMessage(`File saved: ${document.languageId}`);
@@ -137,6 +157,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 }
 
+/**
+ * Starts a standalone LSP client that communicates with the PlantUML language server over stdio. Provides diagnostics
+ * and completions for .puml files
+ */
 async function startLanguageClient(context: vscode.ExtensionContext): Promise<void> {
     const jarPath = path.join(context.extensionPath, 'server', JAR_NAME);
 
@@ -177,6 +201,10 @@ async function startLanguageClient(context: vscode.ExtensionContext): Promise<vo
     }
 }
 
+/**
+ * Spawns the GLSP server JAR as a child process. If the port is already in use, skips spawning and reuses the existing
+ * server. Waits until the port is accepting connections before returning
+ */
 async function launchServerProcess(context: vscode.ExtensionContext): Promise<void> {
     if (serverProcess) {
         return;
@@ -220,6 +248,9 @@ async function launchServerProcess(context: vscode.ExtensionContext): Promise<vo
     await waitForPort(GLSP_PORT, SERVER_READY_TIMEOUT);
 }
 
+/**
+ * Polls a TCP port at regular intervals until a connection succeeds or the timeout expires
+ */
 function waitForPort(port: number, timeout: number): Promise<void> {
     return new Promise((resolve, reject) => {
         const start = Date.now();
@@ -246,6 +277,9 @@ function waitForPort(port: number, timeout: number): Promise<void> {
     });
 }
 
+/**
+ * Stops the LSP language client on extension deactivation
+ */
 export async function deactivate(): Promise<void> {
     if (languageClient) {
         await languageClient.stop();

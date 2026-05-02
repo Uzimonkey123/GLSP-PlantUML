@@ -1,3 +1,10 @@
+/*
+ * File: class-package-view.tsx
+ * Author: Norman Babiak
+ * Description: Package views for class diagram
+ * Date: 29.4.2026
+ */
+
 import { injectable } from 'inversify';
 import { VNode } from 'snabbdom';
 import { RenderingContext, ShapeView, IView } from '@eclipse-glsp/client';
@@ -6,6 +13,9 @@ import { GCompartment } from '@eclipse-glsp/client';
 /** @jsx svg */
 import { svg } from '@eclipse-glsp/client';
 
+/**
+ * Folder view
+ */
 @injectable()
 export class PackageFolderView extends ShapeView {
     render(model: GCompartment, context: RenderingContext): VNode | undefined {
@@ -42,6 +52,9 @@ export class PackageFolderView extends ShapeView {
     }
 }
 
+/**
+ * Simple rectangle view
+ */
 @injectable()
 export class PackageRectangleView extends ShapeView {
     render(model: GCompartment, context: RenderingContext): VNode | undefined {
@@ -66,6 +79,9 @@ export class PackageRectangleView extends ShapeView {
     }
 }
 
+/**
+ * Frame view
+ */
 @injectable()
 export class PackageFrameView extends ShapeView {
     render(model: GCompartment, context: RenderingContext): VNode | undefined {
@@ -97,6 +113,9 @@ export class PackageFrameView extends ShapeView {
     }
 }
 
+/**
+ * Node view
+ */
 @injectable()
 export class PackageNodeView extends ShapeView {
     render(model: GCompartment, context: RenderingContext): VNode | undefined {
@@ -117,7 +136,7 @@ export class PackageNodeView extends ShapeView {
 
         return (
             <g class-sprotty-node={true} class-top-level={isTopLevel}>
-                <path d={topFace}   style={{ fill: background, stroke: stroke, strokeWidth: strokeWidth }} />
+                <path d={topFace} style={{ fill: background, stroke: stroke, strokeWidth: strokeWidth }} />
                 <path d={rightFace} style={{ fill: background, stroke: stroke, strokeWidth: strokeWidth }} />
                 <rect
                     x={0} y={depth} width={frontW} height={frontH}
@@ -133,6 +152,9 @@ export class PackageNodeView extends ShapeView {
     }
 }
 
+/**
+ * Database view
+ */
 @injectable()
 export class PackageDatabaseView extends ShapeView {
     render(model: GCompartment, context: RenderingContext): VNode | undefined {
@@ -156,7 +178,7 @@ export class PackageDatabaseView extends ShapeView {
                     x={0} y={bodyY} width={width} height={bodyH}
                     style={{ fill: background, stroke: 'none' }}
                 />
-                <line x1={0}     y1={bodyY} x2={0}     y2={bodyY + bodyH} style={{ stroke: stroke, strokeWidth: strokeWidth }} />
+                <line x1={0} y1={bodyY} x2={0} y2={bodyY + bodyH} style={{ stroke: stroke, strokeWidth: strokeWidth }} />
                 <line x1={width} y1={bodyY} x2={width} y2={bodyY + bodyH} style={{ stroke: stroke, strokeWidth: strokeWidth }} />
                 <ellipse cx={cx} cy={bodyY + bodyH} rx={rx} ry={ry}
                          style={{ fill: background, stroke: stroke, strokeWidth: strokeWidth }} />
@@ -170,6 +192,9 @@ export class PackageDatabaseView extends ShapeView {
     }
 }
 
+/**
+ * Cloud view
+ */
 @injectable()
 export class PackageCloudView extends ShapeView {
     render(model: GCompartment, context: RenderingContext): VNode | undefined {
@@ -203,6 +228,9 @@ export class PackageCloudView extends ShapeView {
     }
 }
 
+/**
+ * Header view to support name positioning for packages
+ */
 @injectable()
 export class PackageHeaderView implements IView {
     render(model: GCompartment, context: RenderingContext): VNode | undefined {

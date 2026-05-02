@@ -1,3 +1,10 @@
+/*
+ * File: utils.tsx
+ * Author: Norman Babiak
+ * Description: Utility functions for arrow rendering and edge creation, calculation
+ * Date: 29.4.2026
+ */
+
 import { GNode, Point, svg } from '@eclipse-glsp/client';
 import { VNode } from 'snabbdom';
 import {
@@ -7,6 +14,9 @@ import {
 
 /** @jsx svg */
 
+/**
+ * Returns the SVG stroke-dasharray value corresponding to a PlantUML line style
+ */
 export function getStrokeDashArray(style: LineStyle): string {
     switch (style) {
         case 'DASHED': return '5,5';
@@ -15,11 +25,20 @@ export function getStrokeDashArray(style: LineStyle): string {
     }
 }
 
+/**
+ * Utility object for rendering arrow heads at edge endpoints, looking up head sizes, and computing angles between two points.
+ */
 export const ArrowHeadRenderer = {
+    /**
+     * Returns the reserved space that a given arrow head type has along the edge.
+     */
     getSize(kind: ArrowHead): number {
         return ARROW_SIZES[kind] ?? 0;
     },
 
+    /**
+     * Renders an SVG path for the given arrow head type
+     */
     render(kind: ArrowHead, position: Point, angle: number, color: string, thickness: number): VNode | null {
         if (kind === 'none') return null;
         const path = ARROW_PATHS[kind];
@@ -36,12 +55,21 @@ export const ArrowHeadRenderer = {
         );
     },
 
+    /**
+     * Computes the angle in degrees from start to end
+     */
     getAngle(start: Point, end: Point): number {
         return Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
     }
 };
 
+/** ň
+ * Utility object for computing anchor points on entity boundaries
+ */
 export const AnchorCalculator = {
+    /**
+     * Dispatches to diamond or rectangle boundary calculation depending on the entity shape.
+     */
     getBoundaryPoint(node: GNode, refX: number, refY: number): Point {
         if (isDiamondEntity(node)) {
             return this.getDiamondBoundaryPoint(node, refX, refY);
@@ -50,6 +78,9 @@ export const AnchorCalculator = {
         return this.getRectangleBoundaryPoint(node, refX, refY);
     },
 
+    /**
+     * Finds the point where a ray from the rectangle's center toward intersects the rectangle boundary.
+     */
     getRectangleBoundaryPoint(node: GNode, refX: number, refY: number): Point {
         const cx = node.position.x + node.size.width / 2;
         const cy = node.position.y + node.size.height / 2;
@@ -69,6 +100,9 @@ export const AnchorCalculator = {
         return {x: cx + t * dx, y: cy + t * dy};
     },
 
+    /**
+     * Returns the four tip points of a diamond-shaped entity
+     */
     getDiamondTips(node: GNode): { top: Point; right: Point; bottom: Point; left: Point } {
         const x = node.position.x, y = node.position.y;
         const w = node.size.width, h = node.size.height;
@@ -80,6 +114,9 @@ export const AnchorCalculator = {
         };
     },
 
+    /**
+     * Picks the diamond tip whose quadrant contains the reference point.
+     */
     getClosestDiamondTip(node: GNode, refX: number, refY: number): Point {
         const tips = this.getDiamondTips(node);
         const cx = node.position.x + node.size.width / 2;
@@ -120,6 +157,9 @@ export const AnchorCalculator = {
         return this.getClosestDiamondTip(node, refX, refY);
     },
 
+    /**
+     * Finds where a ray hits a line segment, or null if it misses. Used to attach edges to diamond walls
+     */
     lineRayIntersection(ox: number, oy: number, dx: number, dy: number, p1: Point, p2: Point): Point | null {
         const ex = p2.x - p1.x, ey = p2.y - p1.y;
         const denom = dx * ey - dy * ex;
@@ -136,6 +176,10 @@ export const AnchorCalculator = {
         return null;
     },
 
+    /**
+     * Slides a boundary anchor point along the entity edge by a perpendicular offset, clamping to stay within the entity bounds
+     * Used to separate parallel edges
+     */
     slideBoundaryPoint(node: GNode, base: Point, perpX: number, perpY: number, offset: number): Point {
         const left = node.position.x, top = node.position.y;
         const right = left + node.size.width, bottom = top + node.size.height;
@@ -150,16 +194,22 @@ export const AnchorCalculator = {
         return { x: Math.max(left, Math.min(right, base.x + perpX * offset)), y: base.y };
     },
 
+    /**
+     * Computes separated source/target anchor points for one edge in a parallel bundle. Handles all combinations of
+     * rectangle and diamond entities
+     */
     getParallelAnchors(source: GNode, target: GNode, index: number, totalCount: number) {
         const srcCx = source.position.x + source.size.width / 2;
         const srcCy = source.position.y + source.size.height / 2;
         const tgtCx = target.position.x + target.size.width / 2;
         const tgtCy = target.position.y + target.size.height / 2;
 
+        // Perpendicular to the center-to-center line
         const dx = tgtCx - srcCx, dy = tgtCy - srcCy;
         const len = Math.sqrt(dx * dx + dy * dy) || 1;
         const perpX = -dy / len, perpY = dx / len;
 
+        // Offset from the bundle center
         const middle = (totalCount - 1) / 2;
         const offset = (index - middle) * EDGE_CONFIG.parallel.spacing;
 

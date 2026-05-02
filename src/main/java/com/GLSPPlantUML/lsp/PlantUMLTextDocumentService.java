@@ -28,15 +28,25 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
     private CompositeValidator compositeValidator;
     private boolean initialized = false;
 
-    // TODO: Better diagram recognize
     private static final Pattern DIAGRAM_TYPE_PATTERN = Pattern.compile(
-            "\\b(class|interface|enum|abstract|package|namespace)\\b"
+            "\\b(class|interface|enum|abstract|annotation|dataclass|entity|exception"
+                    + "|metaclass|protocol|record|stereotype|struct)\\b"
+                    + "|\\b(package|namespace|rectangle|node|cloud|database"
+                    + "|frame|storage|component|folder)\\b"
                     + "|\\{\\s*([+\\-#~])"
                     + "|--|>|\\.\\.\\|>"
                     + "|--\\*|--o"
+                    + "|<\\|--|<\\|\\.\\."
+                    + "|\\.\\.[>]|--[>]"
+                    + "|o--|\\*--"
+                    + "|\\bdiamond\\b|\\bcircle\\b|<>"
                     + "|<<\\w+>>"
                     + "|\\{field}|\\{method}"
                     + "|\\{static}|\\{abstract}"
+                    + "|\\b[A-Za-z_]\\w*\\s*:\\s*\\S"
+                    + "|^\\s*-{2,}\\s*$|^\\s*[.]{2,}\\s*$|^\\s*={2,}\\s*$|^\\s*_{2,}\\s*$"
+                    + "|\\b(hide|show)\\s+(empty|members|fields|methods|circle|stereotype)"
+                    + "|\\bleft\\s+to\\s+right\\s+direction\\b"
     );
 
     public PlantUMLTextDocumentService(PlantUMLLanguageServer server) {

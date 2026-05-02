@@ -1,3 +1,10 @@
+/*
+ * File: curved-edge-views.ts
+ * Author: Norman Babiak
+ * Description: File with curved edge calculations, mirroring server side code
+ * Date: 29.4.2026
+ */
+
 import { GNode, Point } from '@eclipse-glsp/client';
 import { VNode } from 'snabbdom';
 import { svg } from '@eclipse-glsp/client';
@@ -18,6 +25,9 @@ interface EdgeStyle {
     color: string;
 }
 
+/**
+ * Normalizes a 2D vector to unit length
+ */
 const normalize = (x: number, y: number): Point => {
     const len = Math.hypot(x, y) || 1;
     return { x: x / len, y: y / len };
@@ -26,6 +36,9 @@ const normalize = (x: number, y: number): Point => {
 export class CurvedEdgeRenderer {
     private static curveDirectionMap = new Map<string, boolean>();
 
+    /**
+     * Returns the Y offset of a member, scanning fields then methods by label text. Falls back to vertical center if not found.
+     */
     public static getMemberYOffset(entity: GNode, memberName: string | null | undefined): number {
         if (!memberName || memberName.trim() === '') {
             return entity.size.height / 2;
@@ -34,11 +47,13 @@ export class CurvedEdgeRenderer {
         const lineHeight = 14;
         const padding = 5;
 
+        // Header height depending on stereotype presence
         const nameLabel = entity.children?.find(child => child.type === 'label:entityName');
         const hasStereotype = nameLabel && (nameLabel as any).args?.stereotypeName &&
             (nameLabel as any).args.stereotypeName.length > 0;
         const headerH = hasStereotype ? 44 : 30;
 
+        // Fields first
         const fieldLabels = entity.children?.filter(child => child.type === 'label:field') || [];
         for (let i = 0; i < fieldLabels.length; i++) {
             const fieldText = (fieldLabels[i] as any).text || '';
@@ -51,6 +66,7 @@ export class CurvedEdgeRenderer {
             }
         }
 
+        // Offset below method line
         const methodLabels = entity.children?.filter(child => child.type === 'label:method') || [];
         const fieldCount = fieldLabels.length;
         const fieldH = fieldCount > 0 ? fieldCount * lineHeight + padding * 2 : 10;
@@ -69,6 +85,9 @@ export class CurvedEdgeRenderer {
         return entity.size.height / 2;
     }
 
+    /**
+     * Computes the anchor point on the left or right edge of an entity at the Y offset of the given member.
+     */
     public static calculateMemberAnchorPoint(
         entity: GNode,
         memberName: string | null | undefined,
@@ -86,6 +105,10 @@ export class CurvedEdgeRenderer {
         };
     }
 
+    /**
+     * Like calculateMemberAnchorPoint, but automatically picks the entity side closest to the other entity's center
+     * unless forceRight is specified.
+     */
     public static calculateMemberAnchorPointClosest(
         entity: GNode,
         otherEntity: GNode,
@@ -119,6 +142,9 @@ export class CurvedEdgeRenderer {
         };
     }
 
+    /**
+     * Returns the ordinal index of a member within the entity, used for curve direction alternation.
+     */
     public static getMemberIndex(entity: GNode, memberName: string | null | undefined): number {
         if (!memberName || memberName.trim() === '') {
             return 0;
@@ -154,6 +180,10 @@ export class CurvedEdgeRenderer {
         return 0;
     }
 
+    /**
+     * Determines anchors, curve necessity, and curve direction for a member-to-member link. Vertically arranged entities
+     * get curves that alternate sides by member index
+     */
     public static determineMemberLinkStyle(
         source: GNode,
         target: GNode,
@@ -190,13 +220,13 @@ export class CurvedEdgeRenderer {
         let needsCurve: boolean;
 
         if (isVerticallyArranged) {
-
+            // Vertically stacked, alternate exit side by member index, always curve
             const exitRight = memberIndex % 2 === 0;
             sourceExitsRight = exitRight;
             targetExitsRight = exitRight;
             needsCurve = true;
 
-        } else {
+        } else { // Side by side, exit toward each other, straight line
             sourceExitsRight = targetCenterX > sourceCenterX;
             targetExitsRight = sourceCenterX > targetCenterX;
 
@@ -235,6 +265,10 @@ export class CurvedEdgeRenderer {
         };
     }
 
+    /**
+     * Assigns a deterministic curve direction for a given entity pair and member combination, caching the result so
+     * repeated renders stay stable.
+     */
     public static determineCurveDirection(
         source: GNode,
         target: GNode,
@@ -285,6 +319,10 @@ export class CurvedEdgeRenderer {
         return { flipCurve, curveToRight };
     }
 
+    /**
+     * Builds a cubic Bézier path between two points with control points offset perpendicular to the line. Returns the SVG
+     * path string and unit tangent vectors at both endpoints
+     */
     public static calculateCurveWithTangents(
         start: Point,
         end: Point,
@@ -294,6 +332,7 @@ export class CurvedEdgeRenderer {
         const dy = end.y - start.y;
         const dist = Math.hypot(dx, dy);
 
+        // Bulge and control points matching server calculations in diagrams/ClassDiagram/utils/CurvedEdgeCalculator.java
         const sign = flip ? -1 : 1;
         const perp = normalize(-dy * sign, dx * sign);
         const bulge = dist * 0.3;
@@ -314,6 +353,9 @@ export class CurvedEdgeRenderer {
         };
     }
 
+    /**
+     * Renders a curved SVG path element from precomputed CurveData, applying stroke style and color
+     */
     public static renderCurvedPath(
         curveData: CurveData,
         style: EdgeStyle
@@ -336,6 +378,9 @@ export class CurvedEdgeRenderer {
         );
     }
 
+    /**
+     * Computes arrow head positions and rotation angles at both ends of a curve by stepping inward along the tangent vectors by the head size
+     */
     public static calculateArrowTransforms(
         sourceAnchor: Point,
         targetAnchor: Point,

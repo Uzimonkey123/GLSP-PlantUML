@@ -1,4 +1,11 @@
-import { GEdge, GNode, IViewArgs, Point, RenderingContext } from '@eclipse-glsp/client';
+/*
+ * File: types.ts
+ * Author: Norman Babiak
+ * Description: File for holding types for edge calculations and configs in class diagram
+ * Date: 29.4.2026
+ */
+
+import { GEdge, GNode, IViewArgs, RenderingContext } from '@eclipse-glsp/client';
 
 export const EDGE_CONFIG = {
     handle: {radius: 5, hitRadius: 10},
