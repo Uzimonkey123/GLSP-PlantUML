@@ -37,8 +37,11 @@ public abstract class AbstractPlantUMLStorage<M, S extends PlantUMLModelState<M>
         }
 
         String uriString = uriOpt.get();
+        System.err.println(uriString);
         modelState.setSourceUri(uriString);
-        final File file = new File(java.net.URI.create(uriString));
+
+        String encoded = uriString.replace(" ", "%20");
+        final File file = new File(java.net.URI.create(encoded));
 
         try {
             M model = pumlParser.parse(file);

@@ -5,6 +5,14 @@ TARGET_JAR="target/GLSPPlantUML-1.0-SNAPSHOT.jar"
 SERVER_DIR="plantuml-client/server"
 CLIENT_DIR="plantuml-client"
 
+if [ -f "./mvnw" ]; then
+    MVN="./mvnw"
+    echo "[maven] Using Maven Wrapper (mvnw)"
+else
+    MVN="mvn"
+    echo "[maven] Using system Maven (mvn)"
+fi
+
 SKIP_TESTS=false
 BUILD_CLIENT=false
 PACKAGE_VSIX=false
@@ -36,11 +44,10 @@ done
 
 if [ "$SKIP_TESTS" = true ]; then
     echo "[1/2] Building server (skip tests)..."
-    mvn clean package -DskipTests
-
+    $MVN clean package -DskipTests
 else
     echo "[1/2] Building server (with tests)..."
-    mvn clean package
+    $MVN clean package
 fi
 
 echo "[2/2] Copying JAR to $SERVER_DIR..."

@@ -5,6 +5,14 @@ set TARGET_JAR=target\GLSPPlantUML-1.0-SNAPSHOT.jar
 set SERVER_DIR=plantuml-client\server
 set CLIENT_DIR=plantuml-client
 
+if exist "mvnw.cmd" (
+    set MVN=call mvnw.cmd
+    echo [maven] Using Maven Wrapper - mvnw.cmd
+) else (
+    set MVN=call mvn
+    echo [maven] Using system Maven - mvn
+)
+
 if "%1"=="-h" goto :help
 if "%1"=="--help" goto :help
 if "%1"=="-s" goto :skip
@@ -13,31 +21,31 @@ if "%1"=="-f" goto :full
 if "%1"=="-p" goto :package
 
 echo [1/2] Building server (with tests)
-call mvn clean package
+%MVN% clean package
 if %ERRORLEVEL% neq 0 ( echo Maven build failed! & exit /b 1 )
 goto :copy
 
 :skip
 echo [1/2] Building server (skip tests)
-call mvn clean package -DskipTests
+%MVN% clean package -DskipTests
 if %ERRORLEVEL% neq 0 ( echo Maven build failed! & exit /b 1 )
 goto :copy
 
 :client
 echo [1/2] Building server (with tests)
-call mvn clean package
+%MVN% clean package
 if %ERRORLEVEL% neq 0 ( echo Maven build failed! & exit /b 1 )
 goto :copyclient
 
 :full
 echo [1/2] Building server (skip tests)
-call mvn clean package -DskipTests
+%MVN% clean package -DskipTests
 if %ERRORLEVEL% neq 0 ( echo Maven build failed! & exit /b 1 )
 goto :copyclient
 
 :package
 echo [1/4] Building server (skip tests)
-call mvn clean package -DskipTests
+%MVN% clean package -DskipTests
 if %ERRORLEVEL% neq 0 ( echo Maven build failed! & exit /b 1 )
 echo [2/4] Copying JAR to %SERVER_DIR%
 copy /Y "%TARGET_JAR%" "%SERVER_DIR%\" >nul
