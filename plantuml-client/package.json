@@ -1,7 +1,7 @@
 {
-  "name": "plantuml-glsp",
+  "name": "plantuml-visual-editor",
   "publisher": "NormanBabiak",
-  "displayName": "PlantUML GLSP Diagram Editor",
+  "displayName": "PlantUML Visual Diagram Editor",
   "version": "1.0.0",
   "private": true,
   "license": "GPL-2.0-only WITH Classpath-exception-2.0",
