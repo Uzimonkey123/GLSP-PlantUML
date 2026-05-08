@@ -2,7 +2,7 @@
  * File: SequenceGroupFactory.java
  * Author: Norman Babiak
  * Description: Factory for creating group outlines, separator lines, and their labels
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
@@ -58,6 +58,9 @@ public class SequenceGroupFactory {
         return out;
     }
 
+    /**
+     * Creates group rectangles, labels, and separator lines for all groups
+     */
     public void createGroups() {
         SequenceModel model = ctx.getModel();
         Map<String, Double> centre = ctx.getCentre();
@@ -142,6 +145,9 @@ public class SequenceGroupFactory {
         ctx.getElements().addAll(tempElements);
     }
 
+    /**
+     * Calculates separator Y positions from message indices
+     */
     private void calculateSeparatorY(SequenceGroup seqGroup, SequenceModel model, List<Double> messagesYPos) {
         for (Integer separatorIndex : seqGroup.getSeparatorList()) {
             SequenceMessage separatorMsg = model.messages.get(separatorIndex);
@@ -151,6 +157,9 @@ public class SequenceGroupFactory {
         }
     }
 
+    /**
+     * Creates label elements for each else/also separator
+     */
     private void createSeparatorLabels(SequenceGroup seqGroup, double x1) {
         for (int i = 0; i < separatorYPos.size(); i++) {
             if (!seqGroup.getSeparatorLabel().get(i).isEmpty()) {
@@ -164,12 +173,18 @@ public class SequenceGroupFactory {
         }
     }
 
+    /**
+     * Calculates label height from message line count
+     */
     private int calculateLabelHeight(SequenceMessage msg) {
         String[] lines = msg.getMessage().split("<br>");
 
         return lines.length * lineHeight;
     }
 
+    /**
+     * Finds the min/max X across all messages in the group
+     */
     private void calculateMinMax(SequenceGroup seqGroup, SequenceModel model, Map<String, Double> centre) {
         for (int i = seqGroup.getStartIndex(); i < seqGroup.getEndIndex(); i++) {
             SequenceMessage message = model.messages.get(i);
@@ -188,6 +203,9 @@ public class SequenceGroupFactory {
         }
     }
 
+    /**
+     * Adjusts x2 for nested vs outer groups to prevent overlap
+     */
     private double calculateX2(boolean isNested, boolean nestedOuter, int nestingPadding, double x2) {
         if (isNested) { // For nested we need to always save the x2 so the more outer group can use it
             globalMaxX = Math.max(globalMaxX, x2);

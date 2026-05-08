@@ -16,6 +16,9 @@ import com.diagrams.ClassDiagram.state.ClassModelState;
 
 import java.util.*;
 
+/**
+ * Placeholder class, since routing points are not changed in the implementation of the tool
+ */
 public class ChangeRoutingPointsHandler implements OperationHandler<ChangeRoutingPointsOperation> {
 
     @Inject

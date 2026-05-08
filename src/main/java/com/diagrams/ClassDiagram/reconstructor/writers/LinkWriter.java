@@ -2,7 +2,7 @@
  * File: LinkWriter.java
  * Author: Norman Babiak
  * Description: Writes modified links back to source
- * Date: 31.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor.writers;
@@ -26,6 +26,9 @@ public class LinkWriter {
         this.ctx = ctx;
     }
 
+    /**
+     * Rewrites all links that have been modified or whose entities were renamed
+     */
     public void write() {
         for (ClassLink link : ctx.getModel().links) {
             boolean linkModified = link.isModified() || link.getMessage().isModified()
@@ -60,6 +63,9 @@ public class LinkWriter {
         return link.getEntity1().getType().equals("ASSOCIATION_POINT") || link.getEntity2().getType().equals("ASSOCIATION_POINT");
     }
 
+    /**
+     * Rewrites an association class link by finding the two real entities connected through the association point
+     */
     private void writeAssociationLink(ClassLink link, String indent) {
         // Find which end is the invisible association point
         ClassEntity assoc = link.getEntity1().getType().equals("ASSOCIATION_POINT")
@@ -93,6 +99,9 @@ public class LinkWriter {
         }
     }
 
+    /**
+     * Finds the source line containing the "(EntityA, EntityB)" association class syntax
+     */
     private int findAssociationLine(ClassEntity a, ClassEntity b) {
         List<String> sourceLines = ctx.getSourceLines();
 
@@ -107,6 +116,9 @@ public class LinkWriter {
         return -1;
     }
 
+    /**
+     * Updates only the entity name references in a link line without rebuilding the full arrow syntax
+     */
     private void rewriteLinkEntityReferences(ClassLink link, int lineNum) {
         String current = ctx.getEffectiveLine(lineNum);
 
@@ -141,6 +153,9 @@ public class LinkWriter {
         }
     }
 
+    /**
+     * Builds a complete link line from a ClassLink: entity tokens, member refs, qualifiers, arrow, quantifiers, and label
+     */
     private String buildLinkLine(ClassLink link) {
         StringBuilder sb = new StringBuilder();
         String e1Token = getLinkTokenFromLine(link.getEntity1(), link.getSourceLineStart());
@@ -203,6 +218,9 @@ public class LinkWriter {
         return sb.toString();
     }
 
+    /**
+     * Builds a link line from two entities directly, used for association class rewrites
+     */
     private String buildLinkLineFromEntities(ClassEntity e1, ClassEntity e2,
                                              ClassLabel q1, ClassLabel q2,
                                              ClassLabel message, ClassLink link) {
@@ -232,6 +250,9 @@ public class LinkWriter {
         return sb.toString();
     }
 
+    /**
+     * Builds the arrow string from decorators, line style, color, thickness, and bracket overrides
+     */
     private String buildClassArrow(ClassLink link) {
         StringBuilder sb = new StringBuilder();
 
@@ -283,6 +304,9 @@ public class LinkWriter {
         return sb.toString();
     }
 
+    /**
+     * Resolves the entity token from the original source line, preserving namespace prefixes and member refs
+     */
     private String getLinkTokenFromLine(ClassEntity entity, int lineNum) {
         String line = ctx.getEffectiveLine(lineNum);
 

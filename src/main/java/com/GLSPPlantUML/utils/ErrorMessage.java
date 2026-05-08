@@ -17,6 +17,9 @@ public class ErrorMessage {
         this.message = message;
     }
 
+    /**
+     * Builds a GLabel to represent the error message in the diagram instead of rendering the diagram
+     */
     public GModelElement buildError() {
         return new GLabelBuilder("label:html")
                 .position(0, 0)

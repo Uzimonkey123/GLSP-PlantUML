@@ -2,7 +2,7 @@
  * File: ClassModelStorage.java
  * Author: Norman Babiak
  * Description: Storage for the model, handles loading and saving of the diagram
- * Date: 30.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.storage;
@@ -27,6 +27,9 @@ public class ClassModelStorage extends AbstractPlantUMLStorage<ClassModel, Class
         super.loadSourceModel(action);
     }
 
+    /**
+     * Creates writer and according to the changes in the model rewrites the source model and saves it into the same file
+     */
     @Override
     public void saveSourceModel(SaveModelAction action) {
         try {

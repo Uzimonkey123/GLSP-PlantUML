@@ -2,7 +2,7 @@
  * File: SequenceLabelValidator.java
  * Author: Norman Babiak
  * Description: Label validator, ensuring there are no duplicates in participants after renaming
- * Date: 2.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.validator;
@@ -20,6 +20,9 @@ public class SequenceLabelValidator implements LabelEditValidator {
     @Inject
     protected GModelState modelState;
 
+    /**
+     * Checks periodically when the rewriting is happening, if the given label is empty or contains same name as another object
+     */
     @Override
     public ValidationStatus validate(final String label, final GModelElement element) {
         if (label == null || label.trim().isEmpty()) {

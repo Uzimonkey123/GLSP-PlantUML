@@ -2,7 +2,7 @@
  * File: SequenceLifeEventFactory.java
  * Author: Norman Babiak
  * Description: Factory for creating life event bars
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
@@ -26,6 +26,9 @@ public class SequenceLifeEventFactory {
         this.leBuild = new LifeEventBuild();
     }
 
+    /**
+     * Creates life event bars and destroy crosses for all participants
+     */
     public void createSequenceLifeEvents() {
         Map<String, Double> centre = ctx.getCentre();
         List<Double> lifeEventYPos = ctx.getLifeEventYPos();

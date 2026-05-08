@@ -3,7 +3,7 @@
  * Author: Norman Babiak
  * Description: Writes message lines including regular messages, delays, dividers, references, and return statements.
  *              Also reconstructs arrow syntax.
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.reconstructor.writers;
@@ -66,6 +66,9 @@ public class MessageWriter {
         };
     }
 
+    /**
+     * Builds a regular message line with participant tokens, arrow syntax, and label
+     */
     private String buildRegularMessage(SequenceMessage message) {
         StringBuilder sb = new StringBuilder();
 
@@ -93,14 +96,18 @@ public class MessageWriter {
         }
 
         sb.append(ReconstructorHelper.extractLifeEventSymbol(message.getRawSourceText()));
-        sb.append(": ");
-        sb.append(message.getMessage());
+
+        if(!message.getMessage().isEmpty()) {
+            sb.append(": ");
+            sb.append(message.getMessage());
+        }
 
         return sb.toString();
     }
 
-    // ========== Reference ==========
-
+    /**
+     * Builds a "ref over" line, using block syntax for multi-line content
+     */
     private String buildReference(SequenceMessage message) {
         StringBuilder sb = new StringBuilder("ref over ");
 
@@ -129,6 +136,9 @@ public class MessageWriter {
         return sb.toString();
     }
 
+    /**
+     * Reconstructs the arrow syntax from head, decoration, and color properties
+     */
     private String buildArrow(SequenceMessage message) {
         StringBuilder sb = new StringBuilder();
 

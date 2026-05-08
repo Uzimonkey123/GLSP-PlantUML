@@ -2,7 +2,7 @@
  * File: ClassLinkFactory.java
  * Author: Norman Babiak
  * Description: Creates GModel edge elements and positions labels for class diagram links.
- * Date: 31.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.factory.ClassParts;
@@ -54,6 +54,9 @@ public class ClassLinkFactory {
         this.noteCalculator = new NoteCalculator();
     }
 
+    /**
+     * Main entry point: builds parallel groups, creates edge elements with offset indices, then creates all associated labels and notes
+     */
     public void createLinks() {
         buildParallelGroups();
 
@@ -115,10 +118,16 @@ public class ClassLinkFactory {
         }
     }
 
+    /**
+     * Returns a stable key for a pair of entity IDs regardless of order
+     */
     private String canonicalPairKey(String id1, String id2) {
         return id1.compareTo(id2) <= 0 ? id1 + "::" + id2 : id2 + "::" + id1;
     }
 
+    /**
+     * Returns [index, total] for a link within its parallel group, or null if it's not in a parallel group
+     */
     private int[] getParallelInfo(ClassLink link) {
         boolean hasMembers = (link.getSourceMember() != null && !link.getSourceMember().isEmpty())
                 || (link.getTargetMember() != null && !link.getTargetMember().isEmpty());
@@ -137,6 +146,9 @@ public class ClassLinkFactory {
         return new int[]{ index, group.size() };
     }
 
+    /**
+     * Returns [index, total] for a self-loop link, or null if the link is not a self-loop
+     */
     private int[] getSelfLoopInfo(ClassLink link) {
         if (link.getEntity1() == null || link.getEntity2() == null) return null;
         if (!link.getEntity1().getId().equals(link.getEntity2().getId())) return null;
@@ -150,6 +162,9 @@ public class ClassLinkFactory {
         return new int[]{ index, group.size() };
     }
 
+    /**
+     * Creates note-style edges for member tooltip notes
+     */
     private void createTipLinks() {
         for (ClassEntityFactory.TipInfo tipInfo : entityFactory.tipInfoList) {
             elements.add(linkBuild.buildTipLinks(tipInfo));
@@ -207,6 +222,9 @@ public class ClassLinkFactory {
         }
     }
 
+    /**
+     * Creates qualifier box labels on the entity boundary closest to the opposite entity
+     */
     private void createQualifierLabels() {
         for (ClassLink link : model.links) {
             boolean hasSrc = !isEmpty(link.getSourceQualifier());
@@ -259,6 +277,9 @@ public class ClassLinkFactory {
         }
     }
 
+    /**
+     * Finds the point where a ray from the entity center toward a reference point exits the entity rectangle
+     */
     private static Point entityBoundaryAnchor(double entityX, double entityY, double entityW, double entityH,
                                               double refX, double refY) {
         double centerX = entityX + entityW / 2;
@@ -331,6 +352,9 @@ public class ClassLinkFactory {
         return new Point(boxX + boxW / 2, boxY + boxH / 2);
     }
 
+    /**
+     * Places message labels at the edge midpoint, adjusting for note-on-link overlap if present
+     */
     private void createMessageLabels() {
         for (ClassLink link : model.links) {
             if (isEmpty(link.getMessage().getLabel())) continue;
@@ -364,6 +388,9 @@ public class ClassLinkFactory {
         }
     }
 
+    /**
+     * Creates note entities attached to links, positioned to avoid crossing the edge line
+     */
     private void createLinkNotes() {
         for (ClassLink link : model.links) {
             if (!link.hasNoteOnLink()) continue;
@@ -439,6 +466,9 @@ public class ClassLinkFactory {
         return s == null || s.isEmpty();
     }
 
+    /**
+     * Returns the arrow head size in pixels for a given decorator type
+     */
     private double getHeadSize(String decorator) {
         if (decorator == null) return 0;
         return switch (decorator) {
@@ -449,6 +479,9 @@ public class ClassLinkFactory {
         };
     }
 
+    /**
+     * Computes note height based on the number of lines in its text
+     */
     private double calculateNoteHeight(String text) {
         int lineHeight = 14;
         int padding = 15;

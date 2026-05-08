@@ -2,12 +2,15 @@
  * File: IndentatHelper.java
  * Author: Norman Babiak
  * Description: Util class for extracting and applying indentation from / to source file in writer
- * Date: 2.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.utils;
 
 public class IndentatHelper {
+    /**
+     * Extracts the starting whitespaces from start of the line
+     */
     public static String extractIndentation(String line) {
         if (line == null || line.isEmpty()) return "";
 
@@ -20,6 +23,9 @@ public class IndentatHelper {
         return line.substring(0, firstNonWhitespace);
     }
 
+    /**
+     * Appends the removed extracted indentation to the beginning of the edited source line to keep it consistent
+     */
     public static String applyIndentation(String content, String indentation) {
         if (indentation.isEmpty()) return content;
 

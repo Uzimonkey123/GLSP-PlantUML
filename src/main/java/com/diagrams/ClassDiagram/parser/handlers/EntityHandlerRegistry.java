@@ -2,7 +2,7 @@
  * File: EntityHandlerRegistry.java
  * Author: Norman Babiak
  * Description: Registry that handles picking of the correct handler according to type
- * Date: 30.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.parser.handlers;
@@ -27,6 +27,9 @@ public class EntityHandlerRegistry {
         );
     }
 
+    /**
+     * Finds the first handler that can process the entity's leaf type and delegates to it
+     */
     public ClassEntity handle(Entity pumlEntity, String id, Package parentPackage) {
         String leafType = pumlEntity.getLeafType().toString();
 

@@ -2,7 +2,7 @@
  * File: ClassDeleteHandler.java
  * Author: Norman Babiak
  * Description: Handler for deleting elements from the diagram
- * Date: 30.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.handler;
@@ -62,6 +62,9 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
                     && !operation.getElementIds().isEmpty();
         }
 
+        /**
+         * Main entrypoint that delegates and finds the given element that was deleted between notes, entities and links
+         */
         @Override
         public void execute() {
             GModelRoot root = modelState.getRoot();
@@ -125,7 +128,7 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
                             associationPointsToDelete.add(other);
 
                         } else {
-                            markAssociationClassLineForDeletion(model, other, entity);
+                            markAssociationClassLineForDeletion(model, entity);
                         }
                     }
 
@@ -141,7 +144,10 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             deleteNotesReferencingEntity(model, entity);
         }
 
-        private void markAssociationClassLineForDeletion(ClassModel model, ClassEntity assocPoint, ClassEntity assocClass) {
+        /**
+         * Marks the association class line that needs to be deleted from source code (entity1, entity2) .. AssocClass
+         */
+        private void markAssociationClassLineForDeletion(ClassModel model, ClassEntity assocClass) {
             ClassLineMapper lineMapper = model.getLineMapper();
             if (lineMapper == null) return;
 
@@ -234,6 +240,9 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             }
         }
 
+        /**
+         * Deletes link from the model, and as well note if one is connected on it
+         */
         private void deleteLink(ClassModel model, ClassLink link) {
             if (link.hasLine()) {
                 model.markLinesForDeletion(link.getSourceLineStart(), link.getSourceLineEnd());
@@ -282,6 +291,9 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             model.entities.remove(note);
         }
 
+        /**
+         * If just note is deleted from the link, find the link and remove the fact that it was once there
+         */
         private void clearNotesFromLink(ClassModel model, ClassEntity note) {
             for (ClassLink link : model.links) {
                 if (link.hasNoteOnLink() && link.getNoteOnLink().getId().equals(note.getId())) {
@@ -332,6 +344,9 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
             }
         }
 
+        /**
+         * Finds the element by its ID and removes it
+         */
         private boolean findAndRemove(GModelElement parent, String id) {
             List<GModelElement> children = new ArrayList<>(parent.getChildren());
             for (GModelElement child : children) {
@@ -355,7 +370,6 @@ public class ClassDeleteHandler implements OperationHandler<DeleteOperation> {
 
         @Override
         public void undo() {
-            // TODO: store removed elements for undo support
         }
 
         @Override

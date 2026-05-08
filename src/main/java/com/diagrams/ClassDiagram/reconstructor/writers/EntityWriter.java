@@ -2,7 +2,7 @@
  * File: EntityWriter.java
  * Author: Norman Babiak
  * Description: Writes modified entities back to source
- * Date: 31.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor.writers;
@@ -27,6 +27,9 @@ public class EntityWriter {
         this.ctx = ctx;
     }
 
+    /**
+     * Iterates over all modified entities and rewrites their declarations, updates name references, and rebuilds standalone member lines
+     */
     public void write() {
         for (ClassEntity entity : ctx.getModel().entities) {
             if (!entity.isModified()) continue;
@@ -39,6 +42,9 @@ public class EntityWriter {
         }
     }
 
+    /**
+     * Rewrites the entity declaration line based on whether it's inline, block, or bare
+     */
     private void writeEntityDeclaration(ClassEntity entity) {
         int start = entity.getSourceLineStart();
         int end = entity.getSourceLineEnd();
@@ -61,11 +67,17 @@ public class EntityWriter {
         }
     }
 
+    /**
+     * Builds a bare entity declaration without a body block
+     */
     private String buildEntityBare(ClassEntity entity) {
         String indent = extractIndentation(entity.getRawSourceText());
         return applyIndentation(buildDeclarationHeader(entity), indent);
     }
 
+    /**
+     * Builds an inline entity with all members on one line inside { }
+     */
     private String buildEntityInline(ClassEntity entity) {
         String indent = extractIndentation(entity.getRawSourceText());
         StringBuilder sb = new StringBuilder(buildDeclarationHeader(entity));
@@ -80,6 +92,9 @@ public class EntityWriter {
         return applyIndentation(sb.toString(), indent);
     }
 
+    /**
+     * Builds a multi-line entity block with one member per line
+     */
     private List<String> buildEntityBlock(ClassEntity entity) {
         String indent = extractIndentation(entity.getRawSourceText());
         List<String> lines = new ArrayList<>();
@@ -94,6 +109,9 @@ public class EntityWriter {
         return lines;
     }
 
+    /**
+     * Builds the declaration header: visibility, keyword, name/alias, generics, stereotype, inheritance, and background
+     */
     private String buildDeclarationHeader(ClassEntity entity) {
         StringBuilder sb = new StringBuilder();
         String vis = entity.getVisibility();
@@ -147,6 +165,9 @@ public class EntityWriter {
         return sb.toString();
     }
 
+    /**
+     * Appends the stereotype (<< (C,color) name >>) to the declaration
+     */
     private void appendStereotype(StringBuilder sb, ClassEntity entity) {
         sb.append(" << ");
         char c = entity.getStereotypeChar();
@@ -195,6 +216,9 @@ public class EntityWriter {
         return keyword + tail;
     }
 
+    /**
+     * Builds a single member line with optional visibility prefix
+     */
     String buildMemberLine(EntityMethod member) {
         StringBuilder sb = new StringBuilder();
 
@@ -221,6 +245,9 @@ public class EntityWriter {
         }
     }
 
+    /**
+     * Replaces old entity name with new token in a single line, handling namespaces and conflicts
+     */
     private void updateReferenceLine(int lineNum, ClassEntity entity) {
         String current = ctx.getEffectiveLine(lineNum);
         String oldName = entity.getOriginalName();

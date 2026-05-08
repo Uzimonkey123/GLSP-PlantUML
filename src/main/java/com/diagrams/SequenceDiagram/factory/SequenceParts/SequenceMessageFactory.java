@@ -2,7 +2,7 @@
  * File: SequenceMessageFactory.java
  * Author: Norman Babiak
  * Description: Factory for creating message edges, references, labels, anchors, and delegating note creation
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
@@ -56,6 +56,9 @@ public class SequenceMessageFactory {
         elements = ctx.getElements();
     }
 
+    /**
+     * Creates all message edges, references, and notes, plus anchor markers
+     */
     public void createEdges() {
         SequenceModel model = ctx.getModel();
 
@@ -85,6 +88,9 @@ public class SequenceMessageFactory {
         }
     }
 
+    /**
+     * Creates a single message edge with source/target coordinates and its label
+     */
     private void createEdge(int msgIndex) {
         SequenceNode sourceNode;
         SequenceNode targetNode;
@@ -128,6 +134,9 @@ public class SequenceMessageFactory {
         createMsgLabel(msgIndex, sourceId, targetId, x1, x2);
     }
 
+    /**
+     * Creates a reference box spanning from/to participants
+     */
     private void createReference(int msgIndex) {
         String from = msg.getFromId();
         String to = msg.getToId();
@@ -154,6 +163,9 @@ public class SequenceMessageFactory {
         createMsgLabel(msgIndex, from, to, x1, x2);
     }
 
+    /**
+     * Creates and positions the message label between source and target
+     */
     private void createMsgLabel(int msgIndex, String routingOne, String routingTwo, double x1, double x2) {
         double labelShift;
         double y = messagesYPos.get(msgIndex);
@@ -183,6 +195,9 @@ public class SequenceMessageFactory {
         elements.add(msgBuild.buildMsgLabel(msg, msgIndex, y, labelShift, labelYOffset));
     }
 
+    /**
+     * Pushes/pops anchor start/end markers and creates anchor elements on end
+     */
     private void setupAnchors(int msgIndex) {
         double y = messagesYPos.get(msgIndex);
         // If message is an anchor start, get the top Y coordinate of it
@@ -208,6 +223,9 @@ public class SequenceMessageFactory {
         }
     }
 
+    /**
+     * Calculates the X coordinate for a message endpoint, adjusting for life event bars
+     */
     private double setX(String participant, int msgIndex, boolean isStart, boolean leftToRight) {
         double lifeEventBar = 6;
         double lifeEventOffset = 4;
@@ -233,6 +251,9 @@ public class SequenceMessageFactory {
         }
     }
 
+    /**
+     * Calculates the X coordinate for self-message endpoints, handling nested activation levels
+     */
     private double setSelfX(String participant, int msgIndex, boolean isStart) {
         double lifeEventBar = 6;
         double lifeEventOffset = 4;

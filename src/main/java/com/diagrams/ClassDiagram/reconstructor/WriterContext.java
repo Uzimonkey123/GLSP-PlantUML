@@ -2,7 +2,7 @@
  * File: WriterContext.java
  * Author: Norman Babiak
  * Description: Shared context for all writer modules
- * Date: 31.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor;
@@ -132,6 +132,9 @@ public class WriterContext {
         return lineNamespaceMap;
     }
 
+    /**
+     * Maps each entity ID to its containing package name
+     */
     private Map<String, String> buildEntityNamespaceMap() {
         Map<String, String> map = new HashMap<>();
 
@@ -156,6 +159,9 @@ public class WriterContext {
         }
     }
 
+    /**
+     * Maps each source line number to the namespace it's inside, tracking brace depth for package/namespace blocks
+     */
     private Map<Integer, String> buildLineNamespaceMap() {
         Map<Integer, String> map = new HashMap<>();
         Deque<String> nsStack = new ArrayDeque<>();
@@ -199,6 +205,9 @@ public class WriterContext {
         return map;
     }
 
+    /**
+     * Checks if another entity in the model shares the same original name
+     */
     public boolean hasNameConflict(ClassEntity entity) {
         String name = entity.getOriginalName();
 
@@ -211,6 +220,9 @@ public class WriterContext {
         return false;
     }
 
+    /**
+     * Returns true if a bare name reference on this line can safely be updated, checking namespace scope when there are name conflicts
+     */
     public boolean shouldUpdateBareReference(int lineNum, ClassEntity entity) {
         if (!hasNameConflict(entity)) {
             return true;
@@ -224,6 +236,9 @@ public class WriterContext {
         return entityNs.equals(lineNs);
     }
 
+    /**
+     * Builds a map of old member reference -> new member reference for all renamed members in the entity
+     */
     public static Map<String, String> buildMemberRefMap(ClassEntity entity) {
         Map<String, String> map = new LinkedHashMap<>();
 
@@ -240,6 +255,9 @@ public class WriterContext {
         return map;
     }
 
+    /**
+     * Finds the new member reference string for a given old reference, or null if unchanged
+     */
     public static String findNewMemberRef(ClassEntity entity, String oldRef) {
         if (isNullOrEmpty(oldRef)) return null;
 

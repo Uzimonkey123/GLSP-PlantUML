@@ -28,6 +28,9 @@ public class SequenceModelStorage extends AbstractPlantUMLStorage<SequenceModel,
         SequenceModel model = modelState.getModel();
     }
 
+    /**
+     * Upon calling the action, it creates the writer and with coordination with the model it rewrites the source code
+     */
     @Override
     public void saveSourceModel(SaveModelAction action) {
         try {

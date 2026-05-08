@@ -2,7 +2,7 @@
  * File: EntityWriter.java
  * Author: Norman Babiak
  * Description: Writes modified page details back to source
- * Date: 31.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor.writers;
@@ -23,6 +23,9 @@ public class PageDetailWriter {
         this.ctx = ctx;
     }
 
+    /**
+     * Rewrites title, header, and footer lines if their modified flags are set
+     */
     public void write() {
         ClassModel model = ctx.getModel();
 
@@ -42,6 +45,9 @@ public class PageDetailWriter {
         }
     }
 
+    /**
+     * Builds the replacement lines for a page detail, using multi-line form if the original spanned multiple lines
+     */
     private List<String> buildPageDetail(String keyword, String content,
                                          int startLine, int endLine) {
         List<String> lines = new ArrayList<>();

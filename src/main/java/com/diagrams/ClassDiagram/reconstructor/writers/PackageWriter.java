@@ -23,6 +23,9 @@ public class PackageWriter {
         this.ctx = ctx;
     }
 
+    /**
+     * Processes packages deepest-first so child renames happen before parent path rebuilds
+     */
     public void write() {
         // Deepest packages first so child renames happen before parent path rebuilds
         List<Package> modified = ctx.getModel().packages.stream()
@@ -41,6 +44,9 @@ public class PackageWriter {
         }
     }
 
+    /**
+     * Replaces the package name in its declaration line
+     */
     private void rewritePackageDeclaration(Package pkg) {
         int lineNum = pkg.getSourceLineStart();
         String line = ctx.getEffectiveLine(lineNum);
@@ -58,6 +64,9 @@ public class PackageWriter {
         }
     }
 
+    /**
+     * Updates all qualified references to this package (parent.child.Entity) across the source
+     */
     private void updatePackageReferences(Package pkg) {
         // Build full qualified path
         String oldPath = buildFullPath(pkg, true);
@@ -79,6 +88,9 @@ public class PackageWriter {
         }
     }
 
+    /**
+     * Replaces old qualified path with new path in a single line
+     */
     private void updatePackageReferenceLine(int lineNum, String oldPath, String newPath) {
         String current = ctx.getEffectiveLine(lineNum);
 

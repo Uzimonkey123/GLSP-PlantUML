@@ -50,6 +50,9 @@ public abstract class EntityHandler {
         return entity;
     }
 
+    /**
+     * Creates the internal ClassEntity from the PlantUML entity
+     */
     protected abstract ClassEntity createEntity(Entity pumlEntity, String id);
 
     /**

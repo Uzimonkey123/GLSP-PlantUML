@@ -2,7 +2,7 @@
  * File: SequenceModelParser.java
  * Author: Norman Babiak
  * Description: Parser to internal model from PlantUML public API
- * Date: 3.4.2026
+ * Date: 8.5.2026
  */
 
 package com.diagrams.SequenceDiagram.parser;
@@ -50,6 +50,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
     @Inject
     public SequenceModelParser() {}
 
+    /**
+     * Parses a PlantUML sequence diagram into the internal model
+     */
     public SequenceModel parse(File file) throws IOException {
         // Read and store original
         String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
@@ -126,6 +129,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
+    /**
+     * Creates and stores a participant node from PlantUML data
+     */
     private void ParticipantHandler(Participant participant, int lineNum) {
         String name = String.join("<br>", participant.getDisplay(false));
         String type = participant.getType().toString();
@@ -163,6 +169,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
+    /**
+     * Processes participant englober hierarchy and assignments
+     */
     private void EngloberHandler(SequenceNode node, ParticipantEnglober englober) {
         if (englober == null) return;
 
@@ -218,6 +227,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         });
     }
 
+    /**
+     * Adds source mapping information to a source element
+     */
     private void addMapperInfo(SourceElement element, int lineNum) {
         if (lineNum >= 0) {
             element.setSourceLines(lineNum, lineNum);
@@ -228,6 +240,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
+    /**
+     * Checks whether a participant already exists in the model
+     */
     private boolean hasParticipant(String name) {
         for (SequenceNode node : model.participants) {
             if (node.getName().equals(name)) {
@@ -238,6 +253,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         return false;
     }
 
+    /**
+     * Inserts a participant into the list based on display order
+     */
     private void addParticipants(List<SequenceNode> participants, SequenceNode node) {
         for (int i = 0; i < participants.size(); i++) {
             int existingOrder = participants.get(i).getOrder();
@@ -316,6 +334,9 @@ public class SequenceModelParser implements PlantUMLParser<SequenceModel> {
         }
     }
 
+    /**
+     * Finds the first source line matching the given line type
+     */
     private int findLineByType(LineMapper.LineType type) {
         List<LineMapper.LineInfo> lines = lineMapper.getLineInfos();
 

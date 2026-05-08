@@ -2,7 +2,7 @@
  * File: PlantUMLServerLauncher.java
  * Author: Norman Babiak
  * Description: Main launcher for the servers and processes
- * Date: 5.4.2026
+ * Date: 5.5.2026
  */
 
 package com.GLSPPlantUML.launcher;
@@ -14,6 +14,11 @@ import org.eclipse.glsp.server.launch.SocketGLSPServerLauncher;
 import org.eclipse.glsp.server.utils.LaunchUtil;
 
 public class PlantUMLServerLauncher {
+
+    /**
+     * Main entry for starting and registering the server, the CLI parser and start it with Websocket mode.
+     * Function sets host and port from the CLI arguments
+     */
     public static void main(String[] args) {
         String processName = "GLSPPlantUML-1.0-SNAPSHOT.jar";
 
@@ -36,11 +41,8 @@ public class PlantUMLServerLauncher {
 
         } catch (ParseException e) {
             e.printStackTrace();
-            System.out.println();
+            System.err.println();
             LaunchUtil.printHelp(processName, PlantUMLCLIParser.getDefaultOptions());
-
-        } catch (NoSuchMethodException e) { // TODO error handling properly
-            throw new RuntimeException(e);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

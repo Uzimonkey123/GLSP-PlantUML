@@ -2,7 +2,7 @@
  * File: LinkGeometry.java
  * Author: Norman Babiak
  * Description: Strategy-based edge geometry for link label and quantifier positioning.
- * Date: 31.3.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.ClassDiagram.utils;
@@ -365,10 +365,16 @@ public class LinkGeometry {
         }
     }
 
+    /**
+     * Creates a self-loop geometry for a link whose source and target are the same entity
+     */
     public EdgeGeometry createSelfLoop(ClassLink link, ClassLayout.Size size, int index, int totalCount) {
         return new SelfLoopEdge(link, size, index, totalCount);
     }
 
+    /**
+     * Creates either a CurvedEdge or StraightEdge
+     */
     public EdgeGeometry create(ClassLink link, ClassLayout.Size srcSize, ClassLayout.Size tgtSize) {
         boolean hasMembers = (link.getSourceMember() != null && !link.getSourceMember().isEmpty())
                 || (link.getTargetMember() != null && !link.getTargetMember().isEmpty());
@@ -381,6 +387,9 @@ public class LinkGeometry {
         }
     }
 
+    /**
+     * Creates a ParallelEdge for one edge in a bundle of parallel links
+     */
     public EdgeGeometry createParallel(ClassLink link, ClassLayout.Size srcSize, ClassLayout.Size tgtSize,
                                        boolean flipCurve, int index, int totalCount) {
         return new ParallelEdge(link, srcSize, tgtSize, flipCurve, index, totalCount);

@@ -2,7 +2,7 @@
  * File: NodeGap.java
  * Author: Norman Babiak
  * Description: Calculator for gaps between nodes regarding label lengths
- * Date: 2.4.2026
+ * Date: 8.5.2026
  */
 
 package com.diagrams.SequenceDiagram.utils;
@@ -28,6 +28,9 @@ public class NodeGap {
         this.nodeGaps = getNodeGaps(model.messages);
     }
 
+    /**
+     * Calculates required gaps between participants based on messages
+     */
     private Map<String, Double> getNodeGaps(List<SequenceMessage> modelMessages) {
         Map<String, Double> finalGaps = new HashMap<>();
         SequenceMessage prevMessage = null;
@@ -60,6 +63,9 @@ public class NodeGap {
         return finalGaps;
     }
 
+    /**
+     * Adds additional spacing to prevent parallel note overlap
+     */
     private void handleParallelNotes(SequenceMessage msg, SequenceMessage prevMessage, String from, Map<String, Double> finalGaps) {
         if (msg.getNotes() == null) return;
 
@@ -86,6 +92,9 @@ public class NodeGap {
         finalGaps.merge(prev + "-" + from, gapWidth, Math::max);
     }
 
+    /**
+     * Creates a normalized map key for participant pairs
+     */
     private String getMapKey(String from, String to) {
         if (from == null) {
             return to;
@@ -98,6 +107,9 @@ public class NodeGap {
         return from.compareTo(to) < 0 ? from + "-" + to : to + "-" + from;
     }
 
+    /**
+     * Returns the calculated gap between two participants
+     */
     public double getGaps(String from, String to) {
         double baseGap = 20;
         return nodeGaps.getOrDefault(getMapKey(from, to), baseGap);

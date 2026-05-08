@@ -2,7 +2,7 @@
  * File: ClassLabelEditHandler.java
  * Author: Norman Babiak
  * Description: Handler for replacing edited labels in the internal model
- * Date: 30.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.handler;
@@ -23,6 +23,9 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
     private GLabel label;
     private ClassModel model;
 
+    /**
+     * Main entrypoint, delegates the operations to the update methods
+     */
     @Override
     public Optional<Command> createCommand(final ApplyLabelEditOperation operation) {
 
@@ -53,10 +56,16 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
                 : commandOf(() -> label.setText(operation.getText()));
     }
 
+    /**
+     * Finds the label in the operation
+     */
     protected Optional<GLabel> findLabel(final ApplyLabelEditOperation operation) {
         return modelState.getIndex().getByClass(operation.getLabelId(), GLabel.class);
     }
 
+    /**
+     * Updates entity and its related labels, methods, fields, stereotypes, generics etc.
+     */
     private void updateEntityLabel(ClassEntity entity, String labelId, String newText) {
         String suffix = labelId.substring(entity.getId().length());
 
@@ -107,6 +116,9 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
         }
     }
 
+    /**
+     * Extracts index from the string
+     */
     private int extractIndex(String suffix, String prefix) {
         try {
             if (!suffix.startsWith(prefix)) {
@@ -121,6 +133,9 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
         }
     }
 
+    /**
+     * Updates the field of the entity
+     */
     private void updateField(ClassEntity entity, int fieldIndex, String newText) {
         if (fieldIndex < 0 || fieldIndex >= entity.getFields().size()) {
             return;
@@ -137,6 +152,9 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
         raw.setMethodName(newText);
     }
 
+    /**
+     * Updates the method of the entity
+     */
     private void updateMethod(ClassEntity entity, int methodIndex, String newText) {
         if (methodIndex < 0 || methodIndex >= entity.getMethods().size()) {
             return;
@@ -154,6 +172,9 @@ public class ClassLabelEditHandler extends GModelOperationHandler<ApplyLabelEdit
         raw.setMethodName(newText);
     }
 
+    /**
+     * Updates raw body entry of the entity to keep consistency with fields/methods
+     */
     private void updateRawBody(ClassEntity entity, int bodyIndex, String newText) {
         if (bodyIndex < 0 || bodyIndex >= entity.getRawBody().size()) {
             return;

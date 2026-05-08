@@ -15,6 +15,9 @@ public class WidthCalculator {
 
     public WidthCalculator() {}
 
+    /**
+     * Calculates the amount of lines
+     */
     private static int calculateMaxLength(String lines) {
         return Arrays.stream(lines.split("<br>"))
                 .map(line -> line.replaceAll(TAG_REGEX, ""))
@@ -23,6 +26,9 @@ public class WidthCalculator {
                 .orElse(0);
     }
 
+    /**
+     * Calculates the length of the line by character, possibility to add padding
+     */
     public static double calculateWidth(String lines, int padding) {
         if (lines == null) {
             return 0;

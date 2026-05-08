@@ -2,7 +2,7 @@
  * File: LineMapper.java
  * Author: Norman Babiak
  * Description: Classifies each line of PlantUML source into a LineType for the parser and writer.
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.reconstructor;
@@ -49,6 +49,9 @@ public class LineMapper {
             System.err.println("Type: " + type);
         }
 
+        /**
+         * Classifies a trimmed line by keyword and arrow pattern matching
+         */
         private LineType determineType(String trimmed) {
             if (trimmed.isEmpty()) return LineType.EMPTY;
 
@@ -114,6 +117,9 @@ public class LineMapper {
             };
         }
 
+        /**
+         * Detects PlantUML sequence diagram arrows using left-to-right and right-to-left regex patterns
+         */
         private boolean containsArrow(String line) {
             String leftToRightPattern =
                     "(\\?|\\[|[ox])?" +

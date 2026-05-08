@@ -5,6 +5,8 @@
  * Date: 28.4.2026
  */
 
+// Test file skeleton generated with assistance from Claude Opus 4.5.
+
 package com.diagrams.ClassDiagram;
 
 import com.diagrams.ClassDiagram.model.ClassModel;
@@ -30,7 +32,6 @@ public abstract class ClassDiagramTestBase {
 
     protected ClassModel model;
     protected ClassLineMapper lineMapper;
-    protected ClassLineFinder lineFinder;
     protected Map<Object, Integer> elementToLineMap;
 
     @BeforeEach
@@ -54,12 +55,6 @@ public abstract class ClassDiagramTestBase {
     protected void createMapper(String resourcePath) {
         String source = loadResource(resourcePath);
         lineMapper = new ClassLineMapper(source, model);
-
-    }
-
-    protected void createFinder(String resourcePath) {
-        createMapper(resourcePath);
-        lineFinder = new ClassLineFinder(lineMapper, elementToLineMap);
 
     }
 

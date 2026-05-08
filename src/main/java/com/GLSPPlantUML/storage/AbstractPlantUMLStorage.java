@@ -30,6 +30,10 @@ public abstract class AbstractPlantUMLStorage<M, S extends PlantUMLModelState<M>
     @Inject
     protected PlantUMLParser<M> pumlParser;
 
+    /**
+     * Loads the source model from the provided uri from client side. Initializes parser and sets the result into the model
+     * @param action
+     */
     public void loadSourceModel(RequestModelAction action) {
         Optional<String> uriOpt = MapUtil.getValue(action.getOptions(), "sourceUri");
         if (uriOpt.isEmpty() || uriOpt.get().isBlank()) {
@@ -37,7 +41,6 @@ public abstract class AbstractPlantUMLStorage<M, S extends PlantUMLModelState<M>
         }
 
         String uriString = uriOpt.get();
-        System.err.println(uriString);
         modelState.setSourceUri(uriString);
 
         String encoded = uriString.replace(" ", "%20");

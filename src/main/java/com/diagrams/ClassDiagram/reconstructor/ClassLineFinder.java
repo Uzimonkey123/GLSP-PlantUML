@@ -2,7 +2,7 @@
  * File: ClassLineFinder.java
  * Author: Norman Babiak
  * Description: Locates model elements in the PlantUML source by line type and content matching.
- * Date: 1.4.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor;
@@ -52,6 +52,9 @@ public class ClassLineFinder {
         return -1;
     }
 
+    /**
+     * Finds the source line for an entity, checking declarations first then falling back to relationship lines
+     */
     public int findEntityLine(String name, Object element) {
         List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
 
@@ -81,6 +84,9 @@ public class ClassLineFinder {
         return -1;
     }
 
+    /**
+     * Finds the first unclaimed relationship line referencing both entity aliases
+     */
     public int findRelationshipLine(String alias1, String alias2, Object element) {
         return searchWithWrap(info ->
                 info.type == ClassLineMapper.LineType.RELATIONSHIP
@@ -88,6 +94,9 @@ public class ClassLineFinder {
                         && relMatchesName(info.originalText, alias2), element);
     }
 
+    /**
+     * Finds a package declaration or implicit package reference in an entity declaration
+     */
     public int findPackageLine(String name, Object element) {
         List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
 
@@ -111,6 +120,9 @@ public class ClassLineFinder {
         return -1;
     }
 
+    /**
+     * Finds the first unclaimed NOTE line whose full content contains the given text
+     */
     public int findNoteLine(String text, Object element) {
         boolean filter = text != null && !text.isEmpty();
         // Normalize <br> to \n for comparison since source uses \n and model uses <br>
@@ -141,6 +153,9 @@ public class ClassLineFinder {
         return fullNote.toString();
     }
 
+    /**
+     * Finds the "end note" line for a multi-line note, or returns the start line for single-line notes
+     */
     public int findNoteEndLine(int noteStartLine, Object element) {
         List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
 
@@ -192,6 +207,9 @@ public class ClassLineFinder {
         this.searchFrom = position;
     }
 
+    /**
+     * Checks if a line contains the entity name, stripping generic params and checking word boundaries
+     */
     static boolean entityMatchesName(String line, String name) {
         if (name == null || name.isEmpty()) return true;
 
@@ -203,6 +221,9 @@ public class ClassLineFinder {
         return wordBoundaryContains(stripped, name);
     }
 
+    /**
+     * Checks if a relationship line references the given name, ignoring label text after ":"
+     */
     static boolean relMatchesName(String line, String name) {
         if (name == null || name.isEmpty()) return true;
 
@@ -222,6 +243,9 @@ public class ClassLineFinder {
         return wordBoundaryContains(stripped, name);
     }
 
+    /**
+     * Checks if a dotted entity name like "com.pkg.Entity" implicitly declares the given package
+     */
     private static boolean implicitPackageMatchesName(String line, String pkgName) {
         if (pkgName == null || pkgName.isEmpty()) return false;
 
@@ -339,6 +363,9 @@ public class ClassLineFinder {
         return -1;
     }
 
+    /**
+     * Claims a line so no other element can match against it
+     */
     private void register(Object element, int line) {
         if (element != null) elementToLineMap.put(element, line);
         claimedLines.add(line);

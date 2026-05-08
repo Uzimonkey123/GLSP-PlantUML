@@ -2,7 +2,7 @@
  * File: ReferenceUpdater.java
  * Author: Norman Babiak
  * Description: Updates entity references or members when changed
- * Date: 31.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor.writers;
@@ -25,6 +25,9 @@ public class ReferenceUpdater {
         this.ctx = ctx;
     }
 
+    /**
+     * Updates "extends/implements OldName" clauses in entity declarations when the parent entity was renamed
+     */
     public void updateInheritanceReferences() {
         Map<String, String> nameChanges = new HashMap<>();
 
@@ -78,6 +81,9 @@ public class ReferenceUpdater {
         }
     }
 
+    /**
+     * Updates "Entity::oldMember" references in relationship, note, and member lines when members have been renamed
+     */
     public void updateMemberReferences() {
         Map<ClassEntity, Map<String, String>> entityMemberMaps = new LinkedHashMap<>();
 

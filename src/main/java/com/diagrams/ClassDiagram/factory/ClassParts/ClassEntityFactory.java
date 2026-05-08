@@ -2,7 +2,7 @@
  * File: ClassEntityFactory.java
  * Author: Norman Babiak
  * Description: Computes entity dimensions, runs layout, and builds GModel elements.
- * Date: 31.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.factory.ClassParts;
@@ -35,6 +35,9 @@ public class ClassEntityFactory {
     public List<TipInfo> tipInfoList = new ArrayList<>();
     private final Map<String, ClassLayout.Size> dimensions = new HashMap<>();
 
+    /**
+     * Holds data for creating a note-style edge from a member tooltip to its parent entity
+     */
     public static class TipInfo {
         public String tipId;
         public String parentEntityId;
@@ -194,6 +197,9 @@ public class ClassEntityFactory {
         entityBuild.buildPageDetails(elements, model, dimensions, model.entities);
     }
 
+    /**
+     * Computes width and height for all top-level packages
+     */
     private void calculatePackageDimensions() {
         // Create maps for entity dimensions
         Map<String, Double> entityWidths = new HashMap<>();
@@ -306,6 +312,9 @@ public class ClassEntityFactory {
         }
     }
 
+    /**
+     * Builds a circle entity and adds it to the element list
+     */
     private void createCircleEntity(ClassEntity entity) {
         double entityWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding);
         double entityHeight = entityLength(entity);
@@ -313,12 +322,18 @@ public class ClassEntityFactory {
         elements.add(entityBuild.buildCircleEntity(entity, entityWidth, entityHeight));
     }
 
+    /**
+     * Builds a diamond entity
+     */
     private void createDiamondEntity(ClassEntity entity) {
         double entityWidth = 30;
 
         elements.add(entityBuild.buildDiamondEntity(entity, entityWidth));
     }
 
+    /**
+     * Builds a lollipop entity
+     */
     private void createLollipop(ClassEntity entity) {
         double entityWidth = 15;
         double entityHeight = 15;
@@ -326,10 +341,16 @@ public class ClassEntityFactory {
         elements.add(entityBuild.buildLollipopEntity(entity, entityWidth, entityHeight));
     }
 
+    /**
+     * Builds an association point and adds it to the element list
+     */
     private void createAssociationPoint(ClassEntity entity) {
         elements.add(entityBuild.buildAssociationPoint(entity));
     }
 
+    /**
+     * Builds a note entity, registers it in the model's notes list, and adds it to the element list
+     */
     private void createNoteEntity(ClassEntity entity) {
         double entityWidth = WidthCalculator.calculateWidth(entity.getName(), horizontalPadding) + 20;
         double entityHeight = calculateNoteHeight(entity.getName());
@@ -338,6 +359,9 @@ public class ClassEntityFactory {
         elements.add(entityBuild.buildNoteEntity(entity, entityWidth, entityHeight));
     }
 
+    /**
+     * Returns the maximum display width among a list of entity members
+     */
     private double entityAttributesLength(List<EntityMethod> attribute) {
         double length = 0;
 
@@ -348,6 +372,9 @@ public class ClassEntityFactory {
         return length;
     }
 
+    /**
+     * Computes the total height of a standard entity by summing header, stereotype, field, and method compartments
+     */
     private double entityLength(ClassEntity entity) {
         int lineHeight = 14;
         int verticalPadding = 5;
@@ -367,6 +394,9 @@ public class ClassEntityFactory {
         return stereotypeHeight + headerHeight + fieldsHeight + methodsHeight;
     }
 
+    /**
+     * Computes note height based on the number of lines in its text
+     */
     private double calculateNoteHeight(String text) {
         int lineHeight = 14;
         int padding = 15;
@@ -374,6 +404,9 @@ public class ClassEntityFactory {
         return lines * lineHeight + padding * 2;
     }
 
+    /**
+     * Computes tooltip note width by finding the longest line
+     */
     private double calculateTipWidth(String tipText) {
         String[] lines = tipText.split("<br>");
         int maxLineLength = 0;
@@ -448,6 +481,9 @@ public class ClassEntityFactory {
         }
     }
 
+    /**
+     * Builds package compartments deepest-first and adds invisible anchor nodes for packages with package links
+     */
     private void createPackages() {
         List<Package> sortedPackages = new ArrayList<>(model.packages);
         sortedPackages.sort(Comparator.comparingInt(Package::getDepth).reversed());

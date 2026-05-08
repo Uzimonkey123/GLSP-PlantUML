@@ -2,7 +2,7 @@
  * File: GroupBuild.java
  * Author: Norman Babiak
  * Description: GModelElement builder for groups and everything related to them
- * Date: 4.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.builders;
@@ -15,6 +15,9 @@ import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import java.util.List;
 
 public class GroupBuild {
+    /**
+     * Builds the baselines around the messages included in the given group.
+     */
     public GModelElement buildGroupOutline(SequenceGroup seqGroup, double x1, double x2, double y1,
                                            double y2, List<Double> separatorYPos, double labelWidth) {
         return new GEdgeBuilder("group")
@@ -32,6 +35,9 @@ public class GroupBuild {
                 .build();
     }
 
+    /**
+     * Builds a GLabel for the label of the group
+     */
     public GModelElement buildGroupLabel(SequenceGroup group, double x1, double y1) {
         return new GLabelBuilder("label:html")
                 .id("group-label-" + group.getStartIndex())
@@ -42,6 +48,9 @@ public class GroupBuild {
                 .build();
     }
 
+    /**
+     * Builds a GLabel for the secondary name, comment of the given group
+     */
     public GModelElement buildGroupComment(SequenceGroup group, double x1, double y1) {
         return new GLabelBuilder("label:html")
                 .id("group-comment-" + group.getStartIndex())
@@ -52,6 +61,9 @@ public class GroupBuild {
                 .build();
     }
 
+    /**
+     * Builds a GLabel for the separator label
+     */
     public GModelElement buildSeparatorLabel(String id, String label, double x1, double y1) {
         return new GLabelBuilder("label:html")
                 .id(id)

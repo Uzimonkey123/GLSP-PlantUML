@@ -2,7 +2,7 @@
  * File: EntityHandlerContext.java
  * Author: Norman Babiak
  * Description: Context for the handlers, handles register, source lines, aliases...
- * Date: 30.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.parser.handlers;
@@ -35,6 +35,9 @@ public class EntityHandlerContext {
         this.entityMap = entityMapping;
     }
 
+    /**
+     * Adds the entity to the model and mapping, applies background color, and assigns it to its package
+     */
     public void register(Entity pumlEntity, ClassEntity classEntity, Package parentPackage) {
         model.entities.add(classEntity);
         entityMap.put(pumlEntity, classEntity);
@@ -57,14 +60,23 @@ public class EntityHandlerContext {
         return lineFinder.findNoteEndLine(startLine, entity);
     }
 
+    /**
+     * Maps an entity to a single source line
+     */
     public void mapToSource(ClassEntity entity, int line) {
         addMapperInfo(entity, line, lineMapper);
     }
 
+    /**
+     * Maps an entity to a source line range
+     */
     public void mapToSource(ClassEntity entity, int startLine, int endLine) {
         addMapperInfo(entity, startLine, endLine, lineMapper);
     }
 
+    /**
+     * Extracts the alias from a source line if present (class Foo as F)
+     */
     public String extractAlias(int line) {
         if (line < 0) return null;
 
@@ -74,6 +86,9 @@ public class EntityHandlerContext {
         return ClassLineFinder.extractAlias(info.originalText);
     }
 
+    /**
+     * Extracts and sets the alias on the entity if it differs from the entity name
+     */
     public void applyAlias(ClassEntity entity, String name, int line) {
         String alias = extractAlias(line);
 
@@ -82,11 +97,17 @@ public class EntityHandlerContext {
         }
     }
 
+    /**
+     * Checks if the given source line ends with "{" indicating block-style
+     */
     public boolean opensBlock(int line) {
         ClassLineMapper.LineInfo info = lineMapper.getLineInfo(line);
         return info != null && info.originalText.trim().endsWith("{");
     }
 
+    /**
+     * Finds the closing "}" line for a block that opens at startLine by tracking brace depth
+     */
     public int findBlockEnd(int startLine) {
         List<ClassLineMapper.LineInfo> all = lineMapper.getLineInfos();
         int depth = 0;
@@ -104,6 +125,9 @@ public class EntityHandlerContext {
         return startLine;
     }
 
+    /**
+     * Applies background color from the PlantUML entity if one is set
+     */
     private void applyBackground(Entity pumlEntity, ClassEntity classEntity) {
         if (pumlEntity.getColors().getColor(ColorType.BACK) != null) {
             classEntity.setBackground(pumlEntity.getColors().getColor(ColorType.BACK).asString());

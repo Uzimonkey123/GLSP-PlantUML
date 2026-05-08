@@ -2,7 +2,7 @@
  * File: ClassEntityHandler.java
  * Author: Norman Babiak
  * Description: Handler for all (except special) types of entities
- * Date: 30.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.parser.handlers;
@@ -84,6 +84,9 @@ public class ClassEntityHandler extends EntityHandler {
         return body;
     }
 
+    /**
+     * Extracts methods from the PlantUML entity, falling back to body items containing parentheses if the API throws
+     */
     private List<EntityMethod> parseMethods(Entity entity, List<EntityMethod> fallbackBody) {
         List<EntityMethod> methods = new ArrayList<>();
 
@@ -109,6 +112,9 @@ public class ClassEntityHandler extends EntityHandler {
         return methods;
     }
 
+    /**
+     * Extracts fields from the PlantUML entity, falling back to body items without parentheses if the API throws
+     */
     private List<EntityMethod> parseFields(Entity entity, List<EntityMethod> fallbackBody) {
         List<EntityMethod> fields = new ArrayList<>();
 
@@ -151,6 +157,9 @@ public class ClassEntityHandler extends EntityHandler {
         }
     }
 
+    /**
+     * Extracts stereotype name, icon, and color from the PlantUML entity
+     */
     private void applyStereotype(ClassEntity newEntity, Entity entity) {
         newEntity.setStereotype(true);
         newEntity.setStereotypeName(entity.getStereotype().getLabel(Guillemet.DOUBLE_COMPARATOR));

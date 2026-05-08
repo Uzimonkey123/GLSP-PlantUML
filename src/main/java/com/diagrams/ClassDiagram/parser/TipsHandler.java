@@ -39,6 +39,9 @@ public class TipsHandler {
         }
     }
 
+    /**
+     * Finds the first member whose signature matches the tip key and sets its tooltip content and background color
+     */
     private void attachTipToMember(List<EntityMethod> members, String memberName, String tipContent, Entity tipsEntity) {
         for (EntityMethod member : members) {
             if (matchesMemberSignature(member.getMethodName(), memberName)) {
@@ -70,7 +73,8 @@ public class TipsHandler {
     }
 
     /**
-     * Normalizes member signature for comparison
+     * Strips visibility modifiers and PlantUML modifiers, then normalizes the signature
+     * to "methodName(type1 type2)" format
      */
     private String cleanSignature(String signature) {
         String cleaned = signature.trim()

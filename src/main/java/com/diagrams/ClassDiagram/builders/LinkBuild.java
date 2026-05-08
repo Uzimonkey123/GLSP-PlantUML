@@ -2,7 +2,7 @@
  * File: LinkBuild.java
  * Author: Norman Babiak
  * Description: Builder for links between entities as GEdges
- * Date: 30.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.builders;
@@ -16,6 +16,12 @@ import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 
 public class LinkBuild {
 
+    /**
+     * Builds a GEdge for a class link, using "link:note" type for note links and "link" for all others
+     *
+     * @param link the parsed class link
+     * @return the built GEdge element
+     */
     public GModelElement buildLink(ClassLink link) {
         String edgeType = link.isNoteLink() ? "link:note" : "link";
 
@@ -28,6 +34,12 @@ public class LinkBuild {
         return edge.build();
     }
 
+    /**
+     * Adds all visual and semantic arguments to an edge builder
+     *
+     * @param link the source link with all parsed properties
+     * @param edge the edge builder to add arguments to
+     */
     private void addLinkArguments(ClassLink link, GEdgeBuilder edge) {
         edge.addArgument("headStart", link.getDecorator2());
         edge.addArgument("headEnd", link.getDecorator1());
@@ -56,6 +68,12 @@ public class LinkBuild {
         }
     }
 
+    /**
+     * Builds a movable label for the link message text, placed at the label's stored position
+     *
+     * @param linkLabel the parsed label with position and text
+     * @return the built GLabel element
+     */
     public GModelElement buildLinkLabel(ClassLabel linkLabel) {
         GLabelBuilder label = new GLabelBuilder("label:link")
                 .id(linkLabel.getLabelId())
@@ -66,6 +84,12 @@ public class LinkBuild {
         return label.build();
     }
 
+    /**
+     * Builds a movable label for a quantifier on a link endpoint
+     *
+     * @param quantifierLabel the parsed quantifier label with position and text
+     * @return the built GLabel element
+     */
     public GModelElement buildLinkQuantifier(ClassLabel quantifierLabel) {
         GLabelBuilder label = new GLabelBuilder("label:link")
                 .id(quantifierLabel.getLabelId())
@@ -76,6 +100,12 @@ public class LinkBuild {
         return label.build();
     }
 
+    /**
+     * Builds a note-style edge connecting a tip to its parent entity,
+     *
+     * @param tipInfo the tip info containing parent entity ID, tip ID, and member name
+     * @return the built GEdge element
+     */
     public GModelElement buildTipLinks(ClassEntityFactory.TipInfo tipInfo) {
         GEdgeBuilder edge = new GEdgeBuilder("link:note")
                 .id("edge-" + tipInfo.tipId)

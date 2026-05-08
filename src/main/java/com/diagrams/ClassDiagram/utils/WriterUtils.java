@@ -2,7 +2,7 @@
  * File: WriterUtils.java
  * Author: Norman Babiak
  * Description: Utility methods for writing source file after save
- * Date: 30.3.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.ClassDiagram.utils;
@@ -22,6 +22,9 @@ public final class WriterUtils {
         return value != null && !value.isEmpty();
     }
 
+    /**
+     * Extracts leading whitespace from a line
+     */
     public static String extractIndentation(String line) {
         if (line == null) return "";
         StringBuilder sb = new StringBuilder();
@@ -34,6 +37,9 @@ public final class WriterUtils {
         return sb.toString();
     }
 
+    /**
+     * Prepends the given indentation to a line
+     */
     public static String applyIndentation(String line, String indent) {
         return indent + line;
     }
@@ -83,6 +89,9 @@ public final class WriterUtils {
         return result.toString();
     }
 
+    /**
+     * Wraps a value in quotes if it contains spaces or non-identifier characters
+     */
     public static String quoteIfNeeded(String value) {
         if (value == null) return null;
 
@@ -93,6 +102,9 @@ public final class WriterUtils {
         return value;
     }
 
+    /**
+     * Removes surrounding double quotes if present
+     */
     public static String unquote(String value) {
         if (value == null) return null;
 
@@ -103,6 +115,9 @@ public final class WriterUtils {
         return value;
     }
 
+    /**
+     * Converts a link decorator enum value to its PlantUML arrow symbol
+     */
     public static char visibilityToSymbol(String visibilityValue) {
         if (visibilityValue == null) return 0;
 
@@ -133,6 +148,9 @@ public final class WriterUtils {
         };
     }
 
+    /**
+     * Maps an internal entity type string to the PlantUML keyword used in source
+     */
     public static String entityTypeToKeyword(String type, String rawSourceText) {
         if (type == null) return "class";
 
@@ -218,6 +236,9 @@ public final class WriterUtils {
         return tempName;
     }
 
+    /**
+     * Quotes a member reference if it contains spaces, parentheses, or colons
+     */
     public static String formatMemberRef(String ref) {
         if (ref == null) return "";
 

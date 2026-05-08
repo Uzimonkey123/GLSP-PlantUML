@@ -2,7 +2,7 @@
  * File: ElementRelocator.java
  * Author: Norman Babiak
  * Description: Refreshes source-line references for all elements
- * Date: 3.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.utils;
@@ -23,6 +23,9 @@ public class ElementRelocator {
         this.model = model;
     }
 
+    /**
+     * Rebuilds the line mapper from new source text and re-locates all model elements
+     */
     public void relocateAll(String newSourceText) {
         this.lineMapper = new LineMapper(newSourceText);
         model.setMapper(lineMapper);
@@ -45,6 +48,10 @@ public class ElementRelocator {
         model.clearLinesToDelete();
     }
 
+    /**
+     * Relocates all node objects in the diagram, finding their new declaration lines
+     * @param lineFinder
+     */
     private void relocateParticipants(LineFinder lineFinder) {
         lineFinder.resetSearch();
 
@@ -71,6 +78,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates all life events on the given node according to the changes in the diagram
+     */
     private void relocateLifeEvents(SequenceNode node) {
         String participantName = node.getName();
         Set<Integer> usedLines = new HashSet<>();
@@ -142,6 +152,9 @@ public class ElementRelocator {
         return -1;
     }
 
+    /**
+     * Checks if the activation was started inline and links the life event to that message line
+     */
     private void matchInlineStart(SequenceLifeEvent le) {
         int startMsgIdx = le.getStartMessage();
         if (startMsgIdx < 0 || startMsgIdx >= model.messages.size()) return;
@@ -160,6 +173,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Checks if the deactivation was inline ("--") or a "return" statement, linking the life event's end to that message line
+     */
     private void matchInlineEnd(SequenceLifeEvent le) {
         int endMsgIdx = le.getEndMessage();
         if (endMsgIdx < 0 || endMsgIdx >= model.messages.size()) return;
@@ -188,6 +204,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates all messages to their new source lines, dispatching by message type
+     */
     private void relocateMessages(LineFinder lineFinder) {
         lineFinder.resetSearch();
 
@@ -247,6 +266,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates notes attached to a message, handling both single-line and multi-line note forms
+     */
     private void relocateMessageNotes(LineFinder lineFinder, SequenceMessage message) {
         for (SequenceNote note : message.getNotes()) {
             int startLine = lineFinder.findNoteLine(null, note);
@@ -270,6 +292,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates groups to their new start/end lines and re-resolves separator line numbers
+     */
     private void relocateGroups(LineFinder lineFinder) {
         lineFinder.resetSearch();
 
@@ -299,6 +324,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates englober declarations to their new source lines
+     */
     private void relocateEnglobers(LineFinder lineFinder) {
         lineFinder.resetSearch();
 
@@ -317,6 +345,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     *  Re-locates anchor duration constraint declarations to their new source lines
+     */
     private void relocateAnchors(LineFinder lineFinder) {
         lineFinder.resetSearch();
 
@@ -336,6 +367,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates title, header, footer, and mainframe line positions
+     */
     private void relocatePageElements() {
         model.titleLineStart = findLineByType(LineMapper.LineType.TITLE);
         model.titleLineEnd = findLineByType(LineMapper.LineType.END_TITLE);
@@ -374,10 +408,16 @@ public class ElementRelocator {
         return null;
     }
 
+    /**
+     * Extracts the part of the line before the ":" label separator, or the full line if no label
+     */
     private String getArrowPart(String lineText) {
         return (lineText.indexOf(':') >= 0) ? lineText.substring(0, lineText.indexOf(':')) : lineText;
     }
 
+    /**
+     * Checks if the text after a keyword matches a participant name, handling both plain and quoted forms
+     */
     private boolean matchesParticipant(String textAfterKeyword, String participantName) {
         textAfterKeyword = textAfterKeyword.trim();
 
@@ -399,6 +439,9 @@ public class ElementRelocator {
         return false;
     }
 
+    /**
+     * Finds the first line matching the given LineType, or -1 if not found
+     */
     private int findLineByType(LineMapper.LineType type) {
         for (LineMapper.LineInfo info : lineMapper.getLineInfos()) {
             if (info.type == type) return info.lineNumber;

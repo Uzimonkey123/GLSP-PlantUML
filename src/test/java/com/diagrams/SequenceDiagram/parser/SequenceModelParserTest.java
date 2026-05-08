@@ -5,6 +5,8 @@
  * Date: 29.4.2026
  */
 
+// Test file skeleton generated with assistance from Claude Opus 4.5.
+
 package com.diagrams.SequenceDiagram.parser;
 
 import com.diagrams.SequenceDiagram.SequenceDiagramTestBase;

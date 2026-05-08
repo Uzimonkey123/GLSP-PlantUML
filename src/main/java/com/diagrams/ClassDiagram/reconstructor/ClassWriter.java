@@ -2,7 +2,7 @@
  * File: ClassWriter.java
  * Author: Norman Babiak
  * Description: Handles write operations and deletions
- * Date: 31.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor;
@@ -25,6 +25,10 @@ public class ClassWriter {
         this.context = new WriterContext(model, new File(URI.create(sourceUri)));
     }
 
+    /**
+     * Runs the full write pipeline: deletions, entity/package/link/note/page rewrites,
+     * reference updates, then applies all changes and saves
+     */
     public void write() throws IOException {
         context.reset();
 

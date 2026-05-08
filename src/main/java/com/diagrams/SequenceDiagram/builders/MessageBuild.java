@@ -2,7 +2,7 @@
  * File: MessageBuild.java
  * Author: Norman Babiak
  * Description: GModelElement builder messages, their labels and references
- * Date: 4.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.builders;
@@ -24,6 +24,9 @@ public class MessageBuild {
         this.halfWidth = halfWidth;
     }
 
+    /**
+     * Builds the basic edge with its type, between the source and target nodes
+     */
     public GModelElement buildEdge(SequenceMessage msg, String sourceId, String targetId, double x1, double x2,
                                    double y, boolean incoming, boolean outgoing) {
         GEdgeBuilder eb = new GEdgeBuilder(msg.getType())
@@ -38,6 +41,9 @@ public class MessageBuild {
         return eb.build();
     }
 
+    /**
+     * Adds arguments to the given GEdge, such as info about label or the type of the message arrows
+     */
     private void addArguments(SequenceMessage msg, GEdgeBuilder eb, boolean incoming, boolean outgoing, String targetId,
                               double x1, double x2) {
         if (msg.getType().equals("edge:divider")) {
@@ -72,6 +78,9 @@ public class MessageBuild {
         }
     }
 
+    /**
+     * Builds the GLabel for the edge, letting it appear above it
+     */
     public GModelElement buildMsgLabel(SequenceMessage msg, int msgIndex, double y, double shift, double yOffset) {
         return new GLabelBuilder("label:html")
                 .id("label-"+ msgIndex)
@@ -83,6 +92,9 @@ public class MessageBuild {
                 .build();
     }
 
+    /**
+     * Builds a reference box on the given node or nodes, with a "ref" on the top left
+     */
     public GModelElement buildReference(SequenceMessage msg, String from, String to, double x1, double x2,
                                         double y1, double y2) {
         return new GEdgeBuilder("edge:ref")

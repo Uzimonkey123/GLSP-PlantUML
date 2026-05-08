@@ -2,7 +2,7 @@
  * File: LineFinder.java
  * Author: Norman Babiak
  * Description: Locates model elements in the PlantUML source by line type and content matching.
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.reconstructor;
@@ -84,6 +84,9 @@ public class LineFinder {
         return findLine(LineMapper.LineType.CREATE, participantName, event);
     }
 
+    /**
+     * Saves and restores the search cursor since englobers appear in the participant section
+     */
     public int findEngloberLine(String boxName, Object event) {
         // Save searchFrom index because englober is in participant
         int savedSearchFrom = getCurrentPosition();
@@ -103,6 +106,9 @@ public class LineFinder {
         return findLine(LineMapper.LineType.END_NOTE, null, event);
     }
 
+    /**
+     * Searches forward from the cursor for the first line matching the type and optional text
+     */
     private int findLine(LineMapper.LineType type, String searchText, Object event) {
         List<LineMapper.LineInfo> allLines = lineMapper.getLineInfos();
         int totalLines = allLines.size();
@@ -128,6 +134,9 @@ public class LineFinder {
 
     private final Set<Integer> usedLifeEventLines = new HashSet<>();
 
+    /**
+     * Searches from line 0 with a used-lines set to avoid claiming the same life event line twice
+     */
     private int findLineFromStart(LineMapper.LineType type, String searchText, Object event) {
         List<LineMapper.LineInfo> allLines = lineMapper.getLineInfos();
         boolean hasSearchText = searchText != null && !searchText.isEmpty();

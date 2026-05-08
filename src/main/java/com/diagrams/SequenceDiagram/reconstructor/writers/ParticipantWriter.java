@@ -83,6 +83,9 @@ public class ParticipantWriter {
         }
     }
 
+    /**
+     * Reconstructs a participant declaration with type, name/alias, order, and background
+     */
     private String replaceParticipant(SequenceNode node) {
         StringBuilder sb = new StringBuilder();
 
@@ -119,7 +122,7 @@ public class ParticipantWriter {
             sb.append(" order ").append(node.getOrder());
         }
 
-        if (!node.getBackground().equals("#5d4949")) {
+        if (!node.getBackground().equals("#C0C0C0")) {
             sb.append(" ").append(node.getBackground());
         }
 

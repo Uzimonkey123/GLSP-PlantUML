@@ -29,6 +29,9 @@ public class ModuleLoader {
         this.serverModule = serverModule;
     }
 
+    /**
+     * Main entry point to load modules from either classpath or JAR file
+     */
     public void loadModules() throws Exception {
         loadedModuleClasses.clear();
 
@@ -36,6 +39,9 @@ public class ModuleLoader {
         loadClasspath();
     }
 
+    /**
+     * Loads the plugin folders and searches for JAR files
+     */
     private void loadFolder() throws IOException {
         if (!pluginFolder.isDirectory()) return;
 
@@ -47,6 +53,9 @@ public class ModuleLoader {
         }
     }
 
+    /**
+     * Loads JAR files where the class inside is extending DiagramModule from GLSP
+     */
     private void loadJar(File jar) throws IOException {
         URL jarUrl = jar.toURI().toURL();
 
@@ -62,6 +71,9 @@ public class ModuleLoader {
         }
     }
 
+    /**
+     * Searches for DiagramModule classes in the overall source code to support in-path diagram implementations too
+     */
     private void loadClasspath()
             throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         Reflections reflections = new Reflections("com");

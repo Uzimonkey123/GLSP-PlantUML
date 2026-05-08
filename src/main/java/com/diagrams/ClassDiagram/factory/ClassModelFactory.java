@@ -2,22 +2,21 @@
  * File: ClassModelFactory.java
  * Author: Norman Babiak
  * Description: Main factory for creating corresponding class factories and sending GModel to client side
- * Date: 30.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.factory;
 
 import com.GLSPPlantUML.utils.ErrorMessage;
+import com.GLSPPlantUML.validators.CompositeValidator;
 import com.diagrams.ClassDiagram.builders.EntityBuild;
 import com.diagrams.ClassDiagram.factory.ClassParts.ClassEntityFactory;
 import com.diagrams.ClassDiagram.factory.ClassParts.ClassLinkFactory;
 import com.diagrams.ClassDiagram.model.ClassModel;
-import com.diagrams.ClassDiagram.model.ClassParts.ClassLink;
 import com.diagrams.ClassDiagram.state.ClassModelState;
 import jakarta.inject.Inject;
 import org.eclipse.glsp.graph.GGraph;
 import org.eclipse.glsp.graph.GModelElement;
-import org.eclipse.glsp.graph.builder.impl.GEdgeBuilder;
 import org.eclipse.glsp.graph.builder.impl.GGraphBuilder;
 import org.eclipse.glsp.server.features.core.model.GModelFactory;
 
@@ -32,6 +31,9 @@ public class ClassModelFactory implements GModelFactory {
     protected ClassModel model;
     private final List<GModelElement> elements = new ArrayList<>();
 
+    /**
+     * Creates GModel with the help of element factories and builds the GGraph
+     */
     @Override
     public void createGModel() {
         elements.clear();
@@ -62,6 +64,9 @@ public class ClassModelFactory implements GModelFactory {
         modelState.getRoot().setRevision(-1);
     }
 
+    /**
+     * Handles GModel if error is present, printing the message instead of diagram
+     */
     private void errorHandler(Optional<ErrorMessage> error) {
         ErrorMessage errorMessage = error.get();
         elements.add(errorMessage.buildError());

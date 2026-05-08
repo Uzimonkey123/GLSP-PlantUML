@@ -2,7 +2,7 @@
  * File: ClassModelParser.java
  * Author: Norman Babiak
  * Description: Parser to internal model from PlantUML public API
- * Date: 30.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.parser;
@@ -59,6 +59,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
 
     private EntityHandlerRegistry handlerRegistry;
 
+    /**
+     * Reads the PlantUML file, parses it via SourceStringReader, and populates the internal model with entities,
+     * packages, links, and page details
+     */
     @Override
     public ClassModel parse(File file) throws IOException {
         String originalText = Files.readString(file.toPath(), StandardCharsets.UTF_8);
@@ -138,6 +142,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
     }
 
+    /**
+     * Creates a Package from a PlantUML group entity, attaches it to its parent, and maps it to source lines
+     */
     private Package handlePackage(Entity entity, Package parentPackage) {
         String id = "pkg-" + packageCounter++;
         String name = String.join(" ", entity.getDisplay());
@@ -163,6 +170,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         return pkg;
     }
 
+    /**
+     * Maps a PlantUML USymbol to the internal package type string
+     */
     private String getPackageType(Entity entity) {
         USymbol symbol = entity.getUSymbol();
 
@@ -177,6 +187,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         return "folder";
     }
 
+    /**
+     * Delegates entity creation to the handler registry, which picks the correct handler by leaf type
+     */
     private void handleEntity(Entity entity, Package parentPackage) {
         String id = "ent-" + entityCounter++;
         handlerRegistry.handle(entity, id, parentPackage);
@@ -209,6 +222,10 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
     }
 
+    /**
+     * Parses a PlantUML Link into an internal ClassLink with decorators, quantifiers, qualifiers,
+     * member ports, colors, and optional note-on-link attachment
+     */
     private void handleLink(Link link) {
         Entity linkEntity1 = link.getEntity1();
         Entity linkEntity2 = link.getEntity2();
@@ -316,6 +333,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         linkAttributes(newLink, link);
     }
 
+    /**
+     * Extracts line color and stroke thickness from the PlantUML Link object
+     */
     private void linkAttributes(ClassLink newLink, Link link) {
         if (link.getColors().getColor(ColorType.LINE) != null) {
             String color = link.getColors().getColor(ColorType.LINE).asString();
@@ -352,6 +372,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
     }
 
+    /**
+     * Extracts the diagram title and maps it to source lines
+     */
     private void handleTitle() {
         model.title = "";
 
@@ -370,6 +393,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
     }
 
+    /**
+     * Extracts the diagram header and maps it to source lines
+     */
     private void handleHeader() {
         model.header = "";
 
@@ -388,6 +414,9 @@ public class ClassModelParser implements PlantUMLParser<ClassModel>  {
         }
     }
 
+    /**
+     * Extracts the diagram footer and maps it to source lines
+     */
     private void handleFooter() {
         model.footer = "";
 

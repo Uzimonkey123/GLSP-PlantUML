@@ -2,7 +2,7 @@
  * File: NoteCalculator.java
  * Author: Norman Babiak
  * Description: Calculates note dimensions and positions relative to link labels.
- * Date: 30.3.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.ClassDiagram.utils;
@@ -15,6 +15,9 @@ public class NoteCalculator {
     private final double safetyMargin = 30.0;
     private final double finalAdjustment = 15.0;
 
+    /**
+     * Computes the note box width and height from the text, using the longest line for width
+     */
     public GeometryUtils.Dimensions calculateNoteDimensions(String noteText) {
         String[] lines = noteText.split("<br>");
         int maxLineLength = 0;

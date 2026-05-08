@@ -71,9 +71,11 @@ public class NoteWriter {
         String position = note.getPosition();
         boolean overSeveral = appendPosition(sb, position);
 
+
         // For inline notes on messages (not standalone notes), the label follows directly
         if (!message.getType().equals("edge:note")) {
             if (multiline) {
+                sb.append("\n");
                 sb.append(note.getLabel().replace("<br>", "\n"));
 
             } else {

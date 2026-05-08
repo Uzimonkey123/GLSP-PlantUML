@@ -53,6 +53,9 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
         this.server = server;
     }
 
+    /**
+     * Loads the rules from the RuleLoader and the PlantUML syntax checker through the error validator
+     */
     private synchronized CompositeValidator getValidator() {
         if (!initialized) {
             initialized = true;
@@ -142,6 +145,9 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
         server.getClient().publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
     }
 
+    /**
+     * Detects diagram type by the pattern matcher
+     */
     private String detectDiagramType(String text) {
         if (DIAGRAM_TYPE_PATTERN.matcher(text).find()) {
             return "class-diagram";
@@ -150,6 +156,9 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
         return "sequence-diagram";
     }
 
+    /**
+     * Replaces internal <br> into "\n" for the error message
+     */
     private String cleanErrorMessage(String msg) {
         return msg.replaceAll("<br>", "\n").replaceAll("<[^>]*>", "");
     }
@@ -181,8 +190,10 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
         return CompletableFuture.completedFuture(Either.forLeft(items));
     }
 
+    /**
+     * Class diagram completion list, keywords and arrows that it completes
+     */
     private void addClassDiagramCompletions(List<CompletionItem> items, String currentLine, String fullText) {
-        // TODO: ADD MORE
         addItem(items, "--|>", "Inheritance (extends)", CompletionItemKind.Operator);
         addItem(items, "..|>", "Implementation (implements)", CompletionItemKind.Operator);
         addItem(items, "-->", "Association", CompletionItemKind.Operator);
@@ -206,8 +217,10 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
                 Pattern.compile("(?:class|interface|enum|abstract\\s+class)\\s+(\\w+)"));
     }
 
+    /**
+     * Sequence diagram completion list, keywords and arrows that it completes
+     */
     private void addSequenceDiagramCompletions(List<CompletionItem> items, String currentLine, String fullText) {
-        // TODO: ADD MORE
         addItem(items, "->", "Synchronous message", CompletionItemKind.Operator);
         addItem(items, "-->", "Return message", CompletionItemKind.Operator);
         addItem(items, "->>", "Async message", CompletionItemKind.Operator);
@@ -245,6 +258,9 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
                 Pattern.compile("(?:participant|actor|boundary|control|entity|database|collections|queue)\\s+(\\w+)"));
     }
 
+    /**
+     * Common completions for both PlantUML diagrams
+     */
     private void addCommonCompletions(List<CompletionItem> items, String currentLine) {
         addItem(items, "@startuml", "Start UML block", CompletionItemKind.Keyword);
         addItem(items, "@enduml", "End UML block", CompletionItemKind.Keyword);
@@ -255,6 +271,9 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
         addItem(items, "show ", "Show element", CompletionItemKind.Keyword);
     }
 
+    /**
+     * Searches up the existing object names in the file, suggests them as match for completion
+     */
     private void addExistingEntityNames(List<CompletionItem> items, String text, Pattern pattern) {
         Set<String> seen = new HashSet<>();
         Matcher matcher = pattern.matcher(text);
@@ -267,6 +286,9 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
         }
     }
 
+    /**
+     * Add items to the completion list with its label and details
+     */
     private void addItem(List<CompletionItem> items, String label, String detail, CompletionItemKind kind) {
         CompletionItem item = new CompletionItem(label);
         item.setDetail(detail);

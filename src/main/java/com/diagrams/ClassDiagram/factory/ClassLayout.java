@@ -2,7 +2,7 @@
  * File: ClassLayout.java
  * Author: Norman Babiak
  * Description: Computes entity positions using GraphViz DOT layout engine.
- * Date: 31.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.factory;
@@ -31,6 +31,9 @@ import static guru.nidi.graphviz.attribute.Attributes.attr;
 
 public class ClassLayout {
 
+    /**
+     * Main entrypoint, adds links, packages and entities, make the setup for the graph
+     */
     public void layoutEntities(ClassModel model, Map<String, Size> dimensions) {
         // Swap LR to RL, TB to BT because of how the entities are loaded into the model
         String rankdir = model.isLeftToRight() ? "RL" : "BT";
@@ -72,6 +75,9 @@ public class ClassLayout {
         parseAndApplyPositions(json, model.entities, dimensions);
     }
 
+    /**
+     * Adds package to graph
+     */
     private void addPackagesToGraph(MutableGraph graph, List<Package> packages,
                                     Map<String, Size> dimensions) {
         for (Package pkg : packages) {
@@ -81,6 +87,9 @@ public class ClassLayout {
         }
     }
 
+    /**
+     * Adds standalone entities into graph
+     */
     private void addEntitiesWithoutPackages(MutableGraph graph, List<ClassEntity> entities,
                                             List<Package> packages, Map<String, Size> dimensions) {
         // Collect all packaged entities so it is possible to loop through the ones without a package
@@ -138,6 +147,9 @@ public class ClassLayout {
         parentGraph.add(cluster);
     }
 
+    /**
+     * Helper function for main one to add the nodes with its attributes
+     */
     private void addNode(Map<String, Size> dimensions, MutableGraph cluster, ClassEntity entity) {
         MutableNode node = mutNode(entity.getId());
 

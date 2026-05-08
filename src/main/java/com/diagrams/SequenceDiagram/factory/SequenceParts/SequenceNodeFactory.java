@@ -2,7 +2,7 @@
  * File: SequenceNodeFactory.java
  * Author: Norman Babiak
  * Description: Factory for creating participant nodes, invisible nodes,and page-level details
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
@@ -31,6 +31,9 @@ public class SequenceNodeFactory {
         this.totalHeight = totalHeight;
     }
 
+    /**
+     * Creates all participant nodes, computes their centres, and adds invisible/page elements
+     */
     public void createNodes() {
         SequenceModel model = ctx.getModel();
         Map<String, Double> centre = ctx.getCentre();
@@ -93,6 +96,9 @@ public class SequenceNodeFactory {
         nodeBuild.buildPageDetails(elements, model, totalHeight, centre, highestNode, isHighNodePresent, biggestHeight);
     }
 
+    /**
+     * Strips the stereotype character prefix from the node name
+     */
     private StringBuilder removeSpecialChar() {
         String name = currentNode.getName();
         char stereotypeChar = currentNode.getStereotypeChar();
@@ -108,6 +114,9 @@ public class SequenceNodeFactory {
         return new StringBuilder(String.join("<br>", lines));
     }
 
+    /**
+     * Returns the display label, handling stereotype prefix removal
+     */
     private String getLabel() {
         // Get the label of the node, in case of stereotype check for first char
         return currentNode.isStereotype()

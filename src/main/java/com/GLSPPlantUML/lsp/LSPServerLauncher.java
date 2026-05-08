@@ -2,7 +2,7 @@
  * File: LSPServerLauncher.java
  * Author: Norman Babiak
  * Description: Launches the PlantUML LSP server over stdin/stdout
- * Date: 10.4.2026
+ * Date: 5.5.2026
  */
 
 package com.GLSPPlantUML.lsp;
@@ -18,6 +18,9 @@ import java.util.concurrent.Future;
 
 public class LSPServerLauncher {
 
+    /**
+     * Main entrypoint for the LSP server
+     */
     public static void main(String[] args) {
         try {
             // Setting output, so it does not mix for the client side
@@ -31,6 +34,9 @@ public class LSPServerLauncher {
         }
     }
 
+    /**
+     * Start method for the LSP server
+     */
     public static void startServer(InputStream in, OutputStream out) {
         PlantUMLLanguageServer server = new PlantUMLLanguageServer();
 

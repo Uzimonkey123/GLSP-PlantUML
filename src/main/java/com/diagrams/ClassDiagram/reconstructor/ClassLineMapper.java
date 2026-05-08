@@ -2,7 +2,7 @@
  * File: ClassLineMapper.java
  * Author: Norman Babiak
  * Description: Classifies each line of PlantUML source into a LineType for the parser and writer.
- * Date: 1.4.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor;
@@ -213,6 +213,9 @@ public class ClassLineMapper {
         return open != -1 && close != -1 && close > open;
     }
 
+    /**
+     * Checks if a note is completed on a single line
+     */
     private static boolean isCompletedNote(String trimmed) {
         int first = trimmed.indexOf('"');
         if (first != -1 && trimmed.indexOf('"', first + 1) != -1) {

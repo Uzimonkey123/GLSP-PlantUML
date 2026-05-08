@@ -2,7 +2,7 @@
  * File: GroupWriter.java
  * Author: Norman Babiak
  * Description: Writes group start lines and else-separator lines for modified groups.
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.reconstructor.writers;
@@ -42,6 +42,9 @@ public class GroupWriter {
         }
     }
 
+    /**
+     * Reconstructs the group start line from label, colors, and optional comment
+     */
     private String replaceGroupStart(SequenceGroup group) {
         StringBuilder sb = new StringBuilder();
         String source = group.getRawSourceText();
@@ -69,6 +72,9 @@ public class GroupWriter {
         return ctx.indented(sb.toString(), source);
     }
 
+    /**
+     * Reconstructs an "else" separator line with optional label
+     */
     private String replaceGroupElse(String label, String source) {
         StringBuilder sb = new StringBuilder("else");
 

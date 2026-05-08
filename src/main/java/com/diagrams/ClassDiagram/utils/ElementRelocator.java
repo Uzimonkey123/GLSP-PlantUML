@@ -2,7 +2,7 @@
  * File: ElementRelocator.java
  * Author: Norman Babiak
  * Description: Re-maps all model elements to their source line positions after a write.
- * Date: 30.3.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.ClassDiagram.utils;
@@ -25,6 +25,9 @@ public class ElementRelocator {
         this.model = model;
     }
 
+    /**
+     * Rebuilds the line mapper from new source text and re-locates all model elements
+     */
     public void relocateAll(String newSourceText) {
         this.lineMapper = new ClassLineMapper(newSourceText, model);
         model.setMapper(lineMapper);
@@ -46,6 +49,9 @@ public class ElementRelocator {
         model.clearLinesToDelete();
     }
 
+    /**
+     * Re-locates all non-note entities, finding their new declaration lines and block boundaries
+     */
     private void relocateEntities(ClassLineFinder lineFinder) {
         lineFinder.setPosition(0);
 
@@ -68,6 +74,10 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates all links by searching for relationship lines matching both entity aliases.
+     * Note links are skipped since they don't have source lines
+     */
     private void relocateLinks(ClassLineFinder lineFinder) {
         lineFinder.setPosition(0);
 
@@ -111,6 +121,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates all note entities, deduplicating by ID to avoid processing the same note twice
+     */
     private void relocateNotes(ClassLineFinder lineFinder) {
         lineFinder.setPosition(0);
         Set<String> processedNoteIds = new HashSet<>();
@@ -133,6 +146,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates all packages by finding their declaration lines
+     */
     private void relocatePackages(ClassLineFinder lineFinder) {
         lineFinder.setPosition(0);
 
@@ -150,6 +166,9 @@ public class ElementRelocator {
         }
     }
 
+    /**
+     * Re-locates title, header, and footer line positions
+     */
     private void relocatePageElements(ClassLineFinder lineFinder) {
         model.titleLineStart = lineFinder.findTitleLine();
         model.titleLineEnd = lineFinder.findEndTitleLine();

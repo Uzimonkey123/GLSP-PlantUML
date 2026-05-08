@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class ErrorValidator {
+    /**
+     * Checks on the PlantUML blocks once again, searching for the error to present it to the LSP and into the diagram
+     */
     public ErrorRecord checkErrors(String fileText) {
         try {
             SourceStringReader reader = new SourceStringReader(fileText);
@@ -45,6 +48,9 @@ public class ErrorValidator {
         }
     }
 
+    /**
+     * Extracts the line from the error message
+     */
     private int extractLine(PSystemError errorSystem) {
         Pattern errorPattern = Pattern.compile("line (\\d+)");
         for (String line : errorSystem.getPureAsciiFormatted()) {

@@ -2,7 +2,7 @@
  * File: EntityBuild.java
  * Author: Norman Babiak
  * Description: Builder for entity elements
- * Date: 30.3.2026
+ * Date: 4.5.2026
  */
 
 package com.diagrams.ClassDiagram.builders;
@@ -25,11 +25,23 @@ public class EntityBuild {
     private final int lineHeight = 14;
     private final int padding = 5;
 
+    /**
+     * Computes the header compartment height, which is taller when a stereotype line is present
+     *
+     * @param entity the class entity to inspect
+     * @return header height in pixels
+     */
     private int computeHeaderH(ClassEntity entity) {
         String stereoName = entity.getStereotypeName();
         return (stereoName != null && !stereoName.isEmpty()) ? 44 : 30;
     }
 
+    /**
+     * Computes the field compartment height based on the number of field lines
+     *
+     * @param fields list of field display strings
+     * @return field compartment height
+     */
     private int computeFieldH(List<String> fields) {
         int minSectionHeight = 10;
 
@@ -38,6 +50,17 @@ public class EntityBuild {
                 : minSectionHeight;
     }
 
+    /**
+     * Builds a standard rectangular class entity node with header
+     *
+     * @param entity the parsed class entity with position and metadata
+     * @param width pre-calculated entity width
+     * @param height pre-calculated entity height
+     * @param methods formatted method display strings
+     * @param fields formatted field display strings
+     * @param bodyLines raw body lines
+     * @return the GNode graph element
+     */
     public GModelElement buildEntity(ClassEntity entity, double width, double height,
                                      List<String> methods, List<String> fields, List<String> bodyLines) {
 
@@ -140,6 +163,14 @@ public class EntityBuild {
         return nodeBuilder.build();
     }
 
+    /**
+     * Builds a circle-shaped entity node with a single name label below
+     *
+     * @param entity the parsed circle entity
+     * @param width pre-calculated width
+     * @param height pre-calculated height
+     * @return theGNode graph element
+     */
     public GModelElement buildCircleEntity(ClassEntity entity, double width, double height) {
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity:circle")
                 .id(entity.getId())
@@ -160,6 +191,14 @@ public class EntityBuild {
         return nodeBuilder.build();
     }
 
+    /**
+     * Builds a lollipop entity node with a name label below
+     *
+     * @param entity the parsed lollipop entity
+     * @param width pre-calculated width
+     * @param height pre-calculated height
+     * @return the assembled GNode graph element
+     */
     public GModelElement buildLollipopEntity(ClassEntity entity, double width, double height) {
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity:lollipop")
                 .id(entity.getId())
@@ -180,6 +219,13 @@ public class EntityBuild {
         return nodeBuilder.build();
     }
 
+    /**
+     * Builds a diamond entity node
+     *
+     * @param entity the parsed diamond entity
+     * @param width the side length
+     * @return the GNode graph element
+     */
     public GModelElement buildDiamondEntity(ClassEntity entity, double width) {
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity:diamond")
                 .id(entity.getId())
@@ -192,6 +238,12 @@ public class EntityBuild {
         return nodeBuilder.build();
     }
 
+    /**
+     * Builds a small filled dot node used as the center point
+     *
+     * @param entity the parsed association point entity
+     * @return theGNode graph element
+     */
     public GModelElement buildAssociationPoint(ClassEntity entity) {
         GNodeBuilder point = new GNodeBuilder("entity:association-point")
                 .id(entity.getId())
@@ -201,6 +253,14 @@ public class EntityBuild {
         return point.build();
     }
 
+    /**
+     * Builds a note shaped entity with a single text label inside
+     *
+     * @param entity the parsed note entity
+     * @param width pre-calculated width
+     * @param height pre-calculated height
+     * @return theGNode graph element
+     */
     public GModelElement buildNoteEntity(ClassEntity entity, double width, double height) {
         GNodeBuilder nodeBuilder = new GNodeBuilder("entity:note")
                 .id(entity.getId())
@@ -220,6 +280,14 @@ public class EntityBuild {
         return nodeBuilder.build();
     }
 
+    /**
+     * Builds a package with a positioned header label
+     *
+     * @param pkg the parsed package
+     * @param width pre-calculated package width
+     * @param height pre-calculated package height
+     * @return the GCompartment graph element
+     */
     public GCompartment buildPackage(Package pkg, double width, double height) {
         GCompartmentBuilder packageContainer = new GCompartmentBuilder("package-" + pkg.getType().toLowerCase())
                 .id(pkg.getId())
@@ -262,6 +330,11 @@ public class EntityBuild {
         return packageContainer.build();
     }
 
+    /**
+     * Builds an invisible node
+     * @param pkg the package containing the anchor coordinates
+     * @return the invisible GNode graph element
+     */
     public GModelElement buildPackageAnchor(Package pkg) {
         double absoluteX = pkg.getX() + pkg.getAnchorX();
         double absoluteY = pkg.getY() + pkg.getAnchorY();
@@ -273,6 +346,14 @@ public class EntityBuild {
                 .build();
     }
 
+    /**
+     * Builds and adds the diagram header, title, and footer labels
+     *
+     * @param elements the element list to append the labels to
+     * @param model the class model containing header/title/footer text
+     * @param dimensions pre-calculated entity dimensions for bounding box
+     * @param entities the list of entities to compute the bounding box from
+     */
     public void buildPageDetails(List<GModelElement> elements, ClassModel model,
                                  Map<String, ClassLayout.Size> dimensions,
                                  List<ClassEntity> entities) {
@@ -317,6 +398,12 @@ public class EntityBuild {
                 .build());
     }
 
+    /**
+     * Computes the vertical space needed for a multi-line text string
+     *
+     * @param lines the text string
+     * @return the total height
+     */
     private double yOffset(String lines) {
         if (lines == null) {
             return 0;

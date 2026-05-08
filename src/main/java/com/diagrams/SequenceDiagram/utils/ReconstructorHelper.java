@@ -2,7 +2,7 @@
  * File: ReconstructorHelper.java
  * Author: Norman Babiak
  * Description: Helper for main sequence writer with util methods
- * Date: 2.4.2026
+ * Date: 8.5.2026
  */
 
 package com.diagrams.SequenceDiagram.utils;
@@ -10,6 +10,10 @@ package com.diagrams.SequenceDiagram.utils;
 import com.diagrams.SequenceDiagram.model.SequenceParts.SequenceNode;
 
 public class ReconstructorHelper {
+
+    /**
+     * Extracts a participant alias from a source line
+     */
     public static String extractAlias(String sourceLine) {
         if (sourceLine == null || !sourceLine.contains(" as ")) {
             return null;
@@ -28,6 +32,9 @@ public class ReconstructorHelper {
         return afterAs;
     }
 
+    /**
+     * Returns the participant name or alias for reconstruction
+     */
     public static String getParticipant(SequenceNode node) {
         String alias = extractAlias(node.getRawSourceText());
         if (alias != null && !alias.isEmpty()) {
@@ -44,6 +51,9 @@ public class ReconstructorHelper {
         return name;
     }
 
+    /**
+     * Extracts life event symbols and optional color codes
+     */
     public static String extractLifeEventSymbol(String line) {
         if (line == null || line.isEmpty()) return "";
 

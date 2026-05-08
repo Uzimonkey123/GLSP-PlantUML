@@ -2,7 +2,7 @@
  * File: SequenceModelFactory.java
  * Author: Norman Babiak
  * Description: Main factory that does GLSP graph creation for sequence diagrams from GModel
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory;
@@ -177,6 +177,9 @@ public class SequenceModelFactory implements GModelFactory {
         lifeEventYPos.add(isStartOfLifeEvent ? y + 15 : y);
     }
 
+    /**
+     * Renders a diagram with just an error message when parsing fails
+     */
     private void errorHandler(Optional<ErrorMessage> error) {
         List<GModelElement> elements = new ArrayList<>();
         elements.add(error.get().buildError());

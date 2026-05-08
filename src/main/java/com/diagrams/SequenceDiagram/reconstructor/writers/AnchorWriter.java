@@ -31,7 +31,7 @@ public class AnchorWriter {
     }
 
     /**
-     * Reconstructs an anchor line, preserving original brace markers
+     * Reconstructs an anchor line, preserving original brace markers from the source if available
      */
     private String replaceAnchor(SequenceAnchor anchor) {
         String source = anchor.getRawSourceText();

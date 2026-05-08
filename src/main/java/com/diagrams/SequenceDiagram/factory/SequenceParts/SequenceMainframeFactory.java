@@ -2,7 +2,7 @@
  * File: SequenceMainframeFactory.java
  * Author: Norman Babiak
  * Description: Factory for creating the mainframe border and label around the entire sequence diagram
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
@@ -41,6 +41,9 @@ public class SequenceMainframeFactory {
         maxY = Double.MIN_VALUE;
     }
 
+    /**
+     * Computes the bounding box of all elements and creates the mainframe node
+     */
     public void createMainframe() {
         SequenceModel model = ctx.getModel();
         Map<String, Double> centre = ctx.getCentre();
@@ -76,6 +79,9 @@ public class SequenceMainframeFactory {
         elements.add(nodeBuild.buildMainframe(model, minX, minY, frameWidth, frameHeight, labelWidth, labelHeight));
     }
 
+    /**
+     * Scans all elements to find the min/max coordinates
+     */
     private void computeMainframe(List<GModelElement> elements) {
         for (GModelElement elem : elements) {
             if (elem instanceof GNode) {
@@ -88,6 +94,9 @@ public class SequenceMainframeFactory {
         }
     }
 
+    /**
+     * Updates the bounding box with a single point
+     */
     private void updateFrame(GPoint point) {
         if (point == null) return;
 

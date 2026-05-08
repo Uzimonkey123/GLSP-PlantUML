@@ -2,7 +2,7 @@
  * File: SequenceWriterContext.java
  * Author: Norman Babiak
  * Description: Shared context for sequence diagram writer operations
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.reconstructor;
@@ -13,6 +13,9 @@ import com.diagrams.SequenceDiagram.utils.NewLine;
 
 import java.util.*;
 
+/**
+ * Shared context for all sequence diagram writer modules, holding source lines, pending replacements, and indentation helpers
+ */
 public class SequenceWriterContext {
 
     private final SequenceModel model;

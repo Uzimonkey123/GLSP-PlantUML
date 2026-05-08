@@ -2,7 +2,7 @@
  * File: NodeBuild.java
  * Author: Norman Babiak
  * Description: GModelElement builder for nodes, page details and invisible helper nodes
- * Date: 4.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.builders;
@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 
 public class NodeBuild {
+    /**
+     * Builds invisible GNodes for the anchor points of the incoming, outgoing messages
+     */
     public void buildInvisibleNodes(List<GModelElement> elements, double totalHeight, double cursor, double nodeY) {
         elements.add(new GNodeBuilder()
                 .id("[")
@@ -35,6 +38,9 @@ public class NodeBuild {
                 .build());
     }
 
+    /**
+     * Builds the diagram title, header and footer if present
+     */
     public void buildPageDetails(List<GModelElement> elements, SequenceModel model,
                                  double totalHeight, Map<String, Double> centre,
                                  double highestNode, boolean isHighNodePresent, double biggestHeight) {
@@ -46,7 +52,6 @@ public class NodeBuild {
         titleY -= yOffset(model.title);
 
         double footerY = isHighNodePresent ? biggestHeight + 70 : biggestHeight + 20;
-        //footerY += yOffset(model.footer);
 
         elements.add(new GLabelBuilder("label:html")
                 .id("header")
@@ -70,6 +75,9 @@ public class NodeBuild {
                 .build());
     }
 
+    /**
+     * Builds the basic GNodes and its types let it be participant, database, actor etc..., with its label and stereotype
+     */
     public GModelElement buildNode(SequenceNode node, double cursor, double nodeWidth, double headerHeight,
                                    double height, String label, double nodeStart, boolean showFoot) {
 
@@ -97,6 +105,9 @@ public class NodeBuild {
                 .build();
     }
 
+    /**
+     * Builds invisible anchor points for the anchors in the middle of the edges
+     */
     public void buildAnchorPoints(List<GModelElement> elements, SequenceAnchor anchor, double xCoord, double y,
                                   String from, Map<String, Double> halfWidth) {
         elements.add(new GNodeBuilder()
@@ -114,6 +125,9 @@ public class NodeBuild {
                 .build());
     }
 
+    /**
+     * Builds a mainframe around the whole diagram with a title
+     */
     public GModelElement buildMainframe(SequenceModel model, double x, double y, double width, double height,
                                         double labelWidth, double labelHeight) {
         GLabelBuilder label = new GLabelBuilder("label:html")
@@ -131,6 +145,9 @@ public class NodeBuild {
                 .build();
     }
 
+    /**
+     * Calculates offset depending on the amount of lines present in a string
+     */
     private double yOffset(String lines) {
         int labelHeight = 14;
 

@@ -2,7 +2,7 @@
  * File: CurvedEdgeCalculator.java
  * Author: Norman Babiak
  * Description: Bézier curve geometry for member-to-member and parallel edges.
- * Date: 31.3.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.ClassDiagram.utils;
@@ -15,6 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Computes Bézier curve geometry for member-to-member and parallel edges,
+ * including anchor points, curve direction alternation, and label/quantifier positioning
+ */
 public class CurvedEdgeCalculator {
 
     /**
@@ -22,6 +26,9 @@ public class CurvedEdgeCalculator {
      */
     private final Map<String, Boolean> curveDirectionMap = new HashMap<>();
 
+    /**
+     * Holds the midpoint of a cubic Bézier curve and its unit tangent vector at t=0.5
+     */
     public record CurveData(GeometryUtils.Point midPoint, double midTangentX, double midTangentY) {
         public GeometryUtils.Vector tangent() {
             return new GeometryUtils.Vector(midTangentX, midTangentY);
@@ -126,6 +133,9 @@ public class CurvedEdgeCalculator {
         return curveDirectionMap.get(linkKey);
     }
 
+    /**
+     * Determines whether the curve should bulge right based on the vertical relationship and flip flag
+     */
     public boolean shouldCurveToRight(double sourceY, double targetY,
                                       ClassLayout.Size sourceSize, ClassLayout.Size targetSize,
                                       boolean flipCurve) {
@@ -142,7 +152,8 @@ public class CurvedEdgeCalculator {
     }
 
     /**
-     * Computes a Beziér curve between start and end points
+     * Computes a cubic Bézier curve between two points with control points offset 30% perpendicular.
+     * Returns the midpoint and unit tangent at t=0.5
      */
     public CurveData calculateCurve(GeometryUtils.Point start, GeometryUtils.Point end, boolean flipDirection) {
         GeometryUtils.Vector dir = new GeometryUtils.Vector(start, end);
@@ -190,12 +201,19 @@ public class CurvedEdgeCalculator {
         );
     }
 
+    /**
+     * Positions a label perpendicular to the curve at its midpoint
+     */
     public GeometryUtils.Point calculateLabelPosition(CurveData curveData, double perpOffset) {
         GeometryUtils.Vector perp = curveData.tangent().perpendicular();
 
         return curveData.midPoint.offset(perp, perpOffset);
     }
 
+    /**
+     * Positions a quantifier label past the arrow head along the edge direction,
+     * offset perpendicular, so it doesn't overlap the line
+     */
     public GeometryUtils.Point calculateQuantifierPosition(GeometryUtils.Point anchor, GeometryUtils.Point start, GeometryUtils.Point end,
                                                            double headSize, boolean isStart) {
         GeometryUtils.Vector dir = new GeometryUtils.Vector(start, end).normalize();
@@ -212,16 +230,25 @@ public class CurvedEdgeCalculator {
                 .offset(perp, perpOffset);
     }
 
+    /**
+     * Strips visibility prefix from a member name
+     */
     private String cleanMemberName(String methodName) {
         return methodName.replaceFirst("^[+\\-#~]\\s*", "").trim();
     }
 
+    /**
+     * Matches a field name against a member reference
+     */
     private boolean matchesMember(String clean, String memberName) {
         return clean.startsWith(memberName + " ")
                 || clean.startsWith(memberName + ":")
                 || clean.equals(memberName);
     }
 
+    /**
+     * Matches a method name against a member reference
+     */
     private boolean matchesMethod(String clean, String memberName) {
         return clean.startsWith(memberName + "(")
                 || clean.startsWith(memberName + " ")

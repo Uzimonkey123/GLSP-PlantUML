@@ -2,7 +2,7 @@
  * File: EngloberWriter.java
  * Author: Norman Babiak
  * Description: Writes englober declaration lines
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.reconstructor.writers;
@@ -27,6 +27,9 @@ public class EngloberWriter {
         }
     }
 
+    /**
+     * Reconstructs a "box" declaration with label and optional color
+     */
     private String replaceEnglober(SequenceEnglober englober) {
         StringBuilder sb = new StringBuilder("box ");
         String source = englober.getRawSourceText();

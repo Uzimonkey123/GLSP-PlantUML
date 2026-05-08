@@ -1,3 +1,10 @@
+/*
+ * File: SetDirtyStateHandler.java
+ * Author: Norman Babiak
+ * Description: Setting dirty state after change of file, using the SetDirtyStateAction
+ * Date: 5.5.2026
+ */
+
 package com.GLSPPlantUML.handlers;
 
 import org.eclipse.glsp.server.actions.AbstractActionHandler;

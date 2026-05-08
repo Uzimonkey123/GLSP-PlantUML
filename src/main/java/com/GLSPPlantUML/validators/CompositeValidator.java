@@ -2,7 +2,7 @@
  * File: CompositeValidator.java
  * Author: Norman Babiak
  * Description: Loads in error validator and rule loader, going through the rules and returning results of them
- * Date: 5.4.2026
+ * Date: 5.5.2026
  */
 
 package com.GLSPPlantUML.validators;
@@ -21,6 +21,10 @@ public class CompositeValidator {
         this.ruleLoader = ruleLoader;
     }
 
+    /**
+     * Validates both PlantUML syntax errors with their implemented API, and the validation rules implemented by the user
+     * of this tool
+     */
     public ErrorRecord validate(String fileText, String diagramType) {
         ErrorRecord syntaxResult = errorValidator.checkErrors(fileText);
         if (syntaxResult.hasError()) {
@@ -36,9 +40,5 @@ public class CompositeValidator {
         }
 
         return new ErrorRecord(false, null, -1, -1, -1);
-    }
-
-    public ErrorRecord validate(String fileText) {
-        return errorValidator.checkErrors(fileText);
     }
 }

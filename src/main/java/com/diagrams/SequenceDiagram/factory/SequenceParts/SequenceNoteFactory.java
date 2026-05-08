@@ -2,7 +2,7 @@
  * File: SequenceNoteFactory.java
  * Author: Norman Babiak
  * Description: Factory for creating note boxes and labels attached to messages or standing alone
- * Date: 4.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
@@ -34,7 +34,6 @@ public class SequenceNoteFactory {
         }
     }
 
-    private final SequenceFactoryContext ctx;
     private final SequenceModel model;
     private final List<Double> messagesYPos;
     private final Map<String, Double> centre;
@@ -47,7 +46,6 @@ public class SequenceNoteFactory {
     private final int singleYOffset = 6;
 
     public SequenceNoteFactory(SequenceFactoryContext ctx) {
-        this.ctx = ctx;
         this.noteBuild = new NoteBuild();
 
         model = ctx.getModel();
@@ -57,6 +55,9 @@ public class SequenceNoteFactory {
         elements = ctx.getElements();
     }
 
+    /**
+     * Creates note rectangles and labels for all notes on a message
+     */
     public void createNote(SequenceMessage msg, int msgIndex) {
         if (msg.getNotes() == null || msg.getNotes().isEmpty()) return;
 
@@ -103,6 +104,9 @@ public class SequenceNoteFactory {
         }
     }
 
+    /**
+     * Resolves note position for external messages, overriding to LEFT/RIGHT as needed
+     */
     private String resolveNotePosition(String from, String to, String defaultPosition) {
         if ("[".equals(from)) return "RIGHT";
         if ("]".equals(from)) return "LEFT";
@@ -111,6 +115,9 @@ public class SequenceNoteFactory {
         return defaultPosition;
     }
 
+    /**
+     * Positions a note centered over one or spanning two participants
+     */
     private NotePosition noteOver(String from, String to, double width) {
         if (from == null && to == null) { // Across all
             String firstId = model.participants.getFirst().getId();
@@ -146,6 +153,9 @@ public class SequenceNoteFactory {
         }
     }
 
+    /**
+     * Positions a note to the right of the rightmost participant
+     */
     private NotePosition noteRight(String from, String to, double width) {
         double rightX;
 
@@ -161,6 +171,9 @@ public class SequenceNoteFactory {
                 from != null ? from : to, from != null ? from : to);
     }
 
+    /**
+     * Positions a note to the left of the leftmost participant
+     */
     private NotePosition noteLeft(String from, String to, double width) {
         double leftX;
 

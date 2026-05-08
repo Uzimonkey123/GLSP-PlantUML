@@ -59,6 +59,9 @@ public class ChangeBoundsHandler implements OperationHandler<ChangeBoundsOperati
             return operation != null && modelState != null;
         }
 
+        /**
+         * Updates the position of the given element according its type
+         */
         @Override
         public void execute() {
             for (ElementAndBounds elementAndBounds : operation.getNewBounds()) {
@@ -100,6 +103,9 @@ public class ChangeBoundsHandler implements OperationHandler<ChangeBoundsOperati
             return !oldPositions.isEmpty();
         }
 
+        /**
+         * After undo, replaces the old positions that were saved
+         */
         @Override
         public void undo() {
             for (Map.Entry<String, NodePosition> entry : oldPositions.entrySet()) {
@@ -135,6 +141,9 @@ public class ChangeBoundsHandler implements OperationHandler<ChangeBoundsOperati
             return Collections.emptyList();
         }
 
+        /**
+         * Returns the affected elements in the update
+         */
         @Override
         public Collection<?> getAffectedObjects() {
             List<Object> affected = new ArrayList<>();

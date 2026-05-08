@@ -2,7 +2,7 @@
  * File: SequenceEngloberFactory.java
  * Author: Norman Babiak
  * Description: Factory for creating participant englober boxes
- * Date: 3.4.2026
+ * Date: 7.5.2026
  */
 
 package com.diagrams.SequenceDiagram.factory.SequenceParts;
@@ -30,6 +30,9 @@ public class SequenceEngloberFactory {
             this.englobers = englobers;
         }
 
+        /**
+         * Calculates the first and last participant covered by each englober
+         */
         public void calculateEngloberRange() {
             Map<String, String> startMap = new HashMap<>();
             Map<String, String> endMap = new HashMap<>();
@@ -68,6 +71,9 @@ public class SequenceEngloberFactory {
         this.engloberBuild = new EngloberBuild();
     }
 
+    /**
+     * Creates englober box elements sized to span their participant range plus label width
+     */
     public void createEnglobers() {
         SequenceModel model = ctx.getModel();
         Map<String, Double> centre = ctx.getCentre();

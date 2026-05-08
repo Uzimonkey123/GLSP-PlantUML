@@ -2,7 +2,7 @@
  * File: AnchorBuild.java
  * Author: Norman Babiak
  * Description: GModelElement builder for anchor edges
- * Date: 4.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.builders;
@@ -28,6 +28,9 @@ public class AnchorBuild {
         this.gap = gap;
     }
 
+    /**
+     * Calculates coordinates for X, so the position of the anchor can be saved
+     */
     public double getXCoord(double from, double to) {
         // Calculate the x coordinate to know if it is left or right from the give nodes
         if (from > to) {
@@ -40,6 +43,9 @@ public class AnchorBuild {
     }
 
 
+    /**
+     * Builds an anchor vertical GEdge with its label positioned alongside it
+     */
     public GModelElement build() {
         return new GEdgeBuilder("anchor-arrow")
                 .id(anchor.getAnchorId())

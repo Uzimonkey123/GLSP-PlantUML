@@ -2,7 +2,7 @@
  * File: NoteWriter.java
  * Author: Norman Babiak
  * Description: Writes modified notes back to source
- * Date: 31.3.2026
+ * Date: 5.5.2026
  */
 
 package com.diagrams.ClassDiagram.reconstructor.writers;
@@ -24,6 +24,9 @@ public class NoteWriter {
         this.ctx = ctx;
     }
 
+    /**
+     * Rewrites all modified notes, choosing single-line or multi-line based on the original
+     */
     public void write() {
         for (ClassEntity note : ctx.getModel().notes) {
             if (!note.isModified()) continue;
@@ -36,6 +39,9 @@ public class NoteWriter {
         }
     }
 
+    /**
+     * Rebuilds a single-line note, handling both 'note "text" as alias' and 'note of X : text'
+     */
     private List<String> rebuildSingleLineNote(ClassEntity note) {
         String source = ctx.getEffectiveLine(note.getSourceLineStart());
         String indent = extractIndentation(source);
@@ -60,6 +66,9 @@ public class NoteWriter {
         return lines;
     }
 
+    /**
+     * Rebuilds a multi-line note: preserves the header, splits content by <br>, and appends "end note"
+     */
     private List<String> rebuildMultilineNote(ClassEntity note) {
         String headerSource = ctx.getEffectiveLine(note.getSourceLineStart());
         String indent = extractIndentation(headerSource);

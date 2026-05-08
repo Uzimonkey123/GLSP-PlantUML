@@ -2,7 +2,7 @@
  * File: PlantUMLWebsocketLauncher.java
  * Author: Norman Babiak
  * Description: Custom Websocket launcher for server, just so it is possible to set the idle timeout
- * Date: 5.4.2026
+ * Date: 5.5.2026
  */
 
 package com.GLSPPlantUML.launcher;
@@ -26,6 +26,9 @@ public class PlantUMLWebsocketLauncher extends WebsocketServerLauncher {
         super(serverModule, endpointPath, websocketLogLevel);
     }
 
+    /**
+     * Base start method for the websocket, just to extend the idle timeout
+     */
     @Override
     public void start(String hostname, int port) {
         try {

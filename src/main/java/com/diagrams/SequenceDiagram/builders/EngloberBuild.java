@@ -2,7 +2,7 @@
  * File: EngloberBuild.java
  * Author: Norman Babiak
  * Description: GModelElement builder for englober boxes
- * Date: 4.4.2026
+ * Date: 6.5.2026
  */
 
 package com.diagrams.SequenceDiagram.builders;
@@ -13,6 +13,9 @@ import org.eclipse.glsp.graph.builder.impl.GLabelBuilder;
 import org.eclipse.glsp.graph.builder.impl.GNodeBuilder;
 
 public class EngloberBuild {
+    /**
+     * Builds a box node around the given entities with a label on the top
+     */
     public GModelElement buildEngloberBox(SequenceEnglober box, double x1, double x2, double y1,
                                           double y2, double labelOffset, double highNode) {
         double padding = 10;
