@@ -20,7 +20,11 @@ import java.util.*;
 public class RuleLoader {
     private final Map<String, List<ValidationRule>> rulesByDiagram = new HashMap<>();
     private final Set<Class<? extends ValidationRule>> loadedClasses = new HashSet<>();
-    private final File pluginFolder = new File("plugins");
+    private final File pluginFolder;
+
+    public RuleLoader(File pluginFolder) {
+        this.pluginFolder = pluginFolder;
+    }
 
     /**
      * Main entry point to load modules from either classpath or JAR file

@@ -62,7 +62,7 @@ Implement the `ValidationRule` interface, package as a JAR, and place it in the 
 
 ### Custom diagram modules
 
-Extend `DiagramModule` from GLSP, and drop the JAR into `plugins/`.
+Extend `DiagramModule` from GLSP, and drop the JAR into your `<user>/.glsp-plantuml/plugins` directory.
 
 ---
 

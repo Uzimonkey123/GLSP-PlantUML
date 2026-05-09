@@ -23,8 +23,10 @@ import java.util.Set;
 public class ModuleLoader {
     private final Set<Class<? extends DiagramModule>> loadedModuleClasses = new HashSet<>();
     private final ServerModule serverModule;
-    private final File pluginFolder = new File("plugins");
-
+    private final File pluginFolder = new File(
+            System.getProperty("user.home"),
+            ".glsp-plantuml/plugins"
+    );
     public ModuleLoader(ServerModule serverModule) {
         this.serverModule = serverModule;
     }
@@ -43,7 +45,10 @@ public class ModuleLoader {
      * Loads the plugin folders and searches for JAR files
      */
     private void loadFolder() throws IOException {
-        if (!pluginFolder.isDirectory()) return;
+        if (!pluginFolder.exists()) {
+            pluginFolder.mkdirs();
+        }
+        System.err.println("ModuleLoader plugin folder: " + pluginFolder.getAbsolutePath());
 
         File[] jarFiles = pluginFolder.listFiles(f -> f.isFile() && f.getName().endsWith(".jar"));
         if (jarFiles == null) return;

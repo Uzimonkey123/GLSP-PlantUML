@@ -15,6 +15,10 @@ import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +28,7 @@ import java.util.regex.Pattern;
 public class PlantUMLTextDocumentService implements TextDocumentService {
     private final PlantUMLLanguageServer server;
     private final Map<String, String> documents = new ConcurrentHashMap<>();
+    private String uri;
 
     private CompositeValidator compositeValidator;
     private boolean initialized = false;
@@ -59,8 +64,12 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
     private synchronized CompositeValidator getValidator() {
         if (!initialized) {
             initialized = true;
+            Path filePath = Paths.get(URI.create(uri));
+            Path baseDir = filePath.getParent();
+            File pluginFolder = baseDir.resolve("plugins").toFile();
+
             ErrorValidator errorValidator = new ErrorValidator();
-            RuleLoader ruleLoader = new RuleLoader();
+            RuleLoader ruleLoader = new RuleLoader(pluginFolder);
             try {
                 ruleLoader.loadRules();
 
@@ -77,6 +86,7 @@ public class PlantUMLTextDocumentService implements TextDocumentService {
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
         String uri = params.getTextDocument().getUri();
+        this.uri = uri;
         String text = params.getTextDocument().getText();
         documents.put(uri, text);
         validateAndPublish(uri, text);

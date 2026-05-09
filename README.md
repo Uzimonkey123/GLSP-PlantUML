@@ -25,13 +25,13 @@ An integrated **LSP server** provides real-time syntax diagnostics and code comp
 
 ## Prerequisites
 
-| Tool | Version |
-|------|---------|
-| **Java JDK** | 21+     |
-| **Maven** | 3.8+    |
-| **Node.js** | 22.15   |
-| **npm** | 9+      |
-| **VS Code** | 1.101   |
+| Tool | Version                                        |
+|------|------------------------------------------------|
+| **Java JDK** | 21+ (Up to 22 if running tests due to mockito) |
+| **Maven** | 3.8+                                           |
+| **Node.js** | 22.15                                          |
+| **npm** | 9+                                             |
+| **VS Code** | 1.101                                          |
 
 ---
 
@@ -115,14 +115,12 @@ public class MyRule implements ValidationRule {
     }
 }
 ```
-
-2. Register it via `META-INF/services/com.GLSPPlantUML.validators.ValidationRule`
-3. Place the JAR in the `plugins/` directory
+2. Place the JAR in the `plugins/` directory
 
 ### Adding a diagram module
 
 1. Extend `DiagramModule` from GLSP
-2. Register via `META-INF/services/org.eclipse.glsp.server.di.DiagramModule`
+2. Open your user folder, navigate to `.glsp-plantuml`
 3. Place the JAR in the `plugins/` directory
 
 Plugins are loaded automatically on server startup via `ServiceLoader`.
