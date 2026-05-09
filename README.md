@@ -97,7 +97,8 @@ chmod +x build.sh
 
 ## Plugin System
 
-The extension supports a plugin architecture for adding custom **diagram modules** and **validation rules**.
+The extension supports a plugin architecture for adding custom **diagram modules** and **validation rules** for server side.
+Extension parsing for these diagram types and client view for them is still up to the developer to make.
 
 ### Adding a validation rule
 

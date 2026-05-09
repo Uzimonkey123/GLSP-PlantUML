@@ -21,7 +21,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 public class ModuleLoader {
-    private final Set<Class<? extends DiagramModule>> loadedModuleClasses = new HashSet<>();
+    private final Set<String> loadedDiagramTypes = new HashSet<>();
     private final ServerModule serverModule;
     private final File pluginFolder = new File(
             System.getProperty("user.home"),
@@ -35,7 +35,7 @@ public class ModuleLoader {
      * Main entry point to load modules from either classpath or JAR file
      */
     public void loadModules() throws Exception {
-        loadedModuleClasses.clear();
+        loadedDiagramTypes.clear();
 
         loadFolder();
         loadClasspath();
@@ -69,9 +69,13 @@ public class ModuleLoader {
         ServiceLoader<DiagramModule> serviceLoader = ServiceLoader.load(DiagramModule.class, loader);
 
         for (DiagramModule module : serviceLoader) {
-            Class<? extends DiagramModule> clazz = module.getClass();
-            if (loadedModuleClasses.add(clazz)) {
+            String diagramType = module.getDiagramType();
+
+            if (loadedDiagramTypes.add(diagramType)) {
                 serverModule.configureDiagramModule(module);
+            }
+            else {
+                System.err.println("[ModuleLoader] Skipping duplicate diagram type: " + diagramType);
             }
         }
     }
@@ -84,8 +88,14 @@ public class ModuleLoader {
         Reflections reflections = new Reflections("com");
 
         for (Class<? extends DiagramModule> clazz : reflections.getSubTypesOf(DiagramModule.class)) {
-            if (loadedModuleClasses.add(clazz)) {
-                serverModule.configureDiagramModule(clazz.getDeclaredConstructor().newInstance());
+            DiagramModule module = clazz.getDeclaredConstructor().newInstance();
+            String diagramType = module.getDiagramType();
+
+            if (loadedDiagramTypes.add(diagramType)) {
+                serverModule.configureDiagramModule(module);
+            }
+            else {
+                System.err.println("[ModuleLoader] Skipping duplicate diagram type: " + diagramType);
             }
         }
     }

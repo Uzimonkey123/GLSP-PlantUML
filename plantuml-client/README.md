@@ -62,6 +62,7 @@ Implement the `ValidationRule` interface, package as a JAR, and place it in the 
 
 ### Custom diagram modules
 
+Plugin extension is available for server side. Extension parsing for these diagram types and client view for them is still up to the developer to make.
 Extend `DiagramModule` from GLSP, and drop the JAR into your `<user>/.glsp-plantuml/plugins` directory.
 
 ---
