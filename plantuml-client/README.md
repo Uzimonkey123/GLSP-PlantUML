@@ -1,6 +1,8 @@
 # PlantUML Diagram Editor
 
-Edit PlantUML class and sequence diagrams visually — right inside VS Code.
+Edit PlantUML class and sequence diagrams visually — right inside VS Code. 
+
+> Open a .puml file → Click "Open PlantUML Preview" → Start editing
 
 This extension gives you a split-view workflow: write PlantUML notation in the text editor on one side, and see a live, interactive diagram on the other. Changes flow both ways, edit the text, save, and the diagram updates, edit the diagram, save, and the text updates.
 
@@ -29,11 +31,10 @@ Built on the [Graphical Language Server Platform (GLSP)](https://www.eclipse.org
 
 ## Requirements
 
-| Dependency | Version |
-|---|---|
-| **Java JDK** | 21 or later |
-
-The extension bundles everything else it needs. Java is required because the GLSP server and PlantUML parser run on the JVM.
+| Dependency         | Version                                 |
+|--------------------|-----------------------------------------|
+| **Java JDK**       | 21 or later                             |
+| **GraphViz (dot)** | 2.43 (must be available in system PATH) |
 
 ---
 
@@ -62,7 +63,7 @@ Implement the `ValidationRule` interface, package as a JAR, and place it in the 
 
 ### Custom diagram modules
 
-Plugin extension is available for server side. Extension parsing for these diagram types and client view for them is still up to the developer to make.
+Support for new diagram types requires both extension-side parsing and client-side rendering implementation.
 Extend `DiagramModule` from GLSP, and drop the JAR into your `<user>/.glsp-plantuml/plugins` directory.
 
 ---
@@ -71,8 +72,30 @@ Extend `DiagramModule` from GLSP, and drop the JAR into your `<user>/.glsp-plant
 
 - Only class and sequence diagrams are supported out of the box.
 - The diagram preview requires Java 21+ to be available on `PATH` or configured via `java.home`.
-- For changing between two diagram types, the editor must be closed and just the source code open.
+- Switching between diagram types requires reopening the editor session to reload the appropriate server module.
 - PlantUML skinparam and CSS styling is not supported.
+
+---
+
+## Base troubleshooting
+
+### Graphviz not found (dot command fails)
+
+**Cause:**  
+Graphviz is not installed or `dot` is not available in system PATH.
+
+**Fix:**
+- Install Graphviz: https://graphviz.org/download/
+- Verify installation:
+```bash
+dot -V
+```
+
+### Incompatible Java version
+The tool supports from Java 21+, while if you are running the tests, only up to Java 22, due to Mockito.
+
+### GLSP server does not start / empty preview
+Ensure port 5007 is free to use.
 
 ---
 

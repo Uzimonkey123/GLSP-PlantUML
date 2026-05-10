@@ -25,13 +25,15 @@ An integrated **LSP server** provides real-time syntax diagnostics and code comp
 
 ## Prerequisites
 
-| Tool | Version                                        |
-|------|------------------------------------------------|
-| **Java JDK** | 21+ (Up to 22 if running tests due to mockito) |
-| **Maven** | 3.8+                                           |
-| **Node.js** | 22.15                                          |
-| **npm** | 9+                                             |
-| **VS Code** | 1.101                                          |
+| Tool               | Version                                        |
+|--------------------|------------------------------------------------|
+| **Java JDK**       | 21+ (Up to 22 if running tests due to mockito) |
+| **Maven**          | 3.8+                                           |
+| **Node.js**        | 22.15                                          |
+| **npm**            | 9+                                             |
+| **VS Code**        | 1.101                                          |
+| **GraphViz (dot)** | 2.43 (must be available in system PATH)        |
+
 
 ---
 
@@ -125,7 +127,38 @@ public class MyRule implements ValidationRule {
 3. Place the JAR in the `plugins/` directory
 
 Plugins are loaded automatically on server startup via `ServiceLoader`.
- 
+
+---
+
+## Base troubleshooting
+
+### Graphviz not found (dot command fails)
+
+**Cause:**  
+Graphviz is not installed or `dot` is not available in system PATH.
+
+**Fix:**
+- Install Graphviz: https://graphviz.org/download/
+- Verify installation:
+```bash
+dot -V
+```
+
+### Incompatible Java version
+The tool supports from Java 21+, while if you are running the tests, only up to Java 22, due to Mockito.
+
+### GLSP server does not start / empty preview
+Ensure port 5007 is free to use.
+
+### Build script fails on Linux/macOS
+
+Missing permissions or Windows line endings.
+
+```bash
+chmod +x build.sh mvnw
+sed -i 's/\r$//' build.sh
+```
+
 ---
 
 ## License

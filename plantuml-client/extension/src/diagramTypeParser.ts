@@ -7,6 +7,22 @@
 
 import * as vscode from "vscode";
 
+const CLASS_DECLARATIONS = new RegExp(
+    '(?:^|\\n)\\s*(?:'
+    + 'class|interface|enum|abstract(?:\\s+class)?|annotation|dataclass'
+    + '|exception|metaclass|protocol|record|stereotype|struct'
+    + '|circle|diamond'
+    + ')\\s',
+    'm'
+);
+
+const SEQUENCE_DECLARATIONS = new RegExp(
+    '(?:^|\\n)\\s*(?:'
+    + 'participant|actor|boundary|control|collections|queue'
+    + ')\\s',
+    'm'
+);
+
 const CLASS_SIGNALS = new RegExp(
     '\\b(class|interface|enum|abstract|annotation|dataclass|entity|exception'
     + '|metaclass|protocol|record|stereotype|struct)\\b'
@@ -37,13 +53,22 @@ const SEQUENCE_SIGNALS = new RegExp(
 );
 
 /**
- * Determines the diagram type by counting class and sequence signal matches.
- * If no class signals dominate, sequence diagram is selected as fallback
+ * Determines the diagram type by first checking for unambiguous declaration
+ * keywords. If none are found, falls back to counting signal matches.
+ * Sequence diagram is the final fallback if nothing dominates.
  */
 export default async function parseDiagramType(document: { uri: vscode.Uri }) {
     try {
         const fileContent = await vscode.workspace.fs.readFile(document.uri);
         const content = new TextDecoder().decode(fileContent);
+
+        if (CLASS_DECLARATIONS.test(content)) {
+            return 'class-diagram';
+        }
+
+        if (SEQUENCE_DECLARATIONS.test(content)) {
+            return 'sequence-diagram';
+        }
 
         const classMatches = content.match(CLASS_SIGNALS) || [];
         const seqMatches = content.match(SEQUENCE_SIGNALS) || [];
