@@ -1,6 +1,10 @@
 @echo off
 setlocal
 
+:: Author: Norman Babiak
+:: Description: Build script for Windows
+:: Date: 10.5.2026
+
 set TARGET_JAR=target\GLSPPlantUML-1.0-SNAPSHOT.jar
 set SERVER_DIR=plantuml-client\server
 set CLIENT_DIR=plantuml-client

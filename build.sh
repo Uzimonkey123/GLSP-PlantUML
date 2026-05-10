@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Author: Norman Babiak
+# Description: Building script for Unix systems
+# Date: 10.5.2026
+
 TARGET_JAR="target/GLSPPlantUML-1.0-SNAPSHOT.jar"
 SERVER_DIR="plantuml-client/server"
 CLIENT_DIR="plantuml-client"
